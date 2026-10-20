@@ -8,7 +8,7 @@
   --ink: #15202a;
   --muted: #56646e;
   --line: #d3dbd9;
-  --accent: #b42a5f;
+  --accent: #6b3fa0;
   --accent-ink: #ffffff;
   --lake: #0d6f6b;
   --lake-soft: #d6ecea;
@@ -27,13 +27,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0f1418; --surface: #171e23; --surface-2: #1f282e; --ink: #e6ecea; --muted: #98a6ae;
-    --line: #2b353b; --accent: #f0679b; --accent-ink: #1a0b12; --lake: #52c4bc; --lake-soft: #133331;
+    --line: #2b353b; --accent: #b48cf0; --accent-ink: #150b24; --lake: #52c4bc; --lake-soft: #133331;
     --warn: #f0b04a; --danger: #ff7b7f; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0f1418; --surface: #171e23; --surface-2: #1f282e; --ink: #e6ecea; --muted: #98a6ae;
-  --line: #2b353b; --accent: #f0679b; --accent-ink: #1a0b12; --lake: #52c4bc; --lake-soft: #133331;
+  --line: #2b353b; --accent: #b48cf0; --accent-ink: #150b24; --lake: #52c4bc; --lake-soft: #133331;
   --warn: #f0b04a; --danger: #ff7b7f; color-scheme: dark;
 }
 
@@ -80,7 +80,7 @@ body::before {
   margin: 0; letter-spacing: -0.005em; text-wrap: balance;
 }
 .hero h1 span { color: var(--accent); }
-.hero p { margin: 12px 0 0; color: var(--muted); max-width: 62ch; }
+.hero p { margin: 0; color: var(--muted); max-width: 62ch; }
 .demo-note {
   margin-top: 14px; padding: 10px 14px; border: 1px dashed var(--warn); border-radius: var(--radius);
   color: var(--warn); font-size: 14px; max-width: 70ch;
