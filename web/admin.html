@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Review Queue · Music in SLC</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="wordmark" href="index.html">Music in SLC <small>Admin</small></a>
+    <nav class="nav" aria-label="Site">
+      <a href="index.html">Calendar</a>
+      <a href="admin.html" aria-current="page">Review queue</a>
+      <a href="#" id="sign-out" hidden>Sign out</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap form-page" style="max-width:980px">
+  <h1>Review queue</h1>
+
+  <div class="card" id="not-live" hidden>
+    <p>The review queue needs the database. Add <span class="mono">supabaseUrl</span> and <span class="mono">supabaseAnonKey</span> to <span class="mono">config.js</span>, then come back here.</p>
+  </div>
+
+  <form class="card" id="login" hidden>
+    <div class="field">
+      <label for="login-email">Admin email</label>
+      <input id="login-email" type="email" required autocomplete="email">
+    </div>
+    <div class="form-actions"><button class="btn primary" type="submit">Email me a sign-in link</button></div>
+    <div class="notice" id="login-msg" hidden></div>
+  </form>
+
+  <div class="card" id="not-admin" hidden>
+    <p>You're signed in as <strong id="who"></strong>, but this account isn't an admin yet. Run the <span class="mono">insert into admins</span> line at the bottom of <span class="mono">supabase/schema.sql</span> with this email.</p>
+  </div>
+
+  <div id="admin" hidden>
+    <p id="queue-summary"></p>
+    <div class="queue" id="queue"></div>
+
+    <h2 class="section-title">Source health</h2>
+    <p class="hint">The latest run for each scraper and the inbox. A red row means that source needs attention, usually a changed venue website.</p>
+    <div class="card table-wrap"><table><thead><tr><th>Source</th><th>Status</th><th>Last run</th><th>Shows</th><th>New</th><th>Error</th></tr></thead><tbody id="health"></tbody></table></div>
+
+    <h2 class="section-title">Recently added</h2>
+    <div class="card table-wrap"><table><thead><tr><th>Date</th><th>Show</th><th>Venue</th><th>Source</th><th></th></tr></thead><tbody id="recent"></tbody></table></div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="data.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

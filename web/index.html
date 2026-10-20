@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Music in SLC</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Every live music show in Salt Lake County, from Kilby Court to the Delta Center, in one calendar.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="wordmark" href="index.html">Music in SLC <small>Salt Lake County</small></a>
+    <nav class="nav" aria-label="Site">
+      <a href="index.html" aria-current="page">Calendar</a>
+      <a href="#for-you">For you</a>
+      <a class="cta" href="submit.html">Submit a show</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>Every show in <span>the valley</span></h1>
+    <p>Live music across Salt Lake County, gathered nightly from venue calendars, ticket sites, promoter emails and readers like you.</p>
+    <p class="demo-note" id="demo-note" hidden>These are sample listings with made-up band names at real venues. Connect the database in <span class="mono">config.js</span> to show real shows.</p>
+  </section>
+
+  <section class="taste" id="for-you" aria-labelledby="taste-title">
+    <div>
+      <h2 id="taste-title">For you</h2>
+      <p id="taste-intro">Connect your listening and we'll flag shows by artists you play, plus similar bands coming through town. Pandora listeners: turn on Last.fm scrobbling and use your Last.fm name.</p>
+    </div>
+    <div class="taste-actions" id="taste-connect">
+      <button class="btn lake" id="btn-spotify" type="button">Connect Spotify</button>
+      <form class="taste-inline" id="lastfm-form">
+        <label class="sr-only" for="lastfm-user">Last.fm username</label>
+        <input id="lastfm-user" name="user" placeholder="Last.fm username" autocomplete="off">
+        <button class="btn" type="submit">Use Last.fm</button>
+      </form>
+    </div>
+    <details id="manual-taste">
+      <summary>Or tell us what you like</summary>
+      <form id="manual-form" style="display:grid;gap:10px">
+        <label for="manual-artists" class="hint">Artists you love, separated by commas</label>
+        <textarea id="manual-artists" placeholder="Phoebe Bridgers, Khruangbin, Turnstile"></textarea>
+        <div class="checks" id="manual-genres"></div>
+        <div><button class="btn lake" type="submit">Find my shows</button></div>
+      </form>
+    </details>
+    <div class="taste-actions" id="taste-on" hidden>
+      <div class="taste-summary" id="taste-summary"></div>
+      <button class="chip lake" id="only-matches" type="button" aria-pressed="false">Only my matches</button>
+      <button class="btn ghost" id="taste-clear" type="button">Disconnect</button>
+    </div>
+    <div class="notice err" id="taste-error" hidden></div>
+  </section>
+
+  <section class="filters" aria-label="Filters">
+    <div class="filter-row">
+      <label class="sr-only" for="q">Search shows</label>
+      <input class="search" id="q" type="search" placeholder="Search artists, venues…" autocomplete="off">
+      <label class="sr-only" for="venue">Venue</label>
+      <select class="select" id="venue"><option value="">All venues</option></select>
+    </div>
+    <div class="filter-row" id="when-row">
+      <span class="filter-label">When</span>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Genre</span>
+      <div class="genre-chips" id="genre-chips"></div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Show</span>
+      <button class="chip" type="button" id="f-allages" aria-pressed="false">All ages</button>
+      <button class="chip" type="button" id="f-free" aria-pressed="false">Free</button>
+      <button class="chip" type="button" id="f-clear">Clear filters</button>
+      <span class="count" id="count" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <section id="list" aria-label="Shows"><p class="empty">Loading shows…</p></section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>Listings come from venue websites, Ticketmaster, the <span class="mono" id="inbox-addr">musicinslc@gmail.com</span> inbox and reader submissions. Times are Mountain time. Always confirm with the venue before you go.</p>
+    <p>Playing a show? <a href="submit.html">Submit it</a> or email the flyer to the inbox above.</p>
+  </div>
+</footer>
+
+<script src="config.js"></script>
+<script src="data.js"></script>
+<script src="taste.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

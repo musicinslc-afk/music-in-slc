@@ -1,6 +1,4 @@
-# test
-  indented line
-end# Music in SLC
+# Music in SLC
 
 A concert calendar for every live music show in Salt Lake County.
 

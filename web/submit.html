@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Submit a Show · Music in SLC</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="wordmark" href="index.html">Music in SLC <small>Salt Lake County</small></a>
+    <nav class="nav" aria-label="Site">
+      <a href="index.html">Calendar</a>
+      <a class="cta" href="submit.html" aria-current="page">Submit a show</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap form-page">
+  <h1>Submit a show</h1>
+  <p>Playing in Salt Lake County? Add it here and it goes on the calendar once we check it, usually within a day. You can also email a flyer to <span class="mono" id="inbox-addr">musicinslc@gmail.com</span>.</p>
+
+  <form class="card" id="submit-form" novalidate>
+    <fieldset>
+      <legend>The show</legend>
+      <div class="field">
+        <label for="title">Headliner or show name</label>
+        <input id="title" name="title" required maxlength="200" placeholder="Rhea Vance">
+      </div>
+      <div class="field">
+        <label for="support">Also on the bill <span class="opt">(optional, separate with commas)</span></label>
+        <input id="support" name="support" maxlength="300" placeholder="Junebug, Lake Effect">
+      </div>
+      <div class="grid-3">
+        <div class="field"><label for="date">Date</label><input id="date" name="date" type="date" required></div>
+        <div class="field"><label for="time">Show time</label><input id="time" name="time" type="time" required value="20:00"></div>
+        <div class="field"><label for="doors">Doors <span class="opt">(optional)</span></label><input id="doors" name="doors" type="time"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Where</legend>
+      <div class="grid-2">
+        <div class="field">
+          <label for="venue">Venue</label>
+          <input id="venue" name="venue" required maxlength="120" list="venue-list" placeholder="Kilby Court" autocomplete="off">
+          <datalist id="venue-list"></datalist>
+        </div>
+        <div class="field">
+          <label for="city">City</label>
+          <select id="city" name="city" required>
+            <option>Salt Lake City</option><option>South Salt Lake</option><option>Millcreek</option><option>Murray</option>
+            <option>Holladay</option><option>Cottonwood Heights</option><option>Midvale</option><option>Sandy</option>
+            <option>Draper</option><option>West Valley City</option><option>West Jordan</option><option>South Jordan</option>
+            <option>Taylorsville</option><option>Riverton</option><option>Herriman</option><option>Bluffdale</option>
+            <option>Magna</option><option>Kearns</option><option>Alta</option><option>Brighton</option>
+          </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Details</legend>
+      <div class="grid-3">
+        <div class="field"><label for="price">Cover <span class="opt">($, blank if unsure)</span></label><input id="price" name="price" type="number" min="0" step="1" inputmode="numeric" placeholder="15"></div>
+        <div class="field">
+          <label for="age">Ages</label>
+          <select id="age" name="age"><option value="">Not sure</option><option value="all_ages">All ages</option><option value="18_plus">18+</option><option value="21_plus">21+</option></select>
+        </div>
+        <div class="field"><span class="label">&nbsp;</span><div class="checks"><label><input type="checkbox" id="free" name="free"> Free show</label></div></div>
+      </div>
+      <div class="field">
+        <span class="label">Genre <span class="opt">(pick up to three)</span></span>
+        <div class="checks" id="genre-checks"></div>
+      </div>
+      <div class="field">
+        <label for="ticket">Tickets or event link <span class="opt">(optional)</span></label>
+        <input id="ticket" name="ticket" type="url" placeholder="https://">
+      </div>
+      <div class="field">
+        <label for="description">Anything else <span class="opt">(optional)</span></label>
+        <textarea id="description" name="description" maxlength="1200"></textarea>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>You</legend>
+      <div class="grid-2">
+        <div class="field"><label for="name">Your name</label><input id="name" name="name" required maxlength="100" autocomplete="name"></div>
+        <div class="field"><label for="email">Email <span class="opt">(only used if we have a question)</span></label><input id="email" name="email" type="email" required autocomplete="email"></div>
+      </div>
+      <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+    </fieldset>
+
+    <div class="notice err" id="form-error" hidden></div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit" id="submit-btn">Send for review</button>
+      <span class="hint">We check every submission before it goes live.</span>
+    </div>
+  </form>
+
+  <div class="card" id="thanks" hidden>
+    <div class="notice ok" id="thanks-msg">Got it. Your show is in the review queue.</div>
+    <div class="form-actions"><button class="btn" type="button" id="another">Submit another show</button><a class="btn ghost" href="index.html">Back to the calendar</a></div>
+  </div>
+</main>
+
+<script src="config.js"></script>
+<script src="data.js"></script>
+<script src="submit.js"></script>
+</body>
+</html>

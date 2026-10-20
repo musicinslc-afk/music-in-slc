@@ -1,0 +1,196 @@
+# Salt Lake County venues.
+#
+# Every entry is synced to the `venues` table on each scraper run.
+# `calendar_urls` are the pages the scraper reads. Strategy "auto" tries, in order:
+#   1. schema.org Event JSON-LD embedded in the page (most ticketing widgets emit this)
+#   2. an iCal feed, if `ics_url` is set
+#   3. the AI page reader (needs ANTHROPIC_API_KEY), which reads the page like a person would
+# Use strategy "feeds_only" for venues whose shows come through Ticketmaster, email or submissions (no page to scrape).
+#
+# IMPORTANT: confirm each calendar URL in a browser before launch. Venues change
+# websites often; the admin page's "Source health" panel flags any URL that stops working.
+# `aliases` are other spellings ticket sites use, so duplicates merge correctly.
+
+venues:
+  - slug: kilby-court
+    name: Kilby Court
+    address: 741 S Kilby Ct
+    city: Salt Lake City
+    age_policy: all_ages
+    default_genres: [indie, local]
+    calendar_urls: [https://kilbycourt.com/]
+    strategy: auto
+
+  - slug: urban-lounge
+    name: The Urban Lounge
+    aliases: [Urban Lounge, The Urban Lounge SLC]
+    address: 241 S 500 E
+    city: Salt Lake City
+    age_policy: 21_plus
+    default_genres: [indie]
+    calendar_urls: [https://theurbanloungeslc.com/]
+    strategy: auto
+
+  - slug: metro-music-hall
+    name: Metro Music Hall
+    aliases: [Metro Music Hall Salt Lake City]
+    address: 615 W 100 S
+    city: Salt Lake City
+    age_policy: varies
+    calendar_urls: [https://metromusichall.com/]
+    strategy: auto
+
+  - slug: the-state-room
+    name: The State Room
+    aliases: [State Room]
+    address: 638 S State St
+    city: Salt Lake City
+    age_policy: 21_plus
+    calendar_urls: [https://thestateroompresents.com/]
+    strategy: auto
+
+  - slug: commonwealth-room
+    name: The Commonwealth Room
+    aliases: [Commonwealth Room, The Commonwealth Room - Salt Lake City]
+    address: 195 W 2100 S
+    city: South Salt Lake
+    age_policy: 21_plus
+    calendar_urls: [https://thestateroompresents.com/]
+    strategy: auto
+
+  - slug: soundwell
+    name: Soundwell
+    aliases: [Soundwell SLC]
+    address: 149 W 200 S
+    city: Salt Lake City
+    age_policy: varies
+    default_genres: [electronic]
+    calendar_urls: [https://soundwellslc.com/]
+    strategy: auto
+
+  - slug: the-depot
+    name: The Depot
+    aliases: [Depot SLC]
+    address: 13 N 400 W
+    city: Salt Lake City
+    age_policy: varies
+    strategy: feeds_only
+
+  - slug: the-complex
+    name: The Complex
+    aliases: [The Grand at The Complex SLC, The Rockwell at The Complex SLC, The Lot at The Complex SLC, The Complex SLC, The Grand at The Complex, The Rockwell at The Complex]
+    address: 536 W 100 S
+    city: Salt Lake City
+    age_policy: varies
+    calendar_urls: [https://thecomplexslc.com/]
+    strategy: auto
+
+  - slug: the-union-event-center
+    name: The Union Event Center
+    aliases: [The Union, Union Event Center]
+    address: 235 N 500 W
+    city: Salt Lake City
+    age_policy: all_ages
+    calendar_urls: [https://theunioneventcenter.com/]
+    strategy: auto
+
+  - slug: delta-center
+    name: Delta Center
+    address: 301 S Temple
+    city: Salt Lake City
+    age_policy: all_ages
+    strategy: feeds_only
+
+  - slug: maverik-center
+    name: Maverik Center
+    address: 3200 S Decker Lake Dr
+    city: West Valley City
+    age_policy: all_ages
+    strategy: feeds_only
+
+  - slug: utah-first-amphitheatre
+    name: Utah First Credit Union Amphitheatre
+    aliases: [USANA Amphitheatre, Utah First Credit Union Amphitheatre (formerly USANA Amphitheatre)]
+    address: 5150 S 6055 W
+    city: West Valley City
+    age_policy: all_ages
+    strategy: feeds_only
+
+  - slug: red-butte-garden
+    name: Red Butte Garden Amphitheatre
+    aliases: [Red Butte Garden, Red Butte Garden Amphitheater]
+    address: 300 Wakara Way
+    city: Salt Lake City
+    age_policy: all_ages
+    calendar_urls: [https://redbuttegarden.org/concerts/]
+    strategy: auto
+
+  - slug: eccles-theater
+    name: Eccles Theater
+    aliases: [Delta Performance Hall at the Eccles Theater]
+    address: 131 S Main St
+    city: Salt Lake City
+    age_policy: all_ages
+    strategy: feeds_only
+
+  - slug: abravanel-hall
+    name: Abravanel Hall
+    address: 123 W South Temple
+    city: Salt Lake City
+    age_policy: all_ages
+    default_genres: [classical]
+    calendar_urls: [https://utahsymphony.org/]
+    strategy: auto
+
+  - slug: gallivan-center
+    name: Gallivan Center
+    aliases: [The Gallivan Center]
+    address: 239 S Main St
+    city: Salt Lake City
+    age_policy: all_ages
+    strategy: feeds_only
+
+  - slug: murray-theater
+    name: Murray Theater
+    address: 4961 S State St
+    city: Murray
+    age_policy: all_ages
+    default_genres: [metal, punk]
+    strategy: feeds_only
+
+  - slug: the-royal
+    name: The Royal
+    address: 4760 S 900 E
+    city: Murray
+    age_policy: 21_plus
+    strategy: feeds_only
+
+  - slug: the-beehive
+    name: The Beehive
+    address: 666 S State St
+    city: Salt Lake City
+    age_policy: 21_plus
+    strategy: feeds_only
+
+  - slug: utah-state-fairpark
+    name: Utah State Fairpark
+    address: 155 N 1000 W
+    city: Salt Lake City
+    age_policy: all_ages
+    strategy: feeds_only
+
+  - slug: 801-event-center
+    name: 801 Event Center
+    city: Salt Lake City
+    age_policy: varies
+    strategy: feeds_only
+
+  - slug: the-dlc
+    name: The DLC
+    city: Salt Lake City
+    age_policy: varies
+    strategy: feeds_only
+
+# Add more here as you find them: breweries, coffee shops, and bars with live music
+# usually post on Instagram or send flyers, which is what the musicinslc inbox and the
+# public submit form are for.

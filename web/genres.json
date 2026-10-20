@@ -1,0 +1,24 @@
+{
+  "_comment": "Site genre taxonomy. Shared by the website filters and the ingest jobs. Each genre lists lowercase keywords; a raw genre or tag that contains a keyword as a whole word maps to that genre.",
+  "genres": [
+    { "id": "rock",        "label": "Rock",               "keywords": ["rock", "garage", "grunge", "psych", "psychedelic", "stoner", "surf"] },
+    { "id": "indie",       "label": "Indie & Alternative", "keywords": ["indie", "alternative", "alt rock", "shoegaze", "dream pop", "post-punk", "new wave", "emo", "lo-fi", "bedroom pop"] },
+    { "id": "punk",        "label": "Punk & Hardcore",    "keywords": ["punk", "hardcore", "ska", "oi!", "pop punk", "post-hardcore", "screamo"] },
+    { "id": "metal",       "label": "Metal",              "keywords": ["metal", "doom", "sludge", "deathcore", "metalcore", "heavy metal", "death metal", "thrash", "black metal", "djent", "grindcore"] },
+    { "id": "hiphop",      "label": "Hip-Hop & Rap",      "keywords": ["hip-hop", "hip hop", "rap", "trap", "drill", "boom bap"] },
+    { "id": "electronic",  "label": "Electronic & Dance", "keywords": ["electronic", "electronica", "edm", "house", "techno", "dubstep", "drum and bass", "dnb", "trance", "dance", "dj", "bass music", "synthwave", "electro", "rave"] },
+    { "id": "pop",         "label": "Pop",                "keywords": ["pop", "k-pop", "kpop", "dance pop", "teen pop"] },
+    { "id": "country",     "label": "Country & Americana","keywords": ["country", "americana", "outlaw", "honky", "western", "red dirt", "alt-country"] },
+    { "id": "folk",        "label": "Folk & Singer-Songwriter", "keywords": ["folk", "singer-songwriter", "singer songwriter", "acoustic", "indie folk"] },
+    { "id": "bluegrass",   "label": "Bluegrass & Jam",    "keywords": ["bluegrass", "jam band", "jamband", "newgrass", "string band"] },
+    { "id": "jazz",        "label": "Jazz",               "keywords": ["jazz", "bebop", "swing", "big band", "fusion"] },
+    { "id": "blues",       "label": "Blues",              "keywords": ["blues", "delta blues", "blues rock"] },
+    { "id": "rnb",         "label": "R&B & Soul",         "keywords": ["r&b", "rnb", "soul", "funk", "neo-soul", "motown", "gospel"] },
+    { "id": "latin",       "label": "Latin",              "keywords": ["latin", "reggaeton", "cumbia", "banda", "regional mexican", "corridos", "salsa", "bachata", "mariachi", "norteño", "norteno"] },
+    { "id": "world",       "label": "Reggae & World",     "keywords": ["reggae", "world", "afrobeat", "afrobeats", "dancehall", "celtic", "polynesian", "bollywood"] },
+    { "id": "classical",   "label": "Classical & Orchestral", "keywords": ["classical", "orchestra", "orchestral", "symphony", "opera", "chamber", "choir", "choral", "philharmonic"] },
+    { "id": "experimental","label": "Experimental",       "keywords": ["experimental", "noise", "ambient", "avant", "drone", "industrial"] },
+    { "id": "tribute",     "label": "Tribute & Covers",   "keywords": ["tribute", "cover band", "covers"] },
+    { "id": "local",       "label": "Local Showcase",     "keywords": ["local showcase", "open mic", "open-mic", "battle of the bands", "local bands", "songwriter night"] }
+  ]
+}
