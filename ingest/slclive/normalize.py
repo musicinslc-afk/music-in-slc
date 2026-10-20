@@ -138,9 +138,17 @@ def _venue_key(name: str) -> str:
 
 
 @lru_cache(maxsize=1)
+def _config() -> dict:
+    return yaml.safe_load((settings.CONFIG_DIR / "venues.yaml").read_text())
+
+
 def load_venues() -> tuple[Venue, ...]:
-    data = yaml.safe_load((settings.CONFIG_DIR / "venues.yaml").read_text())
-    return tuple(Venue(**v) for v in data["venues"])
+    return tuple(Venue(**v) for v in _config()["venues"])
+
+
+def load_feeds() -> list[dict]:
+    """Calendar feeds that cover many venues at once (see `feeds:` in venues.yaml)."""
+    return list(_config().get("feeds") or [])
 
 
 def match_venue(name: Optional[str], venues: Iterable[Venue] | None = None) -> Optional[Venue]:

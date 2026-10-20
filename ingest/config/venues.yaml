@@ -11,6 +11,13 @@
 # websites often; the admin page's "Source health" panel flags any URL that stops working.
 # `aliases` are other spellings ticket sites use, so duplicates merge correctly.
 
+# Calendar feeds that cover many venues at once. Shows at venues listed below publish
+# directly; shows at venues not listed here go to the review queue, since a feed can
+# include venues outside Salt Lake County.
+feeds:
+  - name: 24tix
+    url: https://www.24tix.com/calendar.ics   # S&S Presents venues and other local rooms
+
 venues:
   - slug: kilby-court
     name: Kilby Court
@@ -19,7 +26,7 @@ venues:
     age_policy: all_ages
     default_genres: [indie, local]
     calendar_urls: [https://kilbycourt.com/]
-    strategy: auto
+    strategy: feeds_only   # shows come from the 24tix feed
 
   - slug: urban-lounge
     name: The Urban Lounge
@@ -29,7 +36,7 @@ venues:
     age_policy: 21_plus
     default_genres: [indie]
     calendar_urls: [https://theurbanloungeslc.com/]
-    strategy: auto
+    strategy: feeds_only   # shows come from the 24tix feed
 
   - slug: metro-music-hall
     name: Metro Music Hall
@@ -38,7 +45,7 @@ venues:
     city: Salt Lake City
     age_policy: varies
     calendar_urls: [https://metromusichall.com/]
-    strategy: auto
+    strategy: feeds_only   # shows come from the 24tix feed
 
   - slug: the-state-room
     name: The State Room
@@ -187,8 +194,17 @@ venues:
 
   - slug: the-dlc
     name: The DLC
+    aliases: [The DLC at Quarters, DLC at Quarters]
     city: Salt Lake City
     age_policy: varies
+    strategy: feeds_only
+
+  - slug: international-bar
+    name: International Bar
+    aliases: [The International Bar]
+    address: 342 S State St
+    city: Salt Lake City
+    age_policy: 21_plus
     strategy: feeds_only
 
 # Add more here as you find them: breweries, coffee shops, and bars with live music

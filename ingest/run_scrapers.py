@@ -14,16 +14,19 @@ import traceback
 
 from slclive import enrich, settings
 from slclive.db import DB
-from slclive.normalize import load_venues, resolve
-from slclive.sources import ticketmaster, venue_page
+from slclive import fetch
+from slclive.normalize import load_feeds, load_venues, resolve
+from slclive.sources import ics, ticketmaster, venue_page
 
 
-def store(db: DB, shows, venues, source: str, dry_run: bool) -> tuple[int, int, int]:
+def store(db: DB, shows, venues, source: str, dry_run: bool, review_unknown_venues: bool = False) -> tuple[int, int, int]:
     found = inserted = updated = 0
     for raw in shows:
         show = resolve(raw, venues)
         if not show:
             continue
+        if review_unknown_venues and not show.venue_slug:
+            show.status = "pending"  # a venue we don't list yet, possibly outside the county
         found += 1
         enrich.fill_genres(show)
         if dry_run:
@@ -37,7 +40,7 @@ def store(db: DB, shows, venues, source: str, dry_run: bool) -> tuple[int, int, 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--only", action="append", help="venue slug or 'ticketmaster' (repeatable)")
+    ap.add_argument("--only", action="append", help="venue slug, feed name or 'ticketmaster' (repeatable)")
     args = ap.parse_args()
 
     db = DB()
@@ -50,8 +53,17 @@ def main() -> int:
     failures = 0
 
     jobs = []
+    review = set()
     if not wanted or "ticketmaster" in wanted:
         jobs.append(("ticketmaster", lambda: (ticketmaster.fetch_shows(), None, "api")))
+    for feed in load_feeds():
+        name = f"feed:{feed['name']}"
+        if wanted and feed["name"] not in wanted and name not in wanted:
+            continue
+        def feed_job(feed=feed, name=name):
+            return ics.parse(fetch.get(feed["url"]).text, source=name), None, "calendar feed"
+        jobs.append((name, feed_job))
+        review.add(name)
     for v in venues:
         if v.strategy == "feeds_only" or not v.calendar_urls:
             continue
@@ -65,7 +77,7 @@ def main() -> int:
     for source, job in jobs:
         try:
             shows, content_hash, method = job()
-            found, inserted, updated = store(db, shows, venues, source, dry_run)
+            found, inserted, updated = store(db, shows, venues, source, dry_run, source in review)
             db.log_run(source, True, found, inserted, updated, content_hash=content_hash)
             print(f"ok   {source:38} {method:28} found={found} new={inserted} updated={updated}", file=sys.stderr)
         except Exception as e:  # one broken venue must not stop the rest

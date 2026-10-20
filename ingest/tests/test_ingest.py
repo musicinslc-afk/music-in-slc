@@ -76,6 +76,36 @@ class TestMicrodata(unittest.TestCase):
         self.assertIsNone(resolve(s))
 
 
+class TestCalendarFeed(unittest.TestCase):
+    def setUp(self):
+        from slclive.sources import ics
+        self.shows = ics.parse((HERE / "fixtures" / "24tix_calendar.ics").read_text(), "feed:24tix")
+
+    def test_reads_upcoming_events_despite_malformed_header(self):
+        self.assertEqual([s.title for s in self.shows],
+                         ["The Black Angels", "Bayonne - The ‘Filters’ Tour", "Night Market Showcase"])
+
+    def test_room_age_rule_and_time(self):
+        s = self.shows[0]
+        self.assertEqual(s.venue_name, "Metro Music Hall")
+        self.assertEqual(s.age_restriction, "21_plus")
+        self.assertEqual(s.starts_at.strftime("%Y-%m-%d %H:%M"), "2099-11-13 19:00")
+        self.assertIsNone(s.description)  # 24tix repeats the title as the description
+
+    def test_feed_venues_resolve_and_unknown_ones_are_kept_for_review(self):
+        import run_scrapers
+        db = DB(dry_run=True)
+        resolved = [resolve(s) for s in self.shows]
+        self.assertEqual(resolved[0].venue_slug, "metro-music-hall")
+        self.assertEqual(resolved[1].artists, ["Bayonne"])
+        self.assertIsNone(resolved[2].venue_slug)
+        found, _, _ = run_scrapers.store(db, ics_shows := __import__("slclive.sources.ics", fromlist=["parse"]).parse(
+            (HERE / "fixtures" / "24tix_calendar.ics").read_text(), "feed:24tix"), list(load_venues()), "feed:24tix",
+            dry_run=True, review_unknown_venues=True)
+        self.assertEqual(found, 3)
+        self.assertEqual([s.status for s in ics_shows], ["published", "published", "pending"])
+
+
 class TestNormalize(unittest.TestCase):
     def test_split_artists(self):
         self.assertEqual(split_artists("S&S Presents: Mt. Joy with Lily Seabird, Local Natives"),
