@@ -14,7 +14,7 @@
 <body>
 <header class="site-header">
   <div class="wrap">
-    <a class="wordmark" href="index.html">Music in SLC</a>
+    <a class="wordmark" href="index.html">Music in <span>SLC</span></a>
     <nav class="nav" aria-label="Site">
       <a href="index.html" aria-current="page">Calendar</a>
       <a href="#for-you">For you</a>
@@ -27,6 +27,11 @@
   <section class="hero">
     <p>Live music across Salt Lake County, gathered nightly from venue calendars, ticket sites, promoter emails and readers like you.</p>
     <p class="demo-note" id="demo-note" hidden>These are sample listings with made-up band names at real venues. Connect the database in <span class="mono">config.js</span> to show real shows.</p>
+  </section>
+
+  <section class="tonight" id="tonight" aria-labelledby="tonight-title" hidden>
+    <h2 class="section-title" id="tonight-title">Tonight</h2>
+    <div id="tonight-list"></div>
   </section>
 
   <section class="taste" id="for-you" aria-labelledby="taste-title">
@@ -59,6 +64,7 @@
     <div class="notice err" id="taste-error" hidden></div>
   </section>
 
+  <h2 class="section-title" id="calendar-title">Coming up</h2>
   <section class="filters" aria-label="Filters">
     <div class="filter-row">
       <label class="sr-only" for="q">Search shows</label>

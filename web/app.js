@@ -8,6 +8,7 @@
     { q: "", venue: "", when: "all", genres: [], allAges: false, free: false, onlyMatches: false },
     S.store.get(PREFS, {}),
   );
+  if (state.when === "tonight") state.when = "all"; // tonight has its own section above the calendar
   let events = [];
   let genres = [];
 
@@ -16,13 +17,13 @@
 
   // ---------- date ranges in Salt Lake time ----------
   const WHEN = [
-    ["tonight", "Tonight"], ["weekend", "This weekend"], ["week", "Next 7 days"], ["month", "Next 30 days"], ["all", "Everything"],
+    ["weekend", "This weekend"], ["week", "Next 7 days"], ["month", "Next 30 days"], ["all", "Everything"],
   ];
   function inRange(e) {
     const today = S.dayKey(Date.now());
     const k = S.dayKey(e.starts_at);
+    if (k === today) return false; // tonight's shows are listed in their own section
     switch (state.when) {
-      case "tonight": return k === today;
       case "week": return k <= S.addDays(today, 6);
       case "month": return k <= S.addDays(today, 29);
       case "weekend": {
@@ -81,8 +82,27 @@
     </article>`;
   }
 
+  function dayHtml(k, shows) {
+    // Matches float to the top of each night when a profile is connected
+    if (T.profile) shows.sort((a, b) => (b._match?.score || 0) - (a._match?.score || 0) || a.starts_at.localeCompare(b.starts_at));
+    const d = shows[0].starts_at;
+    const rel = relLabel(k);
+    return `<section class="day" aria-label="${S.esc(S.fmtLong(d))}">
+        <div class="stub"><span class="dow">${S.esc(S.fmtDow(d))}</span><span class="num">${S.esc(S.fmtNum(d))}</span><span class="mon">${S.esc(S.fmtMon(d))}</span>${rel ? `<span class="rel">${rel}</span>` : ""}</div>
+        <div class="shows">${shows.map(showHtml).join("")}</div>
+      </section>`;
+  }
+
+  function renderTonight() {
+    const today = S.dayKey(Date.now());
+    const shows = events.filter((e) => S.dayKey(e.starts_at) === today).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+    $("tonight").hidden = !shows.length;
+    $("tonight-list").innerHTML = shows.length ? dayHtml(today, shows) : "";
+  }
+
   function render() {
     for (const e of events) e._match = T.score(e);
+    renderTonight();
     let list = events.filter(matches);
     const n = list.length;
     $("count").textContent = `${n} show${n === 1 ? "" : "s"}`;
@@ -97,16 +117,7 @@
       byDay.get(k).push(e);
     }
     let html = "";
-    for (const [k, shows] of byDay) {
-      // Matches float to the top of each night when a profile is connected
-      if (T.profile) shows.sort((a, b) => (b._match?.score || 0) - (a._match?.score || 0) || a.starts_at.localeCompare(b.starts_at));
-      const d = shows[0].starts_at;
-      const rel = relLabel(k);
-      html += `<section class="day" aria-label="${S.esc(S.fmtLong(d))}">
-        <div class="stub"><span class="dow">${S.esc(S.fmtDow(d))}</span><span class="num">${S.esc(S.fmtNum(d))}</span><span class="mon">${S.esc(S.fmtMon(d))}</span>${rel ? `<span class="rel">${rel}</span>` : ""}</div>
-        <div class="shows">${shows.map(showHtml).join("")}</div>
-      </section>`;
-    }
+    for (const [k, shows] of byDay) html += dayHtml(k, shows);
     $("list").innerHTML = html;
   }
 

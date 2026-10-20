@@ -59,11 +59,12 @@ body::before {
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
   background: var(--surface); border-bottom: 1px solid var(--line);
 }
-.site-header .wrap { display: flex; align-items: center; gap: 16px; padding-block: 10px; flex-wrap: wrap; }
+.site-header .wrap { display: flex; align-items: center; gap: 16px; padding-block: 12px; flex-wrap: wrap; }
 .wordmark {
-  font: 800 30px/0.9 var(--font-display); letter-spacing: 0.01em; text-transform: uppercase;
-  text-decoration: none; display: flex; align-items: baseline; gap: 6px;
+  font: 800 clamp(40px, 7vw, 58px)/0.85 var(--font-display); letter-spacing: 0.005em; text-transform: uppercase;
+  text-decoration: none; display: flex; align-items: baseline; gap: 0.18em; color: var(--ink);
 }
+.wordmark span { color: var(--accent); }
 .wordmark small { font: 600 11px/1 var(--font-body); letter-spacing: 0.12em; color: var(--muted); }
 .nav { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
 .nav a {
@@ -140,7 +141,7 @@ body::before {
 /* ---------- show list ---------- */
 .day { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 16px; padding-block: 18px; border-top: 2px solid var(--ink); }
 .day:first-child { border-top-width: 2px; }
-.stub { position: sticky; top: 76px; align-self: start; text-transform: uppercase; }
+.stub { position: sticky; top: 92px; align-self: start; text-transform: uppercase; }
 .stub .dow { font: 700 13px/1 var(--font-body); letter-spacing: 0.14em; color: var(--accent); }
 .stub .num { font: 800 64px/0.85 var(--font-display); display: block; margin-top: 4px; }
 .stub .mon { font: 700 15px/1 var(--font-display); letter-spacing: 0.08em; color: var(--muted); }
@@ -226,6 +227,9 @@ td.err { white-space: normal; color: var(--danger); min-width: 240px; }
 .pill.ok { background: var(--lake-soft); color: var(--lake); }
 .pill.bad { border: 1px solid var(--danger); color: var(--danger); }
 .section-title { font: 800 30px/1 var(--font-display); text-transform: uppercase; margin: 28px 0 12px; }
+.tonight .section-title { color: var(--accent); }
+.tonight .day { border-top-color: var(--accent); }
+#calendar-title { margin-bottom: 0; }
 
 @media (max-width: 640px) {
   .day { grid-template-columns: 1fr; gap: 10px; }
