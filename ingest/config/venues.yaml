@@ -207,6 +207,14 @@ venues:
     age_policy: 21_plus
     strategy: feeds_only
 
+  - slug: the-pearl-on-main
+    name: The Pearl on Main
+    aliases: [Pearl on Main]
+    address: 7711 S Main St
+    city: Midvale
+    age_policy: varies
+    strategy: feeds_only   # shows come from the 24tix feed
+
 # Add more here as you find them: breweries, coffee shops, and bars with live music
 # usually post on Instagram or send flyers, which is what the musicinslc inbox and the
 # public submit form are for.

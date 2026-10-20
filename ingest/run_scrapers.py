@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import traceback
 
@@ -82,8 +83,10 @@ def main() -> int:
             print(f"ok   {source:38} {method:28} found={found} new={inserted} updated={updated}", file=sys.stderr)
         except Exception as e:  # one broken venue must not stop the rest
             failures += 1
-            db.log_run(source, False, error=f"{type(e).__name__}: {e}")
-            print(f"FAIL {source:38} {type(e).__name__}: {e}", file=sys.stderr)
+            # Strip query strings so API keys in request URLs never reach the database or logs
+            msg = re.sub(r"\?\S*", "?…", f"{type(e).__name__}: {e}")
+            db.log_run(source, False, error=msg)
+            print(f"FAIL {source:38} {msg}", file=sys.stderr)
             if settings.DRY_RUN:
                 traceback.print_exc()
 
