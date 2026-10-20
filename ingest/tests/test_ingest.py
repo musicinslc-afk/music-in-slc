@@ -41,6 +41,41 @@ class TestJsonLd(unittest.TestCase):
         self.assertEqual((s.price_min, s.price_max), (22.0, 25.0))
 
 
+class TestMicrodata(unittest.TestCase):
+    def setUp(self):
+        html = (HERE / "fixtures" / "24tix_event.html").read_text()
+        url = "https://www.24tix.com/event/bwdgcmgicrc77lh5edang63i4y"
+        self.shows = jsonld.parse(html, url, "venue:kilby-court")
+
+    def test_reads_main_event_and_skips_sidebar_teasers(self):
+        self.assertEqual(len(self.shows), 1)
+        s = self.shows[0]
+        self.assertEqual(s.title, "Kilby Court Halloween")
+        self.assertEqual(s.artists, ["Kilby Court Halloween", "BLEACHER BABE", "Stage Fright", "CAMO"])
+        self.assertEqual(s.starts_at.astimezone(TZ).strftime("%Y-%m-%d %H:%M"), "2026-10-23 19:00")
+
+    def test_venue_price_age(self):
+        s = self.shows[0]
+        self.assertEqual(s.venue_name, "Kilby Court")
+        self.assertEqual(s.city, "Salt Lake City")
+        self.assertEqual((s.price_min, s.price_max), (12.15, 13.99))
+        self.assertEqual(s.age_restriction, "all_ages")
+        self.assertEqual(s.ticket_url, "https://www.24tix.com/event/bwdgcmgicrc77lh5edang63i4y")
+        self.assertIsNone(s.description)  # venue rules are not a show description
+
+    def test_event_links_are_deduplicated(self):
+        from slclive.sources import venue_page
+        html = ('<a href="https://www.24tix.com/event/abc123">x</a><a href="https://www.24tix.com/events/abc123">y</a>'
+                '<a href="https://www.axs.com/events/1/z">z</a><a href="/about">a</a>')
+        self.assertEqual(venue_page.event_links(html, "https://kilbycourt.com/"),
+                         ["https://www.24tix.com/event/abc123"])
+
+    def test_passes_are_not_shows(self):
+        s = Show(title="Golden Ticket 2027", starts_at=parse_dt("2027-01-01"),
+                 venue_name="Various Locations in Downtown SLC", source="x")
+        self.assertIsNone(resolve(s))
+
+
 class TestNormalize(unittest.TestCase):
     def test_split_artists(self):
         self.assertEqual(split_artists("S&S Presents: Mt. Joy with Lily Seabird, Local Natives"),

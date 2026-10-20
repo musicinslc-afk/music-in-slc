@@ -80,12 +80,97 @@ def _age(text: Optional[str]) -> Optional[str]:
     return None
 
 
+# ---------------------------------------------------------------------------
+# Microdata (itemscope / itemprop attributes), used by 24tix and many older sites.
+# Each item is converted into the same dict shape as JSON-LD so one code path handles both.
+# ---------------------------------------------------------------------------
+def _owner(el):
+    p = el.parent
+    while p is not None and not p.has_attr("itemscope"):
+        p = p.parent
+    return p
+
+
+def _md_value(el):
+    if el.has_attr("itemscope"):
+        return _md_item(el)
+    if el.name == "meta":
+        return el.get("content")
+    if el.name in ("a", "link"):
+        return el.get("href")
+    if el.name in ("img", "source"):
+        return el.get("src")
+    if el.name == "time" and el.get("datetime"):
+        return el.get("datetime")
+    return el.get_text(" ", strip=True)
+
+
+def _md_item(scope) -> dict:
+    item: dict = {"@type": (scope.get("itemtype") or "").rstrip("/").rsplit("/", 1)[-1]}
+    for el in scope.find_all(attrs={"itemprop": True}):
+        if _owner(el) is not scope:
+            continue
+        for prop in el["itemprop"].split():
+            item.setdefault(prop, []).append(_md_value(el))
+    return item
+
+
+# Venue rules that ticket sites put in the description field; not useful as a show blurb
+_POLICY = re.compile(r"no weapons|valid tickets are sold|no outside (food|beverages)|bag policy", re.I)
+
+
+def _microdata_events(soup) -> list[dict]:
+    events = []
+    for scope in soup.find_all(attrs={"itemscope": True, "itemtype": re.compile(r"event/?$", re.I)}):
+        raw = _md_item(scope)
+        start = next((v for v in raw.get("startDate", []) if v), None)
+        name = next((v for v in raw.get("name", []) if isinstance(v, str) and v), None)
+        if not start or not name:
+            continue  # sidebar teasers and lists of other shows have no start time
+        locations = [v for v in raw.get("location", []) if isinstance(v, dict)]
+        loc = next((v for v in locations if v.get("address")), locations[0] if locations else None)
+        location = None
+        if loc:
+            addr = next((a for a in loc.get("address", []) if isinstance(a, dict)), {})
+            location = {
+                "name": next((v for v in loc.get("name", []) if isinstance(v, str) and v), None),
+                "address": {"addressLocality": next(iter(addr.get("addressLocality", [])), None)},
+            }
+        performers = []
+        for p in raw.get("performer", []):
+            text = p.get("name", [""])[0] if isinstance(p, dict) else p
+            performers += [s.strip() for s in re.split(r",|\s+/\s+", text or "") if s.strip()]
+        if name.lower() not in (p.lower() for p in performers):
+            performers.insert(0, name)
+        offers = [{"price": (o.get("price") or [None])[0]} for o in raw.get("offers", []) if isinstance(o, dict)]
+        ages = [a for o in raw.get("offers", []) if isinstance(o, dict) for a in o.get("typicalAgeRange", [])]
+        ages += raw.get("typicalAgeRange", [])
+        events.append({
+            "@type": "Event",
+            "name": name,
+            "startDate": start,
+            "doorTime": next(iter(raw.get("doorTime", [])), None),
+            "location": location,
+            "performer": performers,
+            "offers": offers,
+            "typicalAgeRange": next((a for a in ages if a), None),
+            "image": next(iter(raw.get("image", [])), None),
+            "url": next((u for u in raw.get("url", []) if isinstance(u, str)), None),
+            "description": next((d for d in raw.get("description", [])
+                                 if isinstance(d, str) and d and not _POLICY.search(d)), None),
+            "eventStatus": next(iter(raw.get("eventStatus", [])), None),
+        })
+    return events
+
+
 def parse(html: str, page_url: str, source: str, default_venue: Optional[str] = None) -> list[Show]:
     soup = BeautifulSoup(html, "html.parser")
     shows: list[Show] = []
     seen: set[tuple] = set()
-    for tag in soup.find_all("script", type=lambda t: t and "ld+json" in t):
-        data = _loads(tag.string or tag.get_text() or "")
+    blocks = [_loads(tag.string or tag.get_text() or "")
+              for tag in soup.find_all("script", type=lambda t: t and "ld+json" in t)]
+    blocks.append(_microdata_events(soup))
+    for data in blocks:
         if data is None:
             continue
         for ev in _walk(data):

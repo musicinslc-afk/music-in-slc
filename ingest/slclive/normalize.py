@@ -171,11 +171,17 @@ def in_salt_lake_county(city: Optional[str]) -> bool:
 # ---------------------------------------------------------------------------
 # Final pass
 # ---------------------------------------------------------------------------
+# Ticket sites list passes, gift cards and parking next to real shows
+_NOT_A_SHOW = re.compile(
+    r"\b(golden ticket|gift cards?|gift certificates?|season pass|annual pass|membership|parking|"
+    r"(all ages|21\+|vip) pass|merch(andise)? only|presale registration)\b", re.I)
+
+
 def resolve(show: Show, venues: Iterable[Venue] | None = None) -> Optional[Show]:
     """Clean a show, attach its venue, fill genres and fingerprint. Returns None to drop it."""
     show.title = clean(show.title) or ""
     show.venue_name = clean(show.venue_name) or ""
-    if not show.title or not show.starts_at:
+    if not show.title or not show.starts_at or _NOT_A_SHOW.search(show.title):
         return None
     if not show.artists:
         show.artists = split_artists(show.title)

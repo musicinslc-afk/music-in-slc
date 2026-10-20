@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Callable, Optional
 from urllib.parse import urljoin
 
@@ -38,6 +38,42 @@ def page_text(html: str, base_url: str) -> str:
     return re.sub(r"[ \t]+", " ", text).strip()
 
 
+# Ticket sites whose event pages carry structured event data and allow crawling.
+# Venue calendars link to these, so the scraper follows the links and reads each event page.
+# (AXS sits behind a bot challenge and Eventlive has no structured data, so they're not listed.)
+FOLLOW_LINKS = [
+    (re.compile(r"^https?://(?:www\.)?24tix\.com/events?/([A-Za-z0-9]+)"), "https://www.24tix.com/event/{}"),
+]
+MAX_FOLLOWED_PER_VENUE = 80
+_followed: dict[str, list[Show]] = {}   # event pages already read this run, shared across venues
+
+
+def event_links(html: str, base_url: str) -> list[str]:
+    soup = BeautifulSoup(html, "html.parser")
+    found: list[str] = []
+    for a in soup.find_all("a", href=True):
+        href = urljoin(base_url, a["href"])
+        for pattern, canonical in FOLLOW_LINKS:
+            m = pattern.match(href)
+            if m:
+                url = canonical.format(m.group(1))
+                if url not in found:
+                    found.append(url)
+    return found[:MAX_FOLLOWED_PER_VENUE]
+
+
+def follow(links: list[str], source: str) -> list[Show]:
+    shows: list[Show] = []
+    for url in links:
+        if url not in _followed:
+            try:
+                _followed[url] = jsonld.parse(fetch.get(url).text, url, source=source)
+            except Exception:
+                _followed[url] = []  # one dead ticket link shouldn't sink the venue
+        shows.extend(replace(s, source=source) for s in _followed[url])
+    return shows
+
+
 def scrape(venue: Venue, previous_hash: Callable[[str], Optional[str]]) -> PageResult:
     result = PageResult()
     source = f"venue:{venue.slug}"
@@ -49,6 +85,12 @@ def scrape(venue: Venue, previous_hash: Callable[[str], Optional[str]]) -> PageR
         if found:
             result.shows.extend(found)
             result.method = "jsonld"
+            continue
+        links = event_links(html, url)
+        followed = follow(links, source) if links else []
+        if followed:
+            result.shows.extend(followed)
+            result.method = f"ticket links ({len(links)} pages)"
         else:
             texts.append((url, page_text(html, url)))
 
