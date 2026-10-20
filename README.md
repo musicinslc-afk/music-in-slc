@@ -28,7 +28,12 @@ Every source produces the same show record. Each show gets a fingerprint (venue,
 - Supabase project **musicinslc** created (organization musicinslc, free plan, East US). Project URL: `https://bamrbmxakgdhczzcprzt.supabase.co`.
 - `supabase/schema.sql` has been run; all tables have row-level security on. A public visitor can read published shows but cannot publish a show directly.
 - `web/config.js` has the project URL and public anon key filled in.
-- Still to do: GitHub repository and secrets (including the service_role key), Gmail app password, API keys, first run, admin sign-in.
+- GitHub repository **musicinslc-afk/music-in-slc** created (public) with all files; GitHub Pages is on and the site is live at https://musicinslc-afk.github.io/music-in-slc/.
+- Repository secrets SUPABASE_URL and SUPABASE_SERVICE_KEY and variables SITE_URL and CONTACT_EMAIL are set. Supabase sign-in URLs point at the live site.
+- The 24tix calendar feed supplies Kilby Court, Urban Lounge, Metro Music Hall, International Bar, The DLC and The Pearl on Main.
+- Secrets TICKETMASTER_API_KEY, ANTHROPIC_API_KEY and INBOX_APP_PASSWORD are set. Ticketmaster, the inbox reader and the AI venue reader all run cleanly; the calendar held 458 upcoming published shows after the first full run.
+- musicinslc@gmail.com is an admin.
+- Still to do: Last.fm key (genre tags and similar-artist recommendations), optional Spotify client ID, and venue entries for Kingsbury Hall, Sandy Amphitheater, Rice-Eccles Stadium, Capitol Theatre and Granary Live.
 
 ## Setup
 
@@ -88,7 +93,7 @@ Edit `web/config.js` with the Supabase URL and anon key, plus the Spotify client
 
 ### 7. Check the venue list
 
-`ingest/config/venues.yaml` lists 22 Salt Lake County venues with their best-known calendar pages. Open each URL in a browser before launch; venue sites move often. Anything that fails shows up red in **Source health** with the error. To add a venue, copy an entry, give it a unique `slug`, and add any alternate spellings ticket sites use under `aliases` so duplicates merge.
+`ingest/config/venues.yaml` lists 24 Salt Lake County venues with their best-known calendar pages. Open each URL in a browser before launch; venue sites move often. Anything that fails shows up red in **Source health** with the error. To add a venue, copy an entry, give it a unique `slug`, and add any alternate spellings ticket sites use under `aliases` so duplicates merge.
 
 Strategies:
 - `auto` reads JSON-LD event data from the page (most ticketing widgets publish it), then an iCal feed if you set `ics_url`, then falls back to Claude reading the page.
@@ -113,7 +118,7 @@ The scraper identifies itself with your site and contact email, obeys `robots.tx
 ```bash
 cd ingest
 pip install -r requirements.txt
-python -m unittest discover -s tests              # 18 tests, no network needed
+python -m unittest discover -s tests              # 25 tests, no network needed
 DRY_RUN=1 python run_scrapers.py --only kilby-court   # print shows without writing
 ```
 
