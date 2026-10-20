@@ -215,6 +215,45 @@ venues:
     age_policy: varies
     strategy: feeds_only   # shows come from the 24tix feed
 
+  - slug: kingsbury-hall
+    name: Kingsbury Hall
+    aliases: [Kingsbury Hall at the University of Utah]
+    address: 1395 E Presidents Cir
+    city: Salt Lake City
+    age_policy: all_ages
+    strategy: feeds_only
+
+  - slug: sandy-amphitheater
+    name: Sandy Amphitheater
+    aliases: [Sandy Amphitheatre]
+    address: 1245 E 9400 S
+    city: Sandy
+    age_policy: all_ages
+    strategy: feeds_only
+
+  - slug: rice-eccles-stadium
+    name: Rice-Eccles Stadium
+    aliases: [Rice Eccles Stadium]
+    address: 451 S 1400 E
+    city: Salt Lake City
+    age_policy: all_ages
+    strategy: feeds_only
+
+  - slug: capitol-theatre
+    name: Capitol Theatre
+    aliases: [Janet Quinney Lawson Capitol Theatre, Capitol Theater]
+    address: 50 W 200 S
+    city: Salt Lake City
+    age_policy: all_ages
+    strategy: feeds_only
+
+  - slug: granary-live
+    name: Granary Live
+    address: 742 S 500 W
+    city: Salt Lake City
+    age_policy: varies
+    strategy: feeds_only
+
 # Add more here as you find them: breweries, coffee shops, and bars with live music
 # usually post on Instagram or send flyers, which is what the musicinslc inbox and the
 # public submit form are for.
