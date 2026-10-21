@@ -316,6 +316,8 @@ class TestVenueParsers(unittest.TestCase):
         medium = by["Medium Build Presents The King of Having Fun on Tour"]
         self.assertEqual(medium.description, "Sold out.")
         self.assertEqual(medium.ticket_url, "https://tixr.com/e/196036")
+        self.assertEqual(medium.artists, ["Medium Build"])
+        self.assertEqual(by["Raynes and David Wimbish & The Collection"].artists[0], "Raynes")
         burndown = by["BurnDown"]
         self.assertEqual(burndown.artists, ["BurnDown", "Febuary", "Knumears", "Soap Box Derby"])
         self.assertEqual(burndown.doors_at, datetime(2026, 10, 25, 18, 0, tzinfo=TZ))

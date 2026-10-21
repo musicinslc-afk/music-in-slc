@@ -50,6 +50,20 @@ def _artist_list(text: str) -> list[str]:
     return [p.title() if p.isupper() else p for p in parts]
 
 
+def billed_headliner(title: str) -> str:
+    """The headlining act in a marketing title, so the show merges with ticket-site listings:
+    'Shwayze – The Nostalgia Tour', 'Amtrac (Live Set)', 'Medium Build Presents The King of
+    Having Fun on Tour', 'Raynes and David Wimbish & The Collection', 'Yheti b2b Toadface'."""
+    t = re.sub(r"\s*\([^)]*\)", "", title)
+    t = re.sub(r"\s*[-–—]\s*ages?\s*\d+\+?.*$", "", t, flags=re.I)
+    m = re.match(r"(.+?)\s+presents?\b:?\s+", t, re.I)
+    if m:
+        return m.group(1).strip()
+    t = re.split(r"\s*:\s+|\s+[-–—|]\s+", t, maxsplit=1)[0]
+    t = re.split(r"\s+b2b\s+|\s+and\s+|\s+&\s+(?!the\b)|\s+w/\s+|\s+with\s+", t, maxsplit=1, flags=re.I)[0]
+    return t.strip() or title
+
+
 # ---------------------------------------------------------------------------
 # Soundwell (soundwellslc.com/events/): WordPress list, one <li> per show, no year shown
 # ---------------------------------------------------------------------------
@@ -74,7 +88,7 @@ def soundwell(html: str, url: str, venue_name: str, source: str, today: Optional
         ticket = urljoin(url, link["href"]) if link and link.get("href") else None
         sold_out = bool(re.match(r"\s*sold\s*out", name, re.I)) or bool(card.select_one(".sold-out"))
         title = re.sub(r"^\s*sold\s*out\s*[:!-]*\s*", "", name, flags=re.I)
-        headliner = re.split(r"\s*:\s*|\s+presents\s+", title, maxsplit=1, flags=re.I)[0].strip()
+        headliner = billed_headliner(title)
         doors_at = datetime.combine(d, doors, TZ) if doors else None
         shows.append(Show(
             title=title,
@@ -82,7 +96,7 @@ def soundwell(html: str, url: str, venue_name: str, source: str, today: Optional
             starts_at=doors_at or datetime.combine(d, time(19, 0), TZ),
             doors_at=doors_at,
             venue_name=venue_name,
-            artists=[headliner, *_artist_list(support)] if support else [],
+            artists=[headliner, *_artist_list(support)],
             description="Sold out." if sold_out else None,
             ticket_url=ticket,
             source_url=url,
