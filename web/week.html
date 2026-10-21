@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>This Week · Music in SLC</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Every live music show in Salt Lake County this week, day by day.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap wide">
+    <a class="wordmark" href="index.html">Music in <span>SLC</span></a>
+    <nav class="nav" aria-label="Site">
+      <a href="index.html">Calendar</a>
+      <a href="week.html" aria-current="page">This week</a>
+      <a class="cta" href="submit.html">Submit a show</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap wide">
+  <div class="week-head">
+    <div>
+      <h1 id="week-title">This week</h1>
+      <p class="week-range" id="week-range"></p>
+    </div>
+    <nav class="week-nav" aria-label="Change week">
+      <button class="btn" type="button" id="prev-week">← Previous week</button>
+      <button class="btn" type="button" id="this-week">This week</button>
+      <button class="btn" type="button" id="next-week">Next week →</button>
+    </nav>
+  </div>
+  <p class="demo-note" id="demo-note" hidden>These are sample listings with made-up band names at real venues.</p>
+  <div class="filter-row" style="padding-block: 0 16px">
+    <button class="chip" type="button" id="f-allages" aria-pressed="false">All ages</button>
+    <button class="chip" type="button" id="f-free" aria-pressed="false">Free</button>
+    <span class="count" id="count" aria-live="polite"></span>
+  </div>
+  <section class="week-grid" id="week" aria-label="Shows by day"><p class="empty">Loading shows…</p></section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap wide">
+    <p>Times are Mountain time. Always confirm with the venue before you go.</p>
+    <p>Playing a show? <a href="submit.html">Submit it</a> or email the flyer to <span class="mono" id="inbox-addr">musicinslc@gmail.com</span>.</p>
+  </div>
+</footer>
+
+<script src="config.js"></script>
+<script src="data.js"></script>
+<script src="week.js"></script>
+</body>
+</html>

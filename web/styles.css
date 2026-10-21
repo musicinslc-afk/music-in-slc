@@ -87,6 +87,70 @@ body::before {
   color: var(--warn); font-size: 14px; max-width: 70ch;
 }
 
+/* ---------- hero banner (Waveform Ridge) ---------- */
+.banner {
+  position: relative; overflow: hidden; background: #0E1A2B; color: #F4EDE1;
+  padding-block: clamp(40px, 6vw, 80px) clamp(150px, 14vw, 260px);
+}
+.banner-ridge { position: absolute; left: 0; bottom: 0; width: 100%; height: auto; display: block; }
+.banner-copy { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+.banner-eyebrow {
+  margin: 0; font: 800 clamp(14px, 1.4vw, 18px)/1 var(--font-display); letter-spacing: 0.28em;
+  text-transform: uppercase; color: #FF6B35;
+}
+.banner h1 {
+  margin: 0; font: 800 clamp(64px, 10vw, 132px)/0.88 var(--font-display); text-transform: uppercase;
+  letter-spacing: 0.005em; color: #F4EDE1;
+}
+.banner-tag { margin: 2px 0 0; font-size: clamp(18px, 1.8vw, 22px); color: #C9D3E0; }
+.banner-cta {
+  margin-top: 8px; display: inline-flex; align-items: center; min-height: 48px; padding: 0 28px;
+  border-radius: 999px; background: #FF6B35; color: #0E1A2B; font-weight: 700; font-size: 18px; text-decoration: none;
+}
+.banner-cta:hover { background: #FF8352; }
+.banner-cta:focus-visible { outline-color: #F4EDE1; }
+main > .demo-note { margin-top: 20px; }
+
+/* ---------- week view ---------- */
+.wrap.wide { max-width: 1360px; }
+.week-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; padding-block: 28px 18px; }
+.week-head h1 { font: 800 clamp(44px, 8vw, 80px)/0.88 var(--font-display); text-transform: uppercase; margin: 0; }
+.week-range { margin: 8px 0 0; font: 500 14px var(--font-mono); color: var(--muted); }
+.week-nav { display: flex; gap: 8px; flex-wrap: wrap; }
+.week-nav .btn { min-height: 44px; }
+.week-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; align-items: start; }
+.wday { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; border-top: 2px solid var(--ink); padding-top: 10px; }
+.wday.today { border-top-color: var(--accent); }
+.wday-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; text-transform: uppercase; }
+.wday-head .rel { flex-basis: 100%; order: -1; font: 600 11px/1 var(--font-body); letter-spacing: 0.12em; color: var(--accent); }
+.wday-head .dow { font: 700 13px/1 var(--font-body); letter-spacing: 0.14em; color: var(--accent); }
+.wday-head .num { font: 800 40px/0.85 var(--font-display); }
+.wday-head .mon { font: 700 14px/1 var(--font-display); letter-spacing: 0.08em; color: var(--muted); }
+.wday-head .n { margin-left: auto; font: 500 12px var(--font-mono); color: var(--muted); text-transform: none; }
+.wshow {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 11px;
+  display: grid; gap: 3px; min-width: 0;
+}
+.wshow.cancelled { opacity: 0.6; }
+.wshow.cancelled .wtitle { text-decoration: line-through; }
+.wshow .wtime { font: 500 12px/1.2 var(--font-mono); color: var(--muted); }
+.wshow .wtitle { font: 700 18px/1.05 var(--font-display); text-transform: uppercase; margin: 0; overflow-wrap: anywhere; }
+.wshow .wtitle a { text-decoration: none; }
+.wshow .wtitle a:hover { text-decoration: underline; }
+.wshow .wwhere { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.wshow .wmeta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+.wshow .wmeta .free { color: var(--lake); font-weight: 700; }
+.wshows { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
+.wday .none { font-size: 13px; color: var(--muted); padding: 6px 0; }
+@media (max-width: 960px) {
+  .week-grid { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .wday { padding-block: 12px 14px; }
+  .wday-head .num { font-size: 34px; }
+  .wday-head .rel { flex-basis: auto; order: 0; color: var(--muted); }
+  .wday-head .rel:empty, .wday-head .rel.blank { display: none; }
+  .wshows { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+}
+
 /* ---------- filters ---------- */
 .filters { display: grid; gap: 12px; padding-block: 18px; }
 .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
