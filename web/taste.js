@@ -1,4 +1,4 @@
-// "For you": builds a listening profile from Spotify, Last.fm, or artists the visitor types in,
+// "For you": builds a listening profile from Last.fm or artists the visitor types in,
 // then scores each show. Everything stays in the visitor's browser.
 (function () {
   const { cfg, store } = window.SLC;
@@ -104,82 +104,6 @@
     return p;
   }
 
-  // ---------- Spotify (PKCE, no server needed) ----------
-  const SP_AUTH = "https://accounts.spotify.com/authorize";
-  const SP_TOKEN = "https://accounts.spotify.com/api/token";
-  const redirectUri = () => location.origin + location.pathname;
-
-  function b64url(bytes) {
-    return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  }
-  async function spotifyLogin() {
-    if (!cfg.spotifyClientId) throw new Error("Spotify isn't set up on this site yet.");
-    const verifier = b64url(crypto.getRandomValues(new Uint8Array(48)));
-    const challenge = b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
-    const state = b64url(crypto.getRandomValues(new Uint8Array(12)));
-    try { sessionStorage.setItem("slc.sp", JSON.stringify({ verifier, state })); } catch {
-      throw new Error("Your browser is blocking site storage, which Spotify sign-in needs.");
-    }
-    const q = new URLSearchParams({
-      client_id: cfg.spotifyClientId, response_type: "code", redirect_uri: redirectUri(),
-      code_challenge_method: "S256", code_challenge: challenge, state,
-      scope: "user-top-read user-follow-read",
-    });
-    location.assign(`${SP_AUTH}?${q}`);
-  }
-
-  async function spotifyCallback() {
-    const params = new URLSearchParams(location.search);
-    const code = params.get("code"), state = params.get("state"), err = params.get("error");
-    if (!code && !err) return null;
-    history.replaceState(null, "", redirectUri());
-    if (err) throw new Error(err === "access_denied" ? "Spotify sign-in was cancelled." : `Spotify said: ${err}`);
-    let saved = {};
-    try { saved = JSON.parse(sessionStorage.getItem("slc.sp") || "{}"); sessionStorage.removeItem("slc.sp"); } catch { /* ignore */ }
-    if (!saved.verifier || saved.state !== state) throw new Error("Spotify sign-in expired. Try again.");
-    const r = await fetch(SP_TOKEN, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: cfg.spotifyClientId, grant_type: "authorization_code", code,
-        redirect_uri: redirectUri(), code_verifier: saved.verifier,
-      }),
-    });
-    const tok = await r.json();
-    if (!tok.access_token) throw new Error("Spotify sign-in failed. This site's Spotify app may not have you on its user list yet.");
-    return fromSpotify(tok.access_token);
-  }
-
-  async function fromSpotify(token) {
-    await loadRules();
-    const get = async (path) => {
-      const r = await fetch(`https://api.spotify.com/v1/${path}`, { headers: { Authorization: `Bearer ${token}` } });
-      if (r.status === 403) throw new Error("Spotify hasn't approved this account for the site yet. Use Last.fm or type in your favorites instead.");
-      if (!r.ok) throw new Error(`Spotify request failed (${r.status})`);
-      return r.json();
-    };
-    const [mid, long, follows] = await Promise.all([
-      get("me/top/artists?limit=50&time_range=medium_term"),
-      get("me/top/artists?limit=50&time_range=long_term").catch(() => ({ items: [] })),
-      get("me/following?type=artist&limit=50").catch(() => ({ artists: { items: [] } })),
-    ]);
-    const p = emptyProfile("spotify", "Spotify");
-    const lists = [mid.items || [], long.items || [], follows.artists?.items || []];
-    lists.forEach((items, li) => items.forEach((a, i) => {
-      const w = (li === 0 ? 1 : 0.8) - i / items.length / 2;
-      addArtist(p, a.name, w);
-      if (Array.isArray(a.genres)) addGenres(p, a.genres, w * 0.5);
-    }));
-    if (!Object.keys(p.artists).length) throw new Error("Spotify didn't return any top artists for this account yet.");
-    if (cfg.lastfmApiKey && Object.keys(p.genres).length < 2) {
-      const top = Object.values(p.artists).sort((a, b) => b.weight - a.weight).slice(0, 10);
-      const tagLists = await Promise.all(top.map((a) => lastfm("artist.gettoptags", { artist: a.name }).catch(() => null)));
-      tagLists.forEach((t) => addGenres(p, (t?.toptags?.tag || []).slice(0, 5).map((x) => x.name), 0.6));
-    }
-    await expandSimilar(p);
-    return p;
-  }
-
   // ---------- scoring ----------
   function score(show) {
     if (!profile) return null;
@@ -226,7 +150,7 @@
 
   window.SLCTaste = {
     get profile() { return profile; }, save, score, summary,
-    fromLastfm, fromManual, spotifyLogin, spotifyCallback,
-    hasSpotify: () => Boolean(cfg.spotifyClientId), hasLastfm: () => Boolean(cfg.lastfmApiKey),
+    fromLastfm, fromManual,
+    hasLastfm: () => Boolean(cfg.lastfmApiKey),
   };
 })();

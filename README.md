@@ -6,7 +6,7 @@ A concert calendar for every live music show in Salt Lake County.
 - **Reads the musicinslc@gmail.com inbox** every hour, including flyer images, and turns show announcements into listings.
 - **Takes submissions** from the public through a form, with an admin review queue.
 - **Filters** by genre, date, venue, all ages and free shows.
-- **Recommends** shows from Spotify, Last.fm (which covers Pandora), or artists a visitor types in.
+- **Recommends** shows from Last.fm (which covers Spotify and Pandora listeners), or artists a visitor types in.
 
 Hosting is free or nearly free: a static site on GitHub Pages, a free Supabase database, and scheduled GitHub Actions. The only metered cost is the Claude API used to read emails and venue pages that have no structured data.
 
@@ -35,7 +35,7 @@ Every source produces the same show record. Each show gets a fingerprint (venue,
 - The KRCL 90.9 community calendar (Live Music category) adds shows at bars, breweries, churches and other rooms; shows at venues not on the list wait for review, and anything outside the county is skipped.
 - Secrets TICKETMASTER_API_KEY, ANTHROPIC_API_KEY and INBOX_APP_PASSWORD are set. Ticketmaster, the inbox reader and the AI venue reader all run cleanly; the calendar held 458 upcoming published shows after the first full run.
 - musicinslc@gmail.com is an admin.
-- Spotify sign-in is not being set up, so the Connect Spotify button stays hidden; recommendations use Last.fm and typed-in artists.
+- Spotify sign-in has been removed from the site; recommendations use Last.fm and typed-in artists.
 - Still to do: Last.fm key (genre tags and similar-artist recommendations).
 
 ## Setup
@@ -66,7 +66,6 @@ To skip review for venues that email you regularly, set a repository variable `T
 | Ticketmaster | [developer.ticketmaster.com](https://developer.ticketmaster.com) (free) | Arena, amphitheatre, Depot, Eccles and other Ticketmaster shows | Strongly recommended |
 | Anthropic | [console.anthropic.com](https://console.anthropic.com) | Reading emails, flyers and venue pages without structured data | Yes, for the inbox |
 | Last.fm | [last.fm/api/account/create](https://www.last.fm/api/account/create) (free) | Genre tags for shows, similar-artist recommendations, Pandora listeners | Recommended |
-| Spotify | [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) | "Connect Spotify" button | Optional, see limits below |
 
 The Claude model defaults to `claude-haiku-5-5`. Override it with an `ANTHROPIC_MODEL` secret if you like. Venue pages are only sent to Claude when their text has changed since the last run, which keeps costs low.
 
@@ -79,7 +78,7 @@ The Claude model defaults to `claude-haiku-5-5`. Override it with an `ANTHROPIC_
 
 ### 5. Site settings
 
-Edit `web/config.js` with the Supabase URL and anon key, plus the Spotify client ID and Last.fm key if you have them. These values are safe to publish. Commit and push; the **Publish website** workflow deploys the `web/` folder.
+Edit `web/config.js` with the Supabase URL and anon key, plus the Last.fm key if you have one. These values are safe to publish. Commit and push; the **Publish website** workflow deploys the `web/` folder.
 
 ### 6. First run
 
@@ -108,7 +107,7 @@ Breweries, coffee shops and bars that only post on Instagram are what the inbox 
 
 - **Typed-in artists and genres** work for everyone with no setup.
 - **Last.fm** works for anyone with a public Last.fm profile. Spotify can scrobble to Last.fm natively, and Pandora listeners can scrobble with a browser extension such as Web Scrobbler. This is the realistic way to support Pandora, which has no public developer API.
-- **Spotify** sign-in works only for a few people. In 2026 Spotify limited non-commercial developer apps to a short allowlist of users (around five), and the app owner needs Spotify Premium. Wider access requires an organization with roughly 250,000 monthly users. Add yourself and a few friends under **User Management** in the Spotify dashboard, and add both `https://your-site/` and `https://your-site/index.html` as Redirect URIs. Everyone else should use Last.fm or type their favorites. Spotify also removed its related-artists and recommendations endpoints, so similar-artist matching comes from Last.fm.
+- **Spotify** sign-in is not offered. Spotify limits non-commercial developer apps to a handful of allowlisted users, so Spotify listeners scrobble to Last.fm instead.
 
 Profiles are stored only in the visitor's browser. Nothing about a visitor's listening is sent to the database.
 

@@ -158,9 +158,8 @@
     $("taste-connect").hidden = on;
     $("manual-taste").hidden = on;
     $("taste-on").hidden = !on;
-    $("btn-spotify").hidden = !T.hasSpotify();
     $("lastfm-form").hidden = !T.hasLastfm();
-    if (!T.hasSpotify() && !T.hasLastfm()) {
+    if (!T.hasLastfm()) {
       $("taste-intro").textContent = "Tell us a few artists or genres you love and we'll flag the shows that fit.";
       $("manual-taste").open = true;
     }
@@ -185,7 +184,6 @@
       if (button) { button.disabled = false; button.textContent = label; }
     }
   }
-  $("btn-spotify").onclick = () => T.spotifyLogin().catch((e) => showTasteError(e.message));
   $("lastfm-form").onsubmit = (ev) => {
     ev.preventDefault();
     const u = $("lastfm-user").value.trim();
@@ -212,13 +210,10 @@
       update();
     });
 
-    const callback = T.spotifyCallback();
     events = await S.loadEvents();
     const venues = [...new Set(events.map((e) => e.venue_name))].sort((a, b) => a.localeCompare(b));
     $("venue").insertAdjacentHTML("beforeend", venues.map((v) => `<option>${S.esc(v)}</option>`).join(""));
     syncControls(); syncTaste(); render();
-    const fromSpotify = await callback.catch((e) => { showTasteError(e.message); return null; });
-    if (fromSpotify) { T.save(fromSpotify); syncTaste(); render(); location.hash = "for-you"; }
   } catch (err) {
     $("list").innerHTML = `<div class="empty"><strong>Shows didn't load</strong>${S.esc(err.message)}</div>`;
   }
