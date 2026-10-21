@@ -140,6 +140,21 @@ class DB:
                 return row
         return None
 
+    def retire_unseen(self, source: str, before: datetime) -> int:
+        """Hide upcoming shows that only `source` ever reported and that its latest complete
+        read no longer lists: removed from the calendar, or older duplicates of a listing the
+        source now reports differently. Returns how many were hidden."""
+        if self.dry_run:
+            return 0
+        r = self.s.patch(f"{self.base}/events", params={
+            "sources": f'cd.{{"{source}"}}', "status": "eq.published",
+            "last_seen_at": f"lt.{before.isoformat(timespec='seconds')}",
+            "starts_at": f"gt.{datetime.now(TZ).isoformat(timespec='seconds')}",
+        }, json={"status": "rejected"}, timeout=60)
+        if r.status_code >= 400:
+            raise RuntimeError(f"events update failed: {r.status_code} {r.text[:300]}")
+        return len(r.json()) if r.text else 0
+
     def upsert_show(self, show: Show) -> str:
         """Insert or merge one show. Returns 'inserted', 'updated' or 'unchanged'."""
         match = self._find_match(show)
