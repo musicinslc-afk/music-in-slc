@@ -16,8 +16,12 @@ from slclive.models import Show  # noqa: E402
 from slclive.normalize import TZ, headliner_key, load_venues, match_venue, parse_dt, resolve, split_artists  # noqa: E402
 import json  # noqa: E402
 
-from slclive.sources import jsonld, krcl, stateroom, ticketmaster  # noqa: E402
+from slclive.sources import jsonld, krcl, seatgeek, stateroom, ticketmaster, ticketsauce  # noqa: E402
+from slclive.sources.venue_parsers import hogwallow, next_date, parse_clock, soundwell  # noqa: E402
+from slclive import coverage  # noqa: E402
+from datetime import date, timedelta  # noqa: E402
 import run_email  # noqa: E402
+import run_digest  # noqa: E402
 
 
 class TestJsonLd(unittest.TestCase):
@@ -292,6 +296,130 @@ class TestKrcl(unittest.TestCase):
         titles = {s.title for s in shows if s}
         self.assertNotIn("2nd Annual Country Christmas Fundraiser Concert", titles)
         self.assertIn("American West Symphony October Concert", titles)
+
+
+class TestVenueParsers(unittest.TestCase):
+    TODAY = date(2026, 10, 21)
+
+    def test_year_rolls_over(self):
+        self.assertEqual(next_date(10, 30, self.TODAY), date(2026, 10, 30))
+        self.assertEqual(next_date(1, 5, self.TODAY), date(2027, 1, 5))
+        self.assertEqual(next_date(10, 18, self.TODAY), date(2026, 10, 18))   # a few days back: same year
+        self.assertEqual(parse_clock(" 9:30PM to 12:30AM"), datetime(1, 1, 1, 21, 30).time())
+        self.assertEqual(parse_clock("7:00 pm"), datetime(1, 1, 1, 19, 0).time())
+
+    def test_soundwell(self):
+        html = (HERE / "fixtures" / "soundwell_events.html").read_text()
+        shows = soundwell(html, "https://soundwellslc.com/events/", "Soundwell", "venue:soundwell", today=self.TODAY)
+        self.assertEqual(len(shows), 6)
+        by = {s.title: s for s in shows}
+        medium = by["Medium Build Presents The King of Having Fun on Tour"]
+        self.assertEqual(medium.description, "Sold out.")
+        self.assertEqual(medium.ticket_url, "https://tixr.com/e/196036")
+        burndown = by["BurnDown"]
+        self.assertEqual(burndown.artists, ["BurnDown", "Febuary", "Knumears", "Soap Box Derby"])
+        self.assertEqual(burndown.doors_at, datetime(2026, 10, 25, 18, 0, tzinfo=TZ))
+        self.assertEqual(by["New Constellations: It Comes In Waves Tour"].artists, ["New Constellations", "Vox Rea"])
+        resolved = resolve(by["Waterparks"], load_venues())
+        self.assertEqual(resolved.venue_slug, "soundwell")
+        self.assertEqual(resolved.fingerprint, "soundwell|2026-10-27|waterparks")
+
+    def test_hogwallow(self):
+        html = (HERE / "fixtures" / "hogwallow_upcoming.html").read_text()
+        shows = hogwallow(html, "https://thehogwallow.com/music/all-upcoming-live-music/", "The Hog Wallow Pub",
+                          "venue:hog-wallow", today=self.TODAY)
+        self.assertEqual(len(shows), 10)
+        first = shows[0]
+        self.assertEqual(first.title, "Sarah DeGraw")
+        self.assertEqual(first.starts_at, datetime(2026, 10, 21, 21, 0, tzinfo=TZ))
+        self.assertEqual(first.source_url, "https://thehogwallow.com/music/live/sarah-degraw1526.html")
+        self.assertEqual(first.raw_genres, ["Americana", "Folk"])
+        cajun = next(s for s in shows if "Cajun" in s.title)
+        self.assertEqual(cajun.title, "J-Rad Cooley & The Cajun Cowboys")
+        self.assertEqual(cajun.starts_at, datetime(2026, 10, 30, 21, 30, tzinfo=TZ))
+        self.assertEqual(next(s for s in shows if s.title == "Reggae Thursday").starts_at.date(), date(2026, 11, 5))
+        resolved = resolve(first, load_venues())
+        self.assertEqual((resolved.venue_slug, resolved.city, resolved.age_restriction),
+                         ("hog-wallow", "Cottonwood Heights", "21_plus"))
+        self.assertIn("country", resolved.genres)
+
+
+class TestTicketsauce(unittest.TestCase):
+    def test_reads_events(self):
+        data = json.loads((HERE / "fixtures" / "ticketsauce_events.json").read_text())
+        shows = ticketsauce.parse(data, "Liquid Joe's", "venue:liquid-joes")
+        by = {s.title: s for s in shows}
+        self.assertEqual(set(by), {"Stonebreed", "Friday The 13th at Liquid Joes"})
+        s = by["Stonebreed"]
+        self.assertEqual(s.starts_at, datetime(2026, 10, 23, 19, 0, tzinfo=TZ))
+        self.assertEqual(s.ticket_url, "https://liquidjoes.ticketsauce.com/e/stonebreed/tickets")
+        self.assertEqual(s.status, "published")
+        self.assertEqual(by["Friday The 13th at Liquid Joes"].status, "pending")   # not filed as a concert
+        self.assertEqual(resolve(s, load_venues()).venue_slug, "liquid-joes")
+
+
+class TestSeatGeek(unittest.TestCase):
+    def test_mapping(self):
+        e = {"short_title": "Rise Against", "datetime_local": "2026-10-18T18:30:00", "url": "https://seatgeek.com/x",
+             "venue": {"name": "The Union Event Center", "city": "Salt Lake City"},
+             "performers": [{"name": "Support", "primary": False}, {"name": "Rise Against", "primary": True, "image": "i.jpg"}]}
+        s = seatgeek.to_show(e)
+        self.assertEqual(s.artists, ["Rise Against", "Support"])
+        self.assertEqual(s.starts_at, datetime(2026, 10, 18, 18, 30, tzinfo=TZ))
+        self.assertEqual(resolve(s, load_venues()).venue_slug, "the-union-event-center")
+        tbd = seatgeek.to_show(dict(e, time_tbd=True, datetime_local="2026-12-01T03:30:00"))
+        self.assertEqual(tbd.starts_at, datetime(2026, 12, 1, 19, 0, tzinfo=TZ))
+        self.assertIsNone(seatgeek.to_show(dict(e, date_tbd=True)))
+
+
+class TestCoverage(unittest.TestCase):
+    class FakeDB:
+        def __init__(self, rows):
+            self.rows, self.logged = rows, []
+
+        def upcoming_venue_dates(self, until):
+            return [r for r in self.rows if datetime.fromisoformat(r["starts_at"]) <= until]
+
+        def log_run(self, source, ok, found=0, error=None, **kw):
+            self.logged.append((source, ok, found, error))
+
+    def test_flags_quiet_venues_and_respects_seasons(self):
+        venues = list(load_venues())
+        for v in venues:
+            v.id = v.slug
+        now = datetime(2026, 10, 21, 12, 0, tzinfo=TZ)
+        soon = (now + timedelta(days=3)).isoformat()
+        rows = [{"venue_id": "kilby-court", "starts_at": soon},
+                {"venue_id": "hog-wallow", "starts_at": (now + timedelta(days=12)).isoformat()}]
+        db = self.FakeDB(rows)
+        results = {v.slug: (n, p) for v, n, p in coverage.check(db, venues, now=now)}
+        self.assertEqual(results["kilby-court"], (1, None))
+        self.assertIsNotNone(results["hog-wallow"][1])        # a show, but outside its 7-day window
+        self.assertIsNone(results["great-saltair"][1])        # seasonal venues are quiet October through March
+        winter = {v.slug: p for v, n, p in coverage.check(db, venues, now=datetime(2027, 1, 10, tzinfo=TZ))}
+        self.assertIsNone(winter["great-saltair"])
+        summer = {v.slug: p for v, n, p in coverage.check(db, venues, now=datetime(2027, 7, 10, tzinfo=TZ))}
+        self.assertIsNotNone(summer["great-saltair"])
+        gaps = coverage.log(db, coverage.check(db, venues, now=now))
+        self.assertEqual(gaps, sum(1 for _, ok, _, _ in db.logged if not ok))
+        self.assertIn(("coverage:kilby-court", True, 1, None), db.logged)
+
+
+class TestDigest(unittest.TestCase):
+    def test_lists_gaps_and_failures(self):
+        runs = [
+            {"source": "coverage:hog-wallow", "ok": False, "error": "No published shows in the next 7 days.", "ran_at": "2026-10-21T13:00"},
+            {"source": "coverage:kilby-court", "ok": True, "error": None, "ran_at": "2026-10-21T13:00"},
+            {"source": "venue:the-complex", "ok": False, "error": "HTTPError: 503", "ran_at": "2026-10-21T13:00"},
+            {"source": "ticketmaster", "ok": True, "error": None, "ran_at": "2026-10-21T13:00"},
+        ]
+        subject, body = run_digest.build(runs, pending=4)
+        self.assertIn("2 to look at", subject)
+        self.assertIn("hog-wallow", body)
+        self.assertIn("venue:the-complex", body)
+        self.assertNotIn("kilby-court", body)
+        self.assertIn("Shows waiting for review: 4", body)
+        self.assertIn("all sources healthy", run_digest.build(runs[1:2], 0)[0])
 
 
 if __name__ == "__main__":

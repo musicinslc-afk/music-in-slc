@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       only:
-        description: "Run one source (venue slug or 'ticketmaster'); blank for all"
+        description: "Run one source (venue slug, 'ticketmaster', 'seatgeek', ...); blank for all"
         required: false
 
 concurrency: { group: ingest-scrape, cancel-in-progress: false }
@@ -21,12 +21,15 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12", cache: pip, cache-dependency-path: ingest/requirements.txt }
       - run: pip install -r requirements.txt
+      # Headless browser for venues whose calendars are drawn by JavaScript (strategy: render)
+      - run: python -m playwright install --with-deps chromium
       - run: python -m unittest discover -s tests
       - name: Scrape and sync
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
+          SEATGEEK_CLIENT_ID: ${{ secrets.SEATGEEK_CLIENT_ID }}
           LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SITE_URL: ${{ vars.SITE_URL }}

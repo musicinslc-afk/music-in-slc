@@ -2,7 +2,7 @@
 
 Usage:
     python run_scrapers.py                  # all sources
-    python run_scrapers.py --only kilby-court --only ticketmaster --only stateroom --only krcl
+    python run_scrapers.py --only kilby-court --only ticketmaster --only stateroom --only krcl --only seatgeek
     DRY_RUN=1 python run_scrapers.py        # print what would be stored, write nothing
 """
 from __future__ import annotations
@@ -13,11 +13,11 @@ import re
 import sys
 import traceback
 
-from slclive import enrich, settings
+from slclive import coverage, enrich, settings
 from slclive.db import DB
 from slclive import fetch
 from slclive.normalize import load_feeds, load_venues, resolve
-from slclive.sources import ics, krcl, stateroom, ticketmaster, venue_page
+from slclive.sources import ics, krcl, seatgeek, stateroom, ticketmaster, venue_page
 
 
 def store(db: DB, shows, venues, source: str, dry_run: bool, review_unknown_venues: bool = False) -> tuple[int, int, int]:
@@ -42,7 +42,7 @@ def store(db: DB, shows, venues, source: str, dry_run: bool, review_unknown_venu
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", action="append",
-                    help="venue slug, feed name, 'ticketmaster', 'stateroom' or 'krcl' (repeatable)")
+                    help="venue slug, feed name, 'ticketmaster', 'stateroom', 'krcl' or 'seatgeek' (repeatable)")
     args = ap.parse_args()
 
     db = DB()
@@ -82,6 +82,10 @@ def main() -> int:
             res = venue_page.scrape(v, db.last_hash)
             return res.shows, res.content_hash, res.method
         jobs.append((f"venue:{v.slug}", job))
+    # Backstop last, so shows the venues and primary sellers already listed only gain a confirmation
+    if (not wanted or "seatgeek" in wanted) and seatgeek.available():
+        jobs.append(("seatgeek", lambda: (seatgeek.fetch_shows(), None, "api (backstop)")))
+        review.add("seatgeek")
 
     for source, job in jobs:
         try:
@@ -98,7 +102,14 @@ def main() -> int:
             if settings.DRY_RUN:
                 traceback.print_exc()
 
-    print(f"done: {db.stats['inserted']} new, {db.stats['updated']} updated, {failures} failed sources", file=sys.stderr)
+    gaps = 0
+    if not dry_run and not wanted:
+        try:
+            gaps = coverage.log(db, coverage.check(db, venues))
+        except Exception as e:
+            print(f"FAIL coverage check: {type(e).__name__}: {e}", file=sys.stderr)
+    print(f"done: {db.stats['inserted']} new, {db.stats['updated']} updated, {failures} failed sources, "
+          f"{gaps} venues with no upcoming shows", file=sys.stderr)
     # Fail the workflow only if everything failed, so one dead venue doesn't spam alerts
     return 1 if failures and failures == len(jobs) else 0
 

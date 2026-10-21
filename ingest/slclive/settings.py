@@ -14,6 +14,7 @@ SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 
 TICKETMASTER_API_KEY = os.environ.get("TICKETMASTER_API_KEY", "")
 LASTFM_API_KEY = os.environ.get("LASTFM_API_KEY", "")
+SEATGEEK_CLIENT_ID = os.environ.get("SEATGEEK_CLIENT_ID", "")
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-5-5")
@@ -21,6 +22,9 @@ ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-5-5")
 INBOX_ADDRESS = os.environ.get("INBOX_ADDRESS", "musicinslc@gmail.com")
 INBOX_APP_PASSWORD = os.environ.get("INBOX_APP_PASSWORD", "")
 INBOX_IMAP_HOST = os.environ.get("INBOX_IMAP_HOST", "imap.gmail.com")
+INBOX_SMTP_HOST = os.environ.get("INBOX_SMTP_HOST", "smtp.gmail.com")
+# Where the weekly digest goes; the inbox itself by default
+DIGEST_TO = os.environ.get("DIGEST_TO", "")
 INBOX_LOOKBACK_DAYS = int(os.environ.get("INBOX_LOOKBACK_DAYS", "14"))
 # Comma-separated sender addresses or domains whose shows publish without review,
 # e.g. "booking@kilbycourt.com,@thestateroompresents.com"

@@ -97,7 +97,7 @@ def main() -> int:
         subject = _decode(msg.get("Subject"))
         sender = parseaddr(_decode(msg.get("From")))[1]
         text, images = message_parts(msg)
-        if not text and not images:
+        if not text and not images or msg.get("X-MusicInSLC-Digest"):   # empty, or our own weekly digest
             db.mark_email(message_id, subject, sender, 0)
             continue
 

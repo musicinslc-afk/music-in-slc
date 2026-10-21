@@ -114,7 +114,11 @@ class Venue:
     aliases: list[str] = field(default_factory=list)
     calendar_urls: list[str] = field(default_factory=list)
     ics_url: Optional[str] = None
-    strategy: str = "auto"
+    strategy: str = "auto"                  # auto | render | feeds_only
+    parser: Optional[str] = None            # a layout parser in sources/venue_parsers.py
+    ticketsauce_partner: Optional[str] = None
+    expect_shows_within_days: Optional[int] = None   # coverage watchdog: flag if nothing upcoming
+    seasonal: bool = False                  # watchdog stays quiet in the off season (Oct through Mar)
     id: Optional[str] = None  # filled from the database
 
     @property

@@ -2,10 +2,11 @@
 
 A concert calendar for every live music show in Salt Lake County.
 
-- **Scrapes** venue calendars and the Ticketmaster feed every 6 hours.
+- **Scrapes** venue calendars and the Ticketmaster feed every 6 hours, with SeatGeek as an optional backstop.
 - **Reads the musicinslc@gmail.com inbox** every hour, including flyer images, and turns show announcements into listings.
 - **Takes submissions** from the public through a form, with an admin review queue.
 - **Filters** by genre, date, venue, all ages and free shows.
+- **Watches its own coverage**: flags venues that should have shows but don't, and emails a weekly digest to the inbox.
 - **Recommends** shows from Last.fm (which covers Spotify and Pandora listeners), or artists a visitor types in.
 
 Hosting is free or nearly free: a static site on GitHub Pages, a free Supabase database, and scheduled GitHub Actions. The only metered cost is the Claude API used to read emails and venue pages that have no structured data.
@@ -36,7 +37,9 @@ Every source produces the same show record. Each show gets a fingerprint (venue,
 - Secrets TICKETMASTER_API_KEY, ANTHROPIC_API_KEY and INBOX_APP_PASSWORD are set. Ticketmaster, the inbox reader and the AI venue reader all run cleanly; the calendar held 458 upcoming published shows after the first full run.
 - musicinslc@gmail.com is an admin.
 - Spotify sign-in has been removed from the site; recommendations use Last.fm and typed-in artists.
-- Still to do: Last.fm key (genre tags and similar-artist recommendations).
+- Soundwell and The Hog Wallow Pub are read with layout parsers for their full calendars; Liquid Joe's comes from its Ticketsauce event list; The Union Event Center's JavaScript calendar is read in a headless browser (its shows also come from Ticketmaster). The Great Saltair comes from Ticketmaster and is marked seasonal.
+- The coverage watchdog flags any watched venue with no published show in its window, as a red `coverage:<venue>` row in Source health. The weekly digest goes to musicinslc@gmail.com on Monday mornings.
+- Still to do: Last.fm key (genre tags and similar-artist recommendations); optional SeatGeek client ID (backstop for touring shows).
 
 ## Setup
 
@@ -66,14 +69,15 @@ To skip review for venues that email you regularly, set a repository variable `T
 | Ticketmaster | [developer.ticketmaster.com](https://developer.ticketmaster.com) (free) | Arena, amphitheatre, Depot, Eccles and other Ticketmaster shows | Strongly recommended |
 | Anthropic | [console.anthropic.com](https://console.anthropic.com) | Reading emails, flyers and venue pages without structured data | Yes, for the inbox |
 | Last.fm | [last.fm/api/account/create](https://www.last.fm/api/account/create) (free) | Genre tags for shows, similar-artist recommendations, Pandora listeners | Recommended |
+| SeatGeek | [seatgeek.com/account/develop](https://seatgeek.com/account/develop) (free client ID) | Backstop for touring shows when a venue's own source breaks; unknown venues wait for review | Optional |
 
 The Claude model defaults to `claude-haiku-5-5`. Override it with an `ANTHROPIC_MODEL` secret if you like. Venue pages are only sent to Claude when their text has changed since the last run, which keeps costs low.
 
 ### 4. GitHub repository
 
 1. Create a repository (public, so GitHub Pages and Actions are free) and push this folder to it.
-2. **Settings → Secrets and variables → Actions → Secrets**: add `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `TICKETMASTER_API_KEY`, `ANTHROPIC_API_KEY`, `LASTFM_API_KEY`, `INBOX_APP_PASSWORD`.
-3. **Variables** tab: add `SITE_URL` (your site address), `CONTACT_EMAIL` (shown to venues in the scraper's user agent), and optionally `TRUSTED_SENDERS`.
+2. **Settings → Secrets and variables → Actions → Secrets**: add `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `TICKETMASTER_API_KEY`, `ANTHROPIC_API_KEY`, `LASTFM_API_KEY`, `INBOX_APP_PASSWORD`, and optionally `SEATGEEK_CLIENT_ID`.
+3. **Variables** tab: add `SITE_URL` (your site address), `CONTACT_EMAIL` (shown to venues in the scraper's user agent), and optionally `TRUSTED_SENDERS` and `DIGEST_TO` (where the weekly digest goes; the inbox by default).
 4. **Settings → Pages**: set Source to **GitHub Actions**.
 
 ### 5. Site settings
@@ -95,11 +99,17 @@ Edit `web/config.js` with the Supabase URL and anon key, plus the Last.fm key if
 
 ### 7. Check the venue list
 
-`ingest/config/venues.yaml` lists 29 Salt Lake County venues with their best-known calendar pages. Open each URL in a browser before launch; venue sites move often. Anything that fails shows up red in **Source health** with the error. To add a venue, copy an entry, give it a unique `slug`, and add any alternate spellings ticket sites use under `aliases` so duplicates merge.
+`ingest/config/venues.yaml` lists 32 Salt Lake County venues with their best-known calendar pages. Open each URL in a browser before launch; venue sites move often. Anything that fails shows up red in **Source health** with the error. To add a venue, copy an entry, give it a unique `slug`, and add any alternate spellings ticket sites use under `aliases` so duplicates merge.
 
 Strategies:
-- `auto` reads JSON-LD event data from the page (most ticketing widgets publish it), then an iCal feed if you set `ics_url`, then falls back to Claude reading the page.
-- `feeds_only` doesn't scrape a page; shows come from Ticketmaster, email and submissions.
+- `auto` uses the venue's layout parser if it has one (`parser:`), then JSON-LD event data from the page (most ticketing widgets publish it), then links to 24tix event pages, then an iCal feed if you set `ics_url`, then falls back to Claude reading the page.
+- `render` does the same on the page as a browser draws it, for calendars built with JavaScript.
+- `feeds_only` doesn't scrape a page; shows come from Ticketmaster, feeds, email and submissions.
+- `ticketsauce_partner:` reads a Ticketsauce seller's event list directly (Liquid Joe's).
+
+Coverage watchdog: give a venue `expect_shows_within_days: N` and it is flagged when nothing is published in the next N days. Add `seasonal: true` for venues that go quiet October through March.
+
+When a source misbehaves, **Actions → Diagnose sources → Run workflow** with arguments such as `--scrape soundwell`, `--db`, or `--render --url https://...` shows what the scraper sees, as annotations on the run.
 
 Breweries, coffee shops and bars that only post on Instagram are what the inbox and the submit form are for. Ask them to email flyers to musicinslc@gmail.com.
 
@@ -120,7 +130,7 @@ The scraper identifies itself with your site and contact email, obeys `robots.tx
 ```bash
 cd ingest
 pip install -r requirements.txt
-python -m unittest discover -s tests              # 32 tests, no network needed
+python -m unittest discover -s tests              # 39 tests, no network needed
 DRY_RUN=1 python run_scrapers.py --only kilby-court   # print shows without writing
 ```
 
@@ -133,6 +143,8 @@ supabase/schema.sql          tables, row-level security, admin role, health view
 ingest/config/venues.yaml    venues, aliases and calendar URLs
 ingest/run_scrapers.py       venue pages, Ticketmaster, 24tix, State Room Presents, KRCL → database
 ingest/run_email.py          musicinslc inbox → database
+ingest/run_digest.py         weekly coverage and health email to the inbox
+ingest/diagnose.py           source diagnostics for the Diagnose sources workflow
 ingest/slclive/              parsing, normalizing, dedupe, AI reader, Last.fm genres
 web/                         the site (no build step)
 web/genres.json              genre list shared by the site and the ingest jobs
@@ -143,4 +155,4 @@ web/genres.json              genre list shared by the site and the ingest jobs
 
 - GitHub pauses scheduled workflows in repositories with no commits for 60 days. Commit something (a venue update counts) at least every couple of months, or re-enable the workflows when GitHub emails you.
 - Supabase pauses free projects after a week without activity; the scheduled jobs keep it active.
-- Check **Source health** weekly. A venue that keeps failing usually changed its website.
+- The weekly digest lists venues with no upcoming shows and sources that failed. A venue that keeps failing usually changed its website.

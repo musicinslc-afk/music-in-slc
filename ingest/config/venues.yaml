@@ -2,10 +2,19 @@
 #
 # Every entry is synced to the `venues` table on each scraper run.
 # `calendar_urls` are the pages the scraper reads. Strategy "auto" tries, in order:
-#   1. schema.org Event JSON-LD embedded in the page (most ticketing widgets emit this)
-#   2. an iCal feed, if `ics_url` is set
-#   3. the AI page reader (needs ANTHROPIC_API_KEY), which reads the page like a person would
+#   1. a layout parser, if `parser` is set (see ingest/slclive/sources/venue_parsers.py)
+#   2. schema.org Event JSON-LD embedded in the page (most ticketing widgets emit this)
+#   3. links to ticket pages that carry event data (24tix)
+#   4. an iCal feed, if `ics_url` is set
+#   5. the AI page reader (needs ANTHROPIC_API_KEY), which reads the page like a person would
+# Strategy "render" does the same on the page as a browser draws it, for calendars built by
+# JavaScript (it needs Playwright, which the scrape workflow installs).
 # Use strategy "feeds_only" for venues whose shows come through Ticketmaster, email or submissions (no page to scrape).
+# `ticketsauce_partner` reads a Ticketsauce seller's event list directly (see sources/ticketsauce.py).
+#
+# Coverage watchdog: `expect_shows_within_days: N` flags the venue in Source health and the
+# weekly digest when it has no published show in the next N days. `seasonal: true` keeps it
+# quiet from October through March.
 #
 # IMPORTANT: confirm each calendar URL in a browser before launch. Venues change
 # websites often; the admin page's "Source health" panel flags any URL that stops working.
@@ -27,6 +36,7 @@ venues:
     default_genres: [indie, local]
     calendar_urls: [https://kilbycourt.com/]
     strategy: feeds_only   # shows come from the 24tix feed
+    expect_shows_within_days: 14
 
   - slug: urban-lounge
     name: The Urban Lounge
@@ -37,6 +47,7 @@ venues:
     default_genres: [indie]
     calendar_urls: [https://theurbanloungeslc.com/]
     strategy: feeds_only   # shows come from the 24tix feed
+    expect_shows_within_days: 14
 
   - slug: metro-music-hall
     name: Metro Music Hall
@@ -46,6 +57,7 @@ venues:
     age_policy: varies
     calendar_urls: [https://metromusichall.com/]
     strategy: feeds_only   # shows come from the 24tix feed
+    expect_shows_within_days: 14
 
   - slug: the-state-room
     name: The State Room
@@ -55,6 +67,7 @@ venues:
     age_policy: 21_plus
     calendar_urls: [https://thestateroompresents.com/]
     strategy: feeds_only   # shows come from the State Room Presents calendar (AXS)
+    expect_shows_within_days: 14
 
   - slug: commonwealth-room
     name: The Commonwealth Room
@@ -64,6 +77,7 @@ venues:
     age_policy: 21_plus
     calendar_urls: [https://thestateroompresents.com/]
     strategy: feeds_only   # shows come from the State Room Presents calendar (AXS)
+    expect_shows_within_days: 21
 
   - slug: soundwell
     name: Soundwell
@@ -71,9 +85,10 @@ venues:
     address: 149 W 200 S
     city: Salt Lake City
     age_policy: varies
-    default_genres: [electronic]
-    calendar_urls: [https://soundwellslc.com/]
+    calendar_urls: [https://soundwellslc.com/events/]
+    parser: soundwell      # full events list; tickets on Tixr and EventLive
     strategy: auto
+    expect_shows_within_days: 21
 
   - slug: the-depot
     name: The Depot
@@ -82,6 +97,7 @@ venues:
     city: Salt Lake City
     age_policy: varies
     strategy: feeds_only
+    expect_shows_within_days: 30
 
   - slug: the-complex
     name: The Complex
@@ -91,6 +107,7 @@ venues:
     age_policy: varies
     calendar_urls: [https://thecomplexslc.com/]
     strategy: auto
+    expect_shows_within_days: 21
 
   - slug: the-union-event-center
     name: The Union Event Center
@@ -99,7 +116,8 @@ venues:
     city: Salt Lake City
     age_policy: all_ages
     calendar_urls: [https://theunioneventcenter.com/]
-    strategy: auto
+    strategy: render       # the calendar is drawn by JavaScript; most shows also come from Ticketmaster
+    expect_shows_within_days: 30
 
   - slug: delta-center
     name: Delta Center
@@ -205,7 +223,40 @@ venues:
     address: 342 S State St
     city: Salt Lake City
     age_policy: 21_plus
-    strategy: feeds_only
+    strategy: feeds_only   # shows come from the 24tix feed
+    expect_shows_within_days: 14
+
+  - slug: liquid-joes
+    name: Liquid Joe's
+    aliases: [Liquid Joes, Liquid Joe's SLC]
+    address: 1249 E 3300 S
+    city: Salt Lake City
+    age_policy: 21_plus
+    ticketsauce_partner: 616de98b-0e40-4d4b-9509-10dd0ad1e02c   # its own Ticketsauce storefront
+    calendar_urls: [https://www.liquidjoes.net/upcoming-events]  # fallback if Ticketsauce returns nothing
+    strategy: render
+    expect_shows_within_days: 21
+
+  - slug: hog-wallow
+    name: The Hog Wallow Pub
+    aliases: [Hog Wallow Pub, Hog Wallow, The Hog Wallow]
+    address: 3200 E Big Cottonwood Canyon Rd
+    city: Cottonwood Heights
+    age_policy: 21_plus
+    calendar_urls: [https://thehogwallow.com/music/all-upcoming-live-music/]
+    parser: hogwallow      # local bands five nights a week; no ticketing
+    strategy: auto
+    expect_shows_within_days: 7
+
+  - slug: great-saltair
+    name: The Great Saltair
+    aliases: [Great Saltair, Saltair, The Saltair]
+    address: 12408 W Saltair Dr
+    city: Magna
+    age_policy: varies
+    strategy: feeds_only   # Live Nation venue: shows come from Ticketmaster
+    expect_shows_within_days: 45
+    seasonal: true
 
   - slug: the-pearl-on-main
     name: The Pearl on Main

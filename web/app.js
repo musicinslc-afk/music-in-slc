@@ -211,7 +211,9 @@
     });
 
     events = await S.loadEvents();
-    const venues = [...new Set(events.map((e) => e.venue_name))].sort((a, b) => a.localeCompare(b));
+    // Alphabetize without a leading "The", so The Union Event Center sits under U
+    const sortKey = (v) => v.replace(/^the\s+/i, "");
+    const venues = [...new Set(events.map((e) => e.venue_name))].sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
     $("venue").insertAdjacentHTML("beforeend", venues.map((v) => `<option>${S.esc(v)}</option>`).join(""));
     syncControls(); syncTaste(); render();
   } catch (err) {

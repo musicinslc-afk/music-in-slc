@@ -75,6 +75,30 @@ class DB:
                                    "updated": updated, "error": (error or "")[:1000] or None,
                                    "content_hash": content_hash}, prefer="return=minimal")
 
+    def latest_runs(self, limit: int = 600) -> list[dict]:
+        """The most recent run of each source."""
+        rows = self._get("source_runs", {"select": "source,ok,found,inserted,error,ran_at",
+                                          "order": "ran_at.desc", "limit": limit})
+        seen, out = set(), []
+        for r in rows:
+            if r["source"] not in seen:
+                seen.add(r["source"])
+                out.append(r)
+        return out
+
+    def upcoming_venue_dates(self, until: datetime) -> list[dict]:
+        """venue_id and starts_at of every published show from now until `until`."""
+        rows, offset = [], 0
+        while True:
+            page = self._get("events", {"select": "venue_id,starts_at", "status": "eq.published",
+                                        "starts_at": f"gte.{datetime.now(TZ).isoformat(timespec='seconds')}",
+                                        "and": f"(starts_at.lte.{until.isoformat(timespec='seconds')})",
+                                        "limit": 1000, "offset": offset})
+            rows += page
+            if len(page) < 1000:
+                return rows
+            offset += 1000
+
     # -- emails ------------------------------------------------------------
     def email_processed(self, message_id: str) -> bool:
         return bool(self._get("processed_emails", {"message_id": f"eq.{message_id}", "select": "message_id"}))

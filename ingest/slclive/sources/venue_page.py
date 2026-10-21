@@ -10,10 +10,11 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from .. import ai_extract, fetch
+from .. import ai_extract, fetch, render
 from ..models import Show
 from ..normalize import Venue
-from . import ics, jsonld
+from . import ics, jsonld, ticketsauce
+from .venue_parsers import PARSERS
 
 
 @dataclass
@@ -77,14 +78,26 @@ def follow(links: list[str], source: str) -> list[Show]:
 def scrape(venue: Venue, previous_hash: Callable[[str], Optional[str]]) -> PageResult:
     result = PageResult()
     source = f"venue:{venue.slug}"
+    if venue.ticketsauce_partner:
+        result.shows = ticketsauce.fetch_shows(venue.ticketsauce_partner, venue.name, source)
+        result.method = "ticketsauce"
+        if result.shows or not venue.calendar_urls:
+            return result
     texts = []
     for url in venue.calendar_urls:
-        html = fetch.get(url).text
+        html = render.get_html(url) if venue.strategy == "render" else fetch.get(url).text
+        parser = PARSERS.get(venue.parser or "")
+        if parser:
+            found = parser(html, url, venue.name, source)
+            if found:
+                result.shows.extend(found)
+                result.method = f"parser:{venue.parser}"
+                continue
         found = jsonld.parse(html, url, source=source, default_venue=venue.name)
         # A venue page sometimes lists shows at sister venues; keep them, normalize sorts it out
         if found:
             result.shows.extend(found)
-            result.method = "jsonld"
+            result.method = "rendered jsonld" if venue.strategy == "render" else "jsonld"
             continue
         links = event_links(html, url)
         followed = follow(links, source) if links else []
