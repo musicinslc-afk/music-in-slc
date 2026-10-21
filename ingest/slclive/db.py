@@ -141,19 +141,24 @@ class DB:
         return None
 
     def retire_unseen(self, source: str, before: datetime) -> int:
-        """Hide upcoming shows that only `source` ever reported and that its latest complete
-        read no longer lists: removed from the calendar, or older duplicates of a listing the
-        source now reports differently. Returns how many were hidden."""
+        """Remove upcoming shows that only `source` ever reported and that its latest complete
+        read no longer lists: taken off the calendar, or older duplicates of a listing the
+        source now reports differently. Removed rather than hidden, so a show that comes back
+        is listed again; shows an admin hid are never touched. Returns how many were removed."""
         if self.dry_run:
             return 0
-        r = self.s.patch(f"{self.base}/events", params={
+        r = self.s.delete(f"{self.base}/events", params={
             "sources": f'cd.{{"{source}"}}', "status": "eq.published",
             "last_seen_at": f"lt.{before.isoformat(timespec='seconds')}",
             "starts_at": f"gt.{datetime.now(TZ).isoformat(timespec='seconds')}",
-        }, json={"status": "rejected"}, timeout=60)
+        }, timeout=60)
         if r.status_code >= 400:
-            raise RuntimeError(f"events update failed: {r.status_code} {r.text[:300]}")
-        return len(r.json()) if r.text else 0
+            raise RuntimeError(f"events delete failed: {r.status_code} {r.text[:300]}")
+        removed = r.json() if r.text else []
+        existing = self._load_existing()
+        for row in removed:
+            existing.pop(row.get("fingerprint"), None)
+        return len(removed)
 
     def upsert_show(self, show: Show) -> str:
         """Insert or merge one show. Returns 'inserted', 'updated' or 'unchanged'."""

@@ -97,11 +97,11 @@ def main() -> int:
             shows, content_hash, method = job()
             found, inserted, updated = store(db, shows, venues, source, dry_run, source in review)
             # A parser or Ticketsauce read is the venue's complete list, so shows only this source
-            # reported that it no longer lists (removed, or superseded duplicates) are hidden
+            # reported that it no longer lists (removed, or superseded duplicates) are removed
             retired = db.retire_unseen(source, started) if found and method.startswith(COMPLETE_METHODS) else 0
             db.log_run(source, True, found, inserted, updated, content_hash=content_hash)
             print(f"ok   {source:38} {method:28} found={found} new={inserted} updated={updated}"
-                  + (f" hidden={retired}" if retired else ""), file=sys.stderr)
+                  + (f" removed={retired}" if retired else ""), file=sys.stderr)
         except Exception as e:  # one broken venue must not stop the rest
             failures += 1
             # Strip query strings so API keys in request URLs never reach the database or logs
