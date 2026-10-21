@@ -128,6 +128,18 @@ def db_report() -> None:
     notice("db", f"{len(rows)} upcoming\n" + "\n".join(lines) + "\n--- latest runs ---\n" + "\n".join(sorted(rl)))
 
 
+def db_venue(name: str) -> None:
+    """Every upcoming show stored for one venue, with its sources and fingerprint."""
+    from datetime import datetime
+    from slclive.db import DB
+    from slclive.normalize import TZ
+    rows = DB(dry_run=False)._get("events", {
+        "select": "starts_at,title,status,sources,fingerprint", "venue_name": f"eq.{name}",
+        "starts_at": f"gte.{datetime.now(TZ).isoformat(timespec='seconds')}", "order": "starts_at.asc", "limit": 500})
+    notice(f"venue {name}", "\n".join(f"{r['starts_at'][:16]} [{r['status']}] {r['title'][:50]} | "
+                                      f"{','.join(r['sources'] or [])} | {r['fingerprint']}" for r in rows))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--url", action="append", default=[])
@@ -135,6 +147,7 @@ def main() -> None:
     ap.add_argument("--scrape", action="append", default=[])
     ap.add_argument("--grep", help="with --scrape, keep only output lines matching this pattern")
     ap.add_argument("--db", action="store_true", help="report what the database holds")
+    ap.add_argument("--venue", action="append", default=[], help="list stored upcoming shows for this venue name")
     ap.add_argument("--start", help="show page markup from the first occurrence of this text")
     a = ap.parse_args()
     global START, GREP
@@ -145,6 +158,8 @@ def main() -> None:
         scrape(s)
     if a.db:
         db_report()
+    for v in a.venue:
+        db_venue(v)
 
 
 if __name__ == "__main__":
