@@ -31,6 +31,8 @@ Every source produces the same show record. Each show gets a fingerprint (venue,
 - GitHub repository **musicinslc-afk/music-in-slc** created (public) with all files; GitHub Pages is on and the site is live at https://musicinslc-afk.github.io/music-in-slc/.
 - Repository secrets SUPABASE_URL and SUPABASE_SERVICE_KEY and variables SITE_URL and CONTACT_EMAIL are set. Supabase sign-in URLs point at the live site.
 - The 24tix calendar feed supplies Kilby Court, Urban Lounge, Metro Music Hall, International Bar, The DLC and The Pearl on Main.
+- The State Room Presents calendar supplies The State Room, The Commonwealth Room and Live at the Eccles shows (the shows sold on AXS, which blocks automated access itself). Eccles shows wait for review unless Ticketmaster confirms them, since that series mixes in comedy and talks.
+- The KRCL 90.9 community calendar (Live Music category) adds shows at bars, breweries, churches and other rooms; shows at venues not on the list wait for review, and anything outside the county is skipped.
 - Secrets TICKETMASTER_API_KEY, ANTHROPIC_API_KEY and INBOX_APP_PASSWORD are set. Ticketmaster, the inbox reader and the AI venue reader all run cleanly; the calendar held 458 upcoming published shows after the first full run.
 - musicinslc@gmail.com is an admin.
 - Spotify sign-in is not being set up, so the Connect Spotify button stays hidden; recommendations use Last.fm and typed-in artists.
@@ -119,7 +121,7 @@ The scraper identifies itself with your site and contact email, obeys `robots.tx
 ```bash
 cd ingest
 pip install -r requirements.txt
-python -m unittest discover -s tests              # 25 tests, no network needed
+python -m unittest discover -s tests              # 32 tests, no network needed
 DRY_RUN=1 python run_scrapers.py --only kilby-court   # print shows without writing
 ```
 
@@ -130,7 +132,7 @@ For the website, serve the `web/` folder with any static server (`python -m http
 ```
 supabase/schema.sql          tables, row-level security, admin role, health view
 ingest/config/venues.yaml    venues, aliases and calendar URLs
-ingest/run_scrapers.py       venue pages + Ticketmaster → database
+ingest/run_scrapers.py       venue pages, Ticketmaster, 24tix, State Room Presents, KRCL → database
 ingest/run_email.py          musicinslc inbox → database
 ingest/slclive/              parsing, normalizing, dedupe, AI reader, Last.fm genres
 web/                         the site (no build step)

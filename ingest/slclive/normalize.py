@@ -181,7 +181,7 @@ def in_salt_lake_county(city: Optional[str]) -> bool:
 # ---------------------------------------------------------------------------
 # Ticket sites list passes, gift cards and parking next to real shows
 _NOT_A_SHOW = re.compile(
-    r"\b(golden ticket|gift cards?|gift certificates?|season pass|annual pass|membership|parking|"
+    r"\b(golden ticket|gift cards?|gift certificates?|season pass|season tickets?|waitlist|annual pass|membership|parking|"
     r"(all ages|21\+|vip) pass|merch(andise)? only|presale registration)\b", re.I)
 
 

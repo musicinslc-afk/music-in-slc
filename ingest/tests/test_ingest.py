@@ -14,7 +14,9 @@ from slclive.db import DB  # noqa: E402
 from slclive.genres import map_genres  # noqa: E402
 from slclive.models import Show  # noqa: E402
 from slclive.normalize import TZ, headliner_key, load_venues, match_venue, parse_dt, resolve, split_artists  # noqa: E402
-from slclive.sources import jsonld, ticketmaster  # noqa: E402
+import json  # noqa: E402
+
+from slclive.sources import jsonld, krcl, stateroom, ticketmaster  # noqa: E402
 import run_email  # noqa: E402
 
 
@@ -230,6 +232,66 @@ class TestMerge(unittest.TestCase):
         db._existing = {a.fingerprint: {"fingerprint": a.fingerprint, "status": "rejected", "sources": ["ticketmaster"]}}
         db.upsert_show(a)
         self.assertEqual(db._existing[a.fingerprint]["status"], "rejected")
+
+
+class TestStateRoom(unittest.TestCase):
+    def setUp(self):
+        data = json.loads((HERE / "fixtures" / "stateroom_events.json").read_text())
+        self.shows = {s.title: s for s in stateroom.parse(data)}
+
+    def test_reads_events_and_rooms(self):
+        self.assertEqual(set(self.shows), {"Powder Blue Ween Tribute", "#IMOMSOHARD", "Pigeons Playing Ping Pong",
+                                           "The Jungle Giants"})  # the 2001 show is dropped
+        self.assertEqual(self.shows["Powder Blue Ween Tribute"].venue_name, "The State Room")
+        self.assertEqual(self.shows["Pigeons Playing Ping Pong"].venue_name, "The Commonwealth Room")
+        ween = self.shows["Powder Blue Ween Tribute"]
+        self.assertEqual(ween.starts_at, datetime(2099, 10, 23, 19, 0, tzinfo=TZ))
+        self.assertEqual(ween.ticket_url, "https://thestateroompresents.com/state-room-presents/ween-tribute")
+        self.assertIn("Ween", ween.description)
+
+    def test_eccles_waits_for_review_and_cancelled_is_marked(self):
+        self.assertEqual(self.shows["#IMOMSOHARD"].status, "pending")
+        self.assertEqual(self.shows["Pigeons Playing Ping Pong"].status, "published")
+        self.assertTrue(self.shows["The Jungle Giants"].cancelled)
+
+    def test_resolves_to_known_venues(self):
+        venues = list(load_venues())
+        r = resolve(self.shows["Pigeons Playing Ping Pong"], venues)
+        self.assertEqual(r.venue_slug, "commonwealth-room")
+
+
+class TestKrcl(unittest.TestCase):
+    def setUp(self):
+        self.venues = list(load_venues())
+        html = (HERE / "fixtures" / "krcl_live_music.html").read_text()
+        self.shows = krcl.parse_page(html, self.venues)
+        self.by = {s.title: s for s in self.shows}
+
+    def test_titles_drop_venue_and_presenter(self):
+        self.assertIn("The Wildwoods", self.by)
+        self.assertIn("Gorillaz", self.by)
+        self.assertIn("Clejan", self.by)
+        self.assertIn("JD McPherson", self.by)
+        self.assertNotIn("Old Show", self.by)
+
+    def test_dates_and_times(self):
+        self.assertEqual(self.by["Gorillaz"].starts_at, datetime(2099, 10, 20, 19, 30, tzinfo=TZ))
+        self.assertEqual(self.by["Fall Harvest Festival"].starts_at, datetime(2099, 10, 24, 11, 0, tzinfo=TZ))
+
+    def test_venues_and_cities(self):
+        self.assertEqual(self.by["The Wildwoods"].venue_name, "The Urban Lounge")
+        self.assertEqual(self.by["Clejan"].venue_name, "The DLC")
+        self.assertEqual(self.by["Kilby Court Halloween: BLEACHER BABE, Stage Fright, CAMO"].venue_name, "Kilby Court")
+        self.assertEqual(self.by["JD McPherson"].venue_name, "The Commonwealth Room")
+        self.assertEqual(self.by["American West Symphony October Concert"].city, "Sandy")
+        self.assertEqual(self.by["Fall Harvest Festival"].city, "Salt Lake City")
+        self.assertEqual(self.by["The Wildwoods"].ticket_url, "https://www.24tix.com/event/58221926385")
+
+    def test_outside_county_is_dropped(self):
+        shows = [resolve(s, self.venues) for s in self.shows]
+        titles = {s.title for s in shows if s}
+        self.assertNotIn("2nd Annual Country Christmas Fundraiser Concert", titles)
+        self.assertIn("American West Symphony October Concert", titles)
 
 
 if __name__ == "__main__":

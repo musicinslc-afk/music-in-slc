@@ -2,7 +2,7 @@
 
 Usage:
     python run_scrapers.py                  # all sources
-    python run_scrapers.py --only kilby-court --only ticketmaster
+    python run_scrapers.py --only kilby-court --only ticketmaster --only stateroom --only krcl
     DRY_RUN=1 python run_scrapers.py        # print what would be stored, write nothing
 """
 from __future__ import annotations
@@ -17,7 +17,7 @@ from slclive import enrich, settings
 from slclive.db import DB
 from slclive import fetch
 from slclive.normalize import load_feeds, load_venues, resolve
-from slclive.sources import ics, ticketmaster, venue_page
+from slclive.sources import ics, krcl, stateroom, ticketmaster, venue_page
 
 
 def store(db: DB, shows, venues, source: str, dry_run: bool, review_unknown_venues: bool = False) -> tuple[int, int, int]:
@@ -41,7 +41,8 @@ def store(db: DB, shows, venues, source: str, dry_run: bool, review_unknown_venu
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--only", action="append", help="venue slug, feed name or 'ticketmaster' (repeatable)")
+    ap.add_argument("--only", action="append",
+                    help="venue slug, feed name, 'ticketmaster', 'stateroom' or 'krcl' (repeatable)")
     args = ap.parse_args()
 
     db = DB()
@@ -57,6 +58,13 @@ def main() -> int:
     review = set()
     if not wanted or "ticketmaster" in wanted:
         jobs.append(("ticketmaster", lambda: (ticketmaster.fetch_shows(), None, "api")))
+    if not wanted or "stateroom" in wanted:
+        # The State Room Presents calendar: State Room, Commonwealth Room and Eccles shows sold on AXS
+        jobs.append(("stateroom", lambda: (stateroom.fetch_shows(), None, "promoter calendar (AXS)")))
+        review.add("stateroom")
+    if not wanted or "krcl" in wanted:
+        jobs.append(("krcl", lambda: (krcl.fetch_shows(venues), None, "KRCL live music calendar")))
+        review.add("krcl")
     for feed in load_feeds():
         name = f"feed:{feed['name']}"
         if wanted and feed["name"] not in wanted and name not in wanted:

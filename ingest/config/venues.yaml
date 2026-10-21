@@ -54,7 +54,7 @@ venues:
     city: Salt Lake City
     age_policy: 21_plus
     calendar_urls: [https://thestateroompresents.com/]
-    strategy: auto
+    strategy: feeds_only   # shows come from the State Room Presents calendar (AXS)
 
   - slug: commonwealth-room
     name: The Commonwealth Room
@@ -63,7 +63,7 @@ venues:
     city: South Salt Lake
     age_policy: 21_plus
     calendar_urls: [https://thestateroompresents.com/]
-    strategy: auto
+    strategy: feeds_only   # shows come from the State Room Presents calendar (AXS)
 
   - slug: soundwell
     name: Soundwell
@@ -194,7 +194,7 @@ venues:
 
   - slug: the-dlc
     name: The DLC
-    aliases: [The DLC at Quarters, DLC at Quarters]
+    aliases: [The DLC at Quarters, DLC at Quarters, Quarters Arcade Bar, Downtown Quarters Arcade Bar]
     city: Salt Lake City
     age_policy: varies
     strategy: feeds_only
