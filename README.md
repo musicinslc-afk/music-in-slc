@@ -154,7 +154,7 @@ Profiles are stored only in the visitor's browser. Nothing about a visitor's lis
 
 ## You: taste, plans and friends
 
-**You** is its own page (`you.html`). It opens with the shows the visitor marked Going and Maybe, by night, with All, Going and Maybe tabs. Below that, Settings (sign-in, friends, who sees your plans, and Last.fm or typed-in artists) stays open until it has been set up once, then folds to one line with **Edit**. It is the only place the Last.fm connection appears. On the calendar, **My matches** and **My plans** filters appear once there's something to filter by.
+**You** is its own page (`you.html`). It opens with the shows the visitor marked Going and Maybe, by night, with All, Going and Maybe tabs, plus a Friends tab listing every upcoming show a friend marked, with their names on each card. Below that, Settings (sign-in, friends, who sees your plans, and Last.fm or typed-in artists) stays open until it has been set up once, then folds to one line with **Edit**. It is the only place the Last.fm connection appears. On the calendar, **My matches** and **My plans** filters appear once there's something to filter by.
 
 - **Maybe and Going** buttons sit on every show card, the week view and the show detail view. Signed out, picks are kept in the browser. Signing in (an emailed link, no password) moves them to the visitor's account.
 - **Who can see them** is set per person: *Friends* (the default), *Everyone*, or *Just me*. Totals such as "12 going" count everyone and never name anyone.

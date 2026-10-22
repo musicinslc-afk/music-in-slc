@@ -30,18 +30,50 @@
     $("n-all").textContent = c.going + c.maybe ? String(c.going + c.maybe) : "";
     $("n-going").textContent = c.going ? String(c.going) : "";
     $("n-maybe").textContent = c.maybe ? String(c.maybe) : "";
+    const fs = P.friendsShows().length;
+    $("n-friends").textContent = fs ? String(fs) : "";
     document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tab === tab)));
     const p = P.profile;
     $("you-name").textContent = p ? p.display_name : "You";
     $("you-sub-head").textContent = p
       ? `@${p.handle} · ${P.visibilityNote()}`
-      : "The shows you've said yes and maybe to.";
+      : "The shows you've said yes and maybe to, and where your friends are headed.";
   }
 
   // The list is drawn when the page loads and when you switch tabs. A show you un-mark stays put until then,
   // so a slip of the thumb can be undone in place.
+  // Friends' tab: every upcoming show a friend marked, with their names on the card
+  function renderFriendsShows() {
+    const list = P.friendsShows();
+    if (!list.length) {
+      let msg, action = "";
+      if (!P.social) msg = "Friends need the site's sign-in, which isn't switched on yet.";
+      else if (!P.user) {
+        msg = "Sign in, then share your page link with friends. Once you've added each other, the shows they mark show up here.";
+        action = `<p><button class="btn primary" type="button" data-signin>Sign in</button></p>`;
+      } else if (!P.friendCount()) {
+        msg = "Share your page link with friends. When they open it and tap Add friend, add them back under Settings, and the shows they mark show up here.";
+        action = `<p><button class="btn primary" type="button" data-share>Share my page</button></p>`;
+      } else msg = "None of your friends have marked an upcoming show yet.";
+      $("my-shows").innerHTML = `<div class="empty you-empty"><strong>No friends' shows yet</strong>${msg}${action}</div>`;
+      $("my-shows").querySelector("[data-signin]")?.addEventListener("click", () => window.SLCYou.focusSignIn());
+      $("my-shows").querySelector("[data-share]")?.addEventListener("click", (ev) => P.shareLink(ev.currentTarget));
+      return;
+    }
+    const byDay = new Map();
+    for (const { e } of list) {
+      const k = S.dayKey(e.starts_at);
+      if (!byDay.has(k)) byDay.set(k, []);
+      byDay.get(k).push(e);
+    }
+    let html = "";
+    for (const [k, shows] of byDay) html += C.dayHtml(k, shows);
+    $("my-shows").innerHTML = html;
+  }
+
   function renderShows() {
     syncCounts();
+    if (tab === "friends") { renderFriendsShows(); return; }
     const mine = events.filter((e) => {
       const s = P.status(e.id);
       return s && (tab === "all" || s === tab);

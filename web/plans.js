@@ -476,6 +476,17 @@
     onChange: (f) => listeners.add(f),
     get user() { return st.user; }, get profile() { return st.profile; },
     get social() { return Boolean(sb) && st.social; }, get ready() { return st.ready; },
+    // Upcoming shows your friends marked, soonest first: [{ e, people: [{ user_id, name, handle, status }] }]
+    friendsShows: () => {
+      const out = [];
+      for (const [id, list] of st.people) {
+        const e = find(id);
+        const people = list.filter((p) => isFriend(p.user_id));
+        if (e && people.length) out.push({ e, people });
+      }
+      return out.sort((a, b) => a.e.starts_at.localeCompare(b.e.starts_at));
+    },
+    friendCount: () => [...st.out].filter((id) => st.in.has(id)).length,
     mineCount: () => {
       const c = { going: 0, maybe: 0 };
       for (const [id, s] of st.mine) if (find(id)) c[s]++;
