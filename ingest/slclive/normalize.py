@@ -122,6 +122,10 @@ class Venue:
     expect_shows_within_days: Optional[int] = None   # coverage watchdog: flag if nothing upcoming
     music_only: bool = False                # mixed-use room: keep live music, drop the rest
     seasonal: bool = False                  # watchdog stays quiet in the off season (Oct through Mar)
+    kind: Optional[str] = None              # for the Venues page: Bar, Club, Theater, Arena...
+    capacity: Optional[int] = None          # approximate
+    website: Optional[str] = None           # the venue's own site, when it isn't the calendar page
+    image: Optional[str] = None             # picture override for the Venues page
     id: Optional[str] = None  # filled from the database
 
     @property
@@ -133,7 +137,7 @@ class Venue:
             "slug": self.slug, "name": self.name, "city": self.city, "address": self.address,
             "age_policy": self.age_policy, "default_genres": self.default_genres,
             "aliases": self.aliases,
-            "website": self.calendar_urls[0] if self.calendar_urls else None,
+            "website": self.website or (self.calendar_urls[0] if self.calendar_urls else None),
         }
 
 

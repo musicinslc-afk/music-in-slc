@@ -412,6 +412,9 @@
     const sortKey = (v) => v.replace(/^the\s+/i, "");
     const venues = [...new Set(events.map((e) => e.venue_name))].sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
     $("venue").insertAdjacentHTML("beforeend", venues.map((v) => `<option>${S.esc(v)}</option>`).join(""));
+    // ?venue=Name (from the Venues page) opens the calendar filtered to that venue
+    const wantVenue = params.get("venue");
+    if (wantVenue && venues.includes(wantVenue)) { state.venue = wantVenue; $("venue").value = wantVenue; }
     syncControls(); syncYou(); render();
     details.fromHash();
     P.start({ find: (id) => events.find((e) => String(e.id) === String(id)) }).then(() => {

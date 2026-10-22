@@ -532,6 +532,20 @@ class TestDigest(unittest.TestCase):
         self.assertIn("all sources healthy", run_digest.build(runs[1:2], 0)[0])
 
 
+class TestVenueDirectory(unittest.TestCase):
+    def test_preview_image_and_fields(self):
+        import build_venues
+        html = '<head><meta property="og:image" content="http://cdn.example.com/room.jpg"></head>'
+        self.assertEqual(build_venues.preview_image(html, "https://example.com/"), "https://cdn.example.com/room.jpg")
+        self.assertEqual(build_venues.preview_image('<meta name="twitter:image" content="/img/a.png">', "https://x.com/p"),
+                         "https://x.com/img/a.png")
+        self.assertIsNone(build_venues.preview_image("<p>nothing</p>", "https://x.com/"))
+        for v in load_venues():
+            self.assertTrue(v.kind, f"{v.slug} needs a kind for the Venues page")
+            if v.capacity is not None:
+                self.assertIsInstance(v.capacity, int)
+
+
 if __name__ == "__main__":
     unittest.main()
 

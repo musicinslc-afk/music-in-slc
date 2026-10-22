@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Venues · Music in SLC</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Every live music venue in Salt Lake County: clubs, bars, theaters and amphitheaters, with what's coming up at each.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap wide">
+    <a class="wordmark" href="index.html">Music in <span>SLC</span></a>
+    <nav class="nav" aria-label="Site">
+      <a href="index.html">Calendar</a>
+      <a href="week.html">This week</a>
+      <a href="venues.html" aria-current="page">Venues</a>
+      <a href="index.html?you=1">You</a>
+      <a class="cta" href="submit.html">Submit a show</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap wide">
+  <div class="week-head">
+    <div>
+      <h1>Venues</h1>
+      <p class="week-range" id="venue-sub">Where live music happens in Salt Lake County</p>
+    </div>
+  </div>
+  <div class="venue-tools">
+    <input class="search" id="vq" type="search" placeholder="Search venues or neighborhoods" aria-label="Search venues">
+    <label class="venue-sort">Sort
+      <select class="select" id="vsort">
+        <option value="name">A to Z</option>
+        <option value="shows">Most shows coming up</option>
+        <option value="big">Biggest first</option>
+        <option value="small">Smallest first</option>
+      </select>
+    </label>
+  </div>
+  <div class="filter-row venue-kinds" id="vkinds" aria-label="Kind of venue"></div>
+  <div class="filter-row" style="padding-block: 6px 16px">
+    <button class="chip" type="button" id="v-allages" aria-pressed="false">All ages</button>
+    <button class="chip" type="button" id="v-active" aria-pressed="false">Shows this week</button>
+    <span class="count" id="vcount" aria-live="polite"></span>
+  </div>
+  <section class="venue-grid" id="venues" aria-label="Venues"><p class="empty">Loading venues…</p></section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap wide">
+    <p>Capacities are approximate. Pictures come from each venue's own website.</p>
+    <p>Know a room we're missing? Email <span class="mono" id="inbox-addr">musicinslc@gmail.com</span>.</p>
+  </div>
+</footer>
+
+<script src="config.js"></script>
+<script src="data.js"></script>
+<script src="venues.js"></script>
+</body>
+</html>

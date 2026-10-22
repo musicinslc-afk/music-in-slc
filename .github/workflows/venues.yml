@@ -1,0 +1,47 @@
+name: Venue directory
+
+on:
+  schedule:
+    - cron: "37 9 * * 1"     # Mondays: refresh pictures and check links
+  push:
+    branches: [main]
+    paths: ["ingest/config/venues.yaml", "ingest/build_venues.py"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency: { group: venue-directory, cancel-in-progress: false }
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults: { run: { working-directory: ingest } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: ingest/requirements.txt }
+      - run: pip install -r requirements.txt
+      - name: Build venues.json
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
+        run: python build_venues.py 2> ../build-venues.log; cat ../build-venues.log; sed 's/^/::notice title=venues::/' ../build-venues.log
+      - name: Commit and publish if changed
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          cd ..
+          # The timestamp alone changing isn't worth a commit
+          if git diff --quiet -I '"updated"' -- web/venues.json && git ls-files --error-unmatch web/venues.json >/dev/null 2>&1; then
+            echo "No changes"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/venues.json
+          git commit -m "Refresh venue directory"
+          git pull --rebase origin main
+          git push origin HEAD:main
+          # A push made with this token doesn't start other workflows, so publish explicitly
+          gh workflow run site.yml --ref main

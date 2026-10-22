@@ -22,6 +22,8 @@
 # IMPORTANT: confirm each calendar URL in a browser before launch. Venues change
 # websites often; the admin page's "Source health" panel flags any URL that stops working.
 # `aliases` are other spellings ticket sites use, so duplicates merge correctly.
+# `kind`, `capacity` (approximate, standing or seated) and `website` feed the Venues page;
+# `image:` overrides the picture, which otherwise comes from the website's preview image.
 
 # Calendar feeds that cover many venues at once. Shows at venues listed below publish
 # directly; shows at venues not listed here go to the review queue, since a feed can
@@ -33,6 +35,8 @@ feeds:
 venues:
   - slug: kilby-court
     name: Kilby Court
+    kind: All-ages club
+    capacity: 250
     address: 741 S Kilby Ct
     city: Salt Lake City
     age_policy: all_ages
@@ -43,6 +47,8 @@ venues:
 
   - slug: urban-lounge
     name: The Urban Lounge
+    kind: Club
+    capacity: 500
     aliases: [Urban Lounge, The Urban Lounge SLC]
     address: 241 S 500 E
     city: Salt Lake City
@@ -54,6 +60,8 @@ venues:
 
   - slug: metro-music-hall
     name: Metro Music Hall
+    kind: Club
+    capacity: 600
     aliases: [Metro Music Hall Salt Lake City]
     address: 615 W 100 S
     city: Salt Lake City
@@ -64,6 +72,9 @@ venues:
 
   - slug: the-state-room
     name: The State Room
+    kind: Concert hall
+    capacity: 299
+    website: https://thestateroompresents.com/the-state-room
     aliases: [State Room]
     address: 638 S State St
     city: Salt Lake City
@@ -74,6 +85,9 @@ venues:
 
   - slug: commonwealth-room
     name: The Commonwealth Room
+    kind: Concert hall
+    capacity: 600
+    website: https://thestateroompresents.com/the-commonwealth-room
     aliases: [Commonwealth Room, The Commonwealth Room - Salt Lake City]
     address: 195 W 2100 S
     city: South Salt Lake
@@ -84,6 +98,9 @@ venues:
 
   - slug: soundwell
     name: Soundwell
+    kind: Club
+    capacity: 600
+    website: https://soundwellslc.com/
     aliases: [Soundwell SLC]
     address: 149 W 200 S
     city: Salt Lake City
@@ -95,6 +112,9 @@ venues:
 
   - slug: the-depot
     name: The Depot
+    kind: Concert hall
+    capacity: 1200
+    website: https://www.depotslc.com/
     aliases: [Depot SLC]
     address: 13 N 400 W
     city: Salt Lake City
@@ -104,6 +124,9 @@ venues:
 
   - slug: the-complex
     name: The Complex
+    kind: Concert complex
+    capacity: 2500
+    website: https://thecomplexslc.com/
     aliases: [The Grand at The Complex SLC, The Rockwell at The Complex SLC, The Lot at The Complex SLC, The Complex SLC, The Grand at The Complex, The Rockwell at The Complex]
     address: 536 W 100 S
     city: Salt Lake City
@@ -114,6 +137,8 @@ venues:
 
   - slug: the-union-event-center
     name: The Union Event Center
+    kind: Concert hall
+    capacity: 3500
     aliases: [The Union, Union Event Center]
     address: 235 N 500 W
     city: Salt Lake City
@@ -124,6 +149,9 @@ venues:
 
   - slug: delta-center
     name: Delta Center
+    kind: Arena
+    capacity: 18000
+    website: https://www.deltacenter.com/
     address: 301 S Temple
     city: Salt Lake City
     age_policy: all_ages
@@ -131,6 +159,9 @@ venues:
 
   - slug: maverik-center
     name: Maverik Center
+    kind: Arena
+    capacity: 12000
+    website: https://www.maverikcenter.com/
     address: 3200 S Decker Lake Dr
     city: West Valley City
     age_policy: all_ages
@@ -138,6 +169,9 @@ venues:
 
   - slug: utah-first-amphitheatre
     name: Utah First Credit Union Amphitheatre
+    kind: Amphitheater
+    capacity: 20000
+    website: https://www.livenation.com/venue/KovZpZAEAEJA/utah-first-credit-union-amphitheatre-events
     aliases: [USANA Amphitheatre, Utah First Credit Union Amphitheatre (formerly USANA Amphitheatre)]
     address: 5150 S 6055 W
     city: West Valley City
@@ -146,6 +180,8 @@ venues:
 
   - slug: red-butte-garden
     name: Red Butte Garden Amphitheatre
+    kind: Amphitheater
+    capacity: 3000
     aliases: [Red Butte Garden, Red Butte Garden Amphitheater]
     address: 300 Wakara Way
     city: Salt Lake City
@@ -155,6 +191,9 @@ venues:
 
   - slug: eccles-theater
     name: Eccles Theater
+    kind: Theater
+    capacity: 2500
+    website: https://artsaltlake.org/venue/delta-performance-hall-at-the-eccles-theater/
     aliases: [Delta Performance Hall at the Eccles Theater]
     address: 131 S Main St
     city: Salt Lake City
@@ -163,6 +202,9 @@ venues:
 
   - slug: abravanel-hall
     name: Abravanel Hall
+    kind: Concert hall
+    capacity: 2800
+    website: https://artsaltlake.org/venue/abravanel-hall/
     address: 123 W South Temple
     city: Salt Lake City
     age_policy: all_ages
@@ -172,6 +214,8 @@ venues:
 
   - slug: gallivan-center
     name: Gallivan Center
+    kind: Outdoor plaza
+    website: https://www.thegallivancenter.com/
     aliases: [The Gallivan Center]
     address: 239 S Main St
     city: Salt Lake City
@@ -180,6 +224,7 @@ venues:
 
   - slug: murray-theater
     name: Murray Theater
+    kind: Theater
     address: 4961 S State St
     city: Murray
     age_policy: all_ages
@@ -188,6 +233,7 @@ venues:
 
   - slug: the-royal
     name: The Royal
+    kind: Club
     address: 4760 S 900 E
     city: Murray
     age_policy: 21_plus
@@ -195,6 +241,8 @@ venues:
 
   - slug: the-beehive
     name: The Beehive
+    kind: Club
+    capacity: 250
     address: 666 S State St
     city: Salt Lake City
     age_policy: 21_plus
@@ -202,6 +250,8 @@ venues:
 
   - slug: utah-state-fairpark
     name: Utah State Fairpark
+    kind: Fairgrounds
+    website: https://www.utahstatefairpark.com/
     address: 155 N 1000 W
     city: Salt Lake City
     age_policy: all_ages
@@ -209,12 +259,15 @@ venues:
 
   - slug: 801-event-center
     name: 801 Event Center
+    kind: Event hall
     city: Salt Lake City
     age_policy: varies
     strategy: feeds_only
 
   - slug: the-dlc
     name: The DLC
+    kind: Bar
+    capacity: 200
     aliases: [The DLC at Quarters, DLC at Quarters, Quarters Arcade Bar, Downtown Quarters Arcade Bar]
     city: Salt Lake City
     age_policy: varies
@@ -222,6 +275,8 @@ venues:
 
   - slug: international-bar
     name: International Bar
+    kind: Bar
+    capacity: 200
     aliases: [The International Bar, International Artist Lounge, The International Artist Lounge]
     address: 342 S State St
     city: Salt Lake City
@@ -231,6 +286,9 @@ venues:
 
   - slug: liquid-joes
     name: Liquid Joe's
+    kind: Bar
+    capacity: 399
+    website: https://www.liquidjoes.net/
     aliases: [Liquid Joes, Liquid Joe's SLC]
     address: 1249 E 3300 S
     city: Salt Lake City
@@ -242,6 +300,9 @@ venues:
 
   - slug: hog-wallow
     name: The Hog Wallow Pub
+    kind: Bar
+    capacity: 200
+    website: https://thehogwallow.com/
     aliases: [Hog Wallow Pub, Hog Wallow, The Hog Wallow]
     address: 3200 E Big Cottonwood Canyon Rd
     city: Cottonwood Heights
@@ -253,6 +314,8 @@ venues:
 
   - slug: drift-lounge
     name: Drift Lounge
+    kind: Lounge
+    website: https://www.driftloungeslc.com/
     aliases: [Drift Lounge at Woodbine, Drift Lounge SLC, Drift]
     address: 545 W 700 S
     city: Salt Lake City
@@ -267,6 +330,9 @@ venues:
   # --- Bars, lounges, breweries and markets with regular live music ----------------------
   - slug: lake-effect
     name: Lake Effect
+    kind: Bar
+    capacity: 250
+    website: https://www.lakeeffectslc.com/
     aliases: [Lake Effect SLC, The Rabbit Hole at Lake Effect, Rabbit Hole]
     address: 155 W 200 S
     city: Salt Lake City
@@ -278,6 +344,8 @@ venues:
 
   - slug: gracies
     name: Gracie's
+    kind: Bar
+    capacity: 350
     aliases: [Gracies, Gracie's SLC, Gracie's Bar]
     address: 326 S West Temple
     city: Salt Lake City
@@ -288,6 +356,9 @@ venues:
 
   - slug: green-pig-pub
     name: The Green Pig Pub
+    kind: Pub
+    capacity: 175
+    website: https://thegreenpigpub.com/
     aliases: [Green Pig Pub, Green Pig]
     address: 31 E 400 S
     city: Salt Lake City
@@ -301,6 +372,8 @@ venues:
 
   - slug: hopkins-brewing
     name: Hopkins Brewing Company
+    kind: Brewery
+    website: https://www.hopkinsbrewingcompany.com/
     aliases: [Hopkins Brewing, Hopkins Brewing Co]
     address: 1048 E 2100 S
     city: Salt Lake City
@@ -315,6 +388,8 @@ venues:
 
   - slug: epic-brewing
     name: Epic Brewing
+    kind: Brewery
+    website: https://www.epicbrewing.com/
     aliases: [Epic Brewing Company, Epic Brewing SLC, Epic Brewing Taproom]
     address: 825 S State St
     city: Salt Lake City
@@ -327,6 +402,8 @@ venues:
 
   - slug: the-break-murray
     name: The Break
+    kind: Bar
+    website: https://thebreakmurray.com/
     aliases: [The Break Murray, The Break Sports Grill Murray]
     city: Murray
     age_policy: 21_plus
@@ -339,6 +416,8 @@ venues:
 
   - slug: aces-high-saloon
     name: Aces High Saloon
+    kind: Bar
+    capacity: 200
     aliases: [Aces High, Aces High Saloon SLC]
     address: 1588 S State St
     city: Salt Lake City
@@ -348,6 +427,9 @@ venues:
 
   - slug: tailgate-tavern
     name: Tailgate Tavern
+    kind: Bar
+    capacity: 88
+    website: https://www.tailgatetavernslc.com/
     aliases: [Tailgate Tavern SLC]
     address: 3550 S State St
     city: South Salt Lake
@@ -361,6 +443,8 @@ venues:
 
   - slug: handlebar
     name: HandleBar
+    kind: Bar
+    website: https://www.handlebarslc.com/
     aliases: [HandleBar SLC, Handlebar, The HandleBar]
     address: 751 N 300 W
     city: Salt Lake City
@@ -371,6 +455,7 @@ venues:
 
   - slug: caputos-15th-15th
     name: Caputo's Market - 15th & 15th
+    kind: Market
     aliases: [Caputo's 15th & 15th, Caputos 15th and 15th]
     city: Salt Lake City
     age_policy: all_ages
@@ -380,6 +465,7 @@ venues:
 
   - slug: caputos-holladay
     name: Caputo's Market - Holladay
+    kind: Market
     aliases: [Caputo's Holladay, Caputos Holladay]
     city: Holladay
     age_policy: all_ages
@@ -387,6 +473,8 @@ venues:
 
   - slug: woodbine-food-hall
     name: Woodbine Food Hall
+    kind: Food hall
+    website: https://www.woodbineslc.com/
     aliases: [Woodbine Food Hall and Bar, Woodbine Foodhall, Woodbine Food Hall & Tavern]
     address: 545 W 700 S
     city: Salt Lake City
@@ -397,6 +485,7 @@ venues:
 
   - slug: melancholy
     name: Melancholy
+    kind: Lounge
     aliases: [Melancholy SLC, Melancholy Wine & Cocktail Lounge]
     city: Salt Lake City
     age_policy: 21_plus
@@ -406,6 +495,7 @@ venues:
 
   - slug: boilerroom
     name: Boilerroom
+    kind: Bar
     aliases: [The Boilerroom, Boiler Room SLC]
     city: Salt Lake City
     age_policy: 21_plus
@@ -413,6 +503,8 @@ venues:
 
   - slug: sky-slc
     name: SKY SLC
+    kind: Club
+    capacity: 1000
     aliases: [Sky SLC, The Rooftop at SKY SLC, SKY Salt Lake City]
     address: 149 W Pierpont Ave
     city: Salt Lake City
@@ -423,6 +515,9 @@ venues:
 
   - slug: great-saltair
     name: The Great Saltair
+    kind: Concert hall
+    capacity: 4600
+    website: https://thesaltair.com/
     aliases: [Great Saltair, Saltair, The Saltair]
     address: 12408 W Saltair Dr
     city: Magna
@@ -433,6 +528,7 @@ venues:
 
   - slug: the-pearl-on-main
     name: The Pearl on Main
+    kind: Music hall
     aliases: [Pearl on Main]
     address: 7711 S Main St
     city: Midvale
@@ -441,6 +537,9 @@ venues:
 
   - slug: kingsbury-hall
     name: Kingsbury Hall
+    kind: Theater
+    capacity: 1900
+    website: https://kingsburyhall.utah.edu/
     aliases: [Kingsbury Hall at the University of Utah]
     address: 1395 E Presidents Cir
     city: Salt Lake City
@@ -449,6 +548,8 @@ venues:
 
   - slug: sandy-amphitheater
     name: Sandy Amphitheater
+    kind: Amphitheater
+    capacity: 2700
     aliases: [Sandy Amphitheatre]
     address: 1245 E 9400 S
     city: Sandy
@@ -457,6 +558,8 @@ venues:
 
   - slug: rice-eccles-stadium
     name: Rice-Eccles Stadium
+    kind: Stadium
+    capacity: 51000
     aliases: [Rice Eccles Stadium]
     address: 451 S 1400 E
     city: Salt Lake City
@@ -465,6 +568,9 @@ venues:
 
   - slug: capitol-theatre
     name: Capitol Theatre
+    kind: Theater
+    capacity: 1900
+    website: https://artsaltlake.org/venue/capitol-theatre/
     aliases: [Janet Quinney Lawson Capitol Theatre, Capitol Theater]
     address: 50 W 200 S
     city: Salt Lake City
@@ -473,6 +579,7 @@ venues:
 
   - slug: granary-live
     name: Granary Live
+    kind: Concert hall
     address: 742 S 500 W
     city: Salt Lake City
     age_policy: varies

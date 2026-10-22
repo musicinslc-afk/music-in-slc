@@ -514,3 +514,45 @@ td.err { white-space: normal; color: var(--danger); min-width: 240px; }
   z-index: 20; max-width: calc(100vw - 32px); padding: 10px 16px; border-radius: 10px;
   background: var(--ink); color: var(--bg); font-size: 14px; box-shadow: 0 8px 30px rgb(0 0 0 / 0.25);
 }
+
+/* ---------- venues ---------- */
+.venue-tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding-bottom: 12px; }
+.venue-sort { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+.venue-kinds { padding-bottom: 4px; }
+.venue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; padding-bottom: 40px; }
+.vcard {
+  display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); overflow: hidden; min-width: 0;
+}
+.vpic { position: relative; aspect-ratio: 16 / 9; background: var(--surface-2); overflow: hidden; }
+.vpic img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;
+  opacity: 0; transition: opacity 0.3s ease;
+}
+.vpic img.loaded { opacity: 1; }
+.vpic img.failed { display: none; }
+.vpic-fallback {
+  position: absolute; inset: 0; display: grid; place-items: center; background: var(--tile, var(--lake));
+  color: #fff; font: 800 clamp(40px, 7vw, 64px)/1 var(--font-display); letter-spacing: 0.04em;
+}
+.vsize {
+  position: absolute; z-index: 2; left: 10px; bottom: 10px; padding: 3px 9px; border-radius: 999px;
+  background: rgba(15, 20, 24, 0.78); color: #fff; font: 600 11px/1.4 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase;
+}
+.vbody { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px 16px; flex: 1; }
+.vname { margin: 0; font: 800 28px/0.95 var(--font-display); text-transform: uppercase; }
+.vfacts { margin: 0; font-size: 14px; color: var(--muted); }
+.vwhere { margin: 0; font-size: 14px; }
+.vwhere a { color: var(--ink); text-decoration-color: var(--line); text-underline-offset: 3px; }
+.vnext { margin: 6px 0 0; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.vnext.none { color: var(--muted); }
+.vnext-label { font: 600 11px/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-right: 4px; }
+.vshows { align-self: flex-start; font-weight: 600; font-size: 14px; color: var(--accent); text-decoration: none; }
+.vshows:hover { text-decoration: underline; }
+.vlinks { display: flex; gap: 14px; margin-top: auto; padding-top: 8px; font-size: 14px; }
+.vlinks a { color: var(--muted); }
+.vlinks a:hover { color: var(--ink); }
+@media (max-width: 520px) {
+  .venue-sort { width: 100%; justify-content: space-between; }
+  .venue-grid { grid-template-columns: minmax(0, 1fr); }
+}
