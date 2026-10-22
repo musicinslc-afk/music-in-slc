@@ -556,3 +556,14 @@ td.err { white-space: normal; color: var(--danger); min-width: 240px; }
   .venue-sort { width: 100%; justify-content: space-between; }
   .venue-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ---------- You page ---------- */
+.you-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; padding-block: 28px 8px; }
+.you-head h1 { font: 800 clamp(48px, 9vw, 88px)/0.86 var(--font-display); text-transform: uppercase; margin: 0; overflow-wrap: anywhere; }
+.you-sub-head { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
+.you-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.you-tabs .chip span { font: 500 12px var(--font-mono); margin-left: 2px; }
+.you-tabs .chip span:empty { display: none; }
+.you-page #my-shows { margin-top: 12px; }
+.you-page .you { margin-top: 36px; }
+.you-empty p { margin: 18px 0 0; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }

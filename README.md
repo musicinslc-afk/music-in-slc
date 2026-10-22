@@ -154,14 +154,14 @@ Profiles are stored only in the visitor's browser. Nothing about a visitor's lis
 
 ## You: taste, plans and friends
 
-The **You** section on the calendar page is set up once and then folds down to a single line showing matches and plans, with **Edit** to reopen it. It is the only place the Last.fm connection appears.
+**You** is its own page (`you.html`). It opens with the shows the visitor marked Going and Maybe, by night, with All, Going and Maybe tabs. Below that, Settings (sign-in, friends, who sees your plans, and Last.fm or typed-in artists) stays open until it has been set up once, then folds to one line with **Edit**. It is the only place the Last.fm connection appears. On the calendar, **My matches** and **My plans** filters appear once there's something to filter by.
 
 - **Maybe and Going** buttons sit on every show card, the week view and the show detail view. Signed out, picks are kept in the browser. Signing in (an emailed link, no password) moves them to the visitor's account.
 - **Who can see them** is set per person: *Friends* (the default), *Everyone*, or *Just me*. Totals such as "12 going" count everyone and never name anyone.
-- **Friends** are two-way. Each person has a page at `index.html?u=<handle>`. Opening someone's page and tapping **Add friend** sends a request; they see it under You and tap **Add back**. Friends' names then show on the shows they picked.
+- **Friends** are two-way. Each person has a page at `you.html?u=<handle>`. Opening someone's page and tapping **Add friend** sends a request; they see it under You and tap **Add back**. Friends' names then show on the shows they picked.
 - The rules live in the database (`supabase/migrations/003_you_plans_and_friends.sql`), so a visitor can only read plans the owner allows, whatever the page code does.
 
-Setup: run migration 003 in the Supabase SQL editor, and under **Authentication → URL Configuration → Redirect URLs** add `https://musicinslc-afk.github.io/music-in-slc/**` so sign-in links return to the calendar.
+Setup: run migration 003 in the Supabase SQL editor, and under **Authentication → URL Configuration → Redirect URLs** add `https://musicinslc-afk.github.io/music-in-slc/**` so sign-in links return to the site.
 
 ## Being a good neighbor
 
@@ -193,6 +193,8 @@ ingest/slclive/              parsing, normalizing, dedupe, AI reader, Last.fm ge
                              flyer finder (flyers.py), band links (links.py, musicbrainz.py)
 web/                         the site (no build step)
 web/details.js               the show detail view: flyer, band links, share, add to calendar
+web/you.html, you.js         the You page: your Going and Maybe shows, then settings
+web/cards.js                 show cards and nights, shared by the calendar and the You page
 web/plans.js                 Maybe and Going, sign-in, friends, and people's pages (?u=handle)
 web/genres.json              genre list shared by the site and the ingest jobs
 .github/workflows/           schedules and deployment

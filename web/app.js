@@ -1,4 +1,4 @@
-// Calendar page: filters, grouping by night, and the You section (taste, plans, friends).
+// Calendar page: filters, grouping by night, taste matches and plans.
 (async function () {
   const S = window.SLC, T = window.SLCTaste, P = window.SLCPlans;
   const $ = (id) => document.getElementById(id);
@@ -59,50 +59,8 @@
   }
 
   // ---------- rendering ----------
-  function relLabel(key) {
-    const today = S.dayKey(Date.now());
-    if (key === today) return "Tonight";
-    if (key === S.addDays(today, 1)) return "Tomorrow";
-    return "";
-  }
-
-  function showHtml(e) {
-    const support = (e.artists || []).slice(1).filter((a) => a.toLowerCase() !== e.title.toLowerCase());
-    const url = S.safeUrl(e.ticket_url);
-    const price = S.priceLabel(e);
-    const tags = (e.genres || []).map((g) => `<span class="tag">${S.esc(window.SLC_GENRE_LABELS[g] || g)}</span>`).join("");
-    const age = S.AGE[e.age_restriction] ? `<span class="tag age">${S.AGE[e.age_restriction]}</span>` : "";
-    const cancelled = e.status === "cancelled";
-    const id = S.esc(e.id);
-    return `<article class="show${e._match ? " matched" : ""}${cancelled ? " cancelled" : ""}${P.cardClass(e)}" data-card="${id}">
-      <div class="time">${S.esc(S.timeLabel(e.starts_at))}${e.doors_at ? `<small>doors ${S.esc(S.timeLabel(e.doors_at))}</small>` : ""}</div>
-      <a class="thumb" href="#show-${id}" data-show="${id}" tabindex="-1" aria-hidden="true">${D.art(e, "thumb-img")}</a>
-      <div class="show-main">
-        <h3 class="title"><a href="#show-${id}" data-show="${id}">${S.esc(e.title)}</a></h3>
-        ${support.length ? `<div class="support">with ${S.esc(support.join(", "))}</div>` : ""}
-        <div class="where">${S.esc(e.venue_name)}${e.city && e.city !== "Salt Lake City" ? ` <span>· ${S.esc(e.city)}</span>` : ""}</div>
-        ${D.cardLinks(e, artists)}
-        <div class="tags">${cancelled ? '<span class="tag status">Cancelled</span>' : ""}${age}${tags}</div>
-        ${e._match ? `<div class="match">${S.esc(e._match.reason)}</div>` : ""}
-        ${P.html(e, "card")}
-      </div>
-      <div class="show-side">
-        ${price ? `<span class="price${price === "Free" ? " free" : ""}">${S.esc(price)}</span>` : ""}
-        ${url && !cancelled ? `<a class="btn primary" href="${S.esc(url)}" target="_blank" rel="noopener">Tickets</a>` : ""}
-      </div>
-    </article>`;
-  }
-
-  function dayHtml(k, shows) {
-    // Matches float to the top of each night when a profile is connected
-    if (T.profile) shows.sort((a, b) => (b._match?.score || 0) - (a._match?.score || 0) || a.starts_at.localeCompare(b.starts_at));
-    const d = shows[0].starts_at;
-    const rel = relLabel(k);
-    return `<section class="day" aria-label="${S.esc(S.fmtLong(d))}">
-        <div class="stub"><span class="dow">${S.esc(S.fmtDow(d))}</span><span class="num">${S.esc(S.fmtNum(d))}</span><span class="mon">${S.esc(S.fmtMon(d))}</span>${rel ? `<span class="rel">${rel}</span>` : ""}</div>
-        <div class="shows">${shows.map(showHtml).join("")}</div>
-      </section>`;
-  }
+  const { showHtml, dayHtml } = window.SLCCards;
+  window.SLCCards.setArtists(artists);
 
   function renderTonight() {
     const today = S.dayKey(Date.now());
@@ -195,201 +153,24 @@
   // page being left, so it is set on every load, not only on a reload.
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
   const params = new URLSearchParams(location.search);
-  const arriveAtYou = location.hash === "#you" || location.hash === "#for-you" || params.has("you");
-  if (arriveAtYou) {
+  // The You section moved to its own page; old links (and sign-in links already sent) go there
+  if (location.hash === "#you" || location.hash === "#for-you" || params.has("you")) {
     params.delete("you");
     const qs = params.toString();
-    const keepHash = location.hash.startsWith("#show-") || location.hash.includes("access_token") ? location.hash : "";
-    history.replaceState(history.state, "", location.pathname + (qs ? `?${qs}` : "") + keepHash);
+    const keepHash = location.hash.includes("access_token") || location.hash.startsWith("#show-") ? location.hash : "";
+    location.replace(`you.html${qs ? `?${qs}` : ""}${keepHash}`);
+    return;
   }
   if (!location.hash.startsWith("#show-")) window.scrollTo(0, 0);
-  // The You link scrolls to the section without leaving #you in the address
-  document.querySelector('.nav a[href="#you"]')?.addEventListener("click", (ev) => {
-    ev.preventDefault();
-    you.open(you.isEmpty());
-  });
 
-  // ---------- You ----------
-  // Set up once, then it folds down to one line with your matches and plans.
-  const YOU = "slc.you.v1";
-  const youPref = S.store.get(YOU, { setUp: false });
-  if (T.profile) youPref.setUp = true; // already set up under the old For you panel
-  const you = {
-    isOpen: () => !$("you-body").hidden,
-    isEmpty: () => !T.profile && !P.user && !P.mineCount().going && !P.mineCount().maybe,
-    open(focus) {
-      setOpen(true);
-      $("you").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
-      if (focus) setTimeout(() => {
-        const target = !P.user && P.social ? $("signin-email") : !T.profile ? $("lastfm-user") : $("you-done");
-        (target && target.offsetParent ? target : $("you-toggle")).focus({ preventScroll: true });
-      }, 350);
-    },
-    close() { setOpen(false); },
-  };
-  window.SLCYou = you;
-  function setOpen(open) {
-    $("you-body").hidden = !open;
-    $("you").dataset.open = String(open);
-    $("you-toggle").setAttribute("aria-expanded", String(open));
-    syncYou();
-  }
-  function done() {
-    youPref.setUp = true;
-    S.store.set(YOU, youPref);
-    setOpen(false);
-    $("you-toggle").focus({ preventScroll: true });
-  }
-  $("you-toggle").onclick = () => (you.isOpen() ? done() : setOpen(true));
-  $("you-done").onclick = done;
-
-  function showTasteError(msg) { $("taste-error").textContent = msg; $("taste-error").hidden = !msg; }
-
-  function syncYou() {
-    const on = Boolean(T.profile);
-    const open = you.isOpen();
-    const plans = P.mineCount();
-    const planned = plans.going + plans.maybe;
-    $("you").dataset.active = String(on || planned > 0 || Boolean(P.user));
-
-    // Collapsed summary
-    const bits = [];
-    if (on) {
-      const hits = events.filter((e) => T.score(e)).length;
-      bits.push(`<strong>${hits} show${hits === 1 ? "" : "s"}</strong> match ${S.esc(T.summary().label)}`);
-    }
-    if (planned) {
-      bits.push(`<strong>Going to ${plans.going}</strong>${plans.maybe ? `, maybe ${plans.maybe}` : ""}`);
-    }
-    if (P.profile) bits.push(S.esc(P.visibilityNote().replace(/\.$/, "")));
-    $("you-summary").innerHTML = bits.length
-      ? bits.join('<span class="dot" aria-hidden="true"> · </span>')
-      : "Picks from your listening, and a place to keep the shows you're going to.";
-    $("you-summary").hidden = open && !bits.length;
-    $("you-toggle").textContent = open ? "Close" : bits.length || youPref.setUp ? "Edit" : "Set up";
-    $("only-matches").hidden = !on;
+  // My matches and My plans only show up once there's something to filter by
+  function syncChips() {
+    const planned = P.mineCount().going + P.mineCount().maybe;
+    $("only-matches").hidden = !T.profile;
     $("only-plans").hidden = !planned && !state.onlyPlans;
     $("only-plans").textContent = planned ? `My plans (${planned})` : "My plans";
-
-    // Step 2: music
-    $("taste-intro").hidden = on;
-    $("taste-connect").hidden = on;
-    $("taste-on").hidden = !on;
-    $("lastfm-form").hidden = !T.hasLastfm();
-    if (!T.hasLastfm()) {
-      $("taste-intro").textContent = "Tell us a few artists or genres you love and we'll flag the shows that fit.";
-      $("manual-taste").open = true;
-    }
-    if (!S.live) $("manual-artists").placeholder = "Try the sample bands: Rhea Vance, Marrow Saints, Lo Velo";
-    if (on) {
-      const s = T.summary();
-      const hits = events.filter((e) => T.score(e)).length;
-      $("taste-summary").innerHTML = `<strong>${hits} show${hits === 1 ? "" : "s"}</strong> match ${S.esc(s.label)}` +
-        (s.text ? ` (${S.esc(s.text)})` : "");
-    }
-
-    // Step 1: account
-    const social = P.social;
-    $("acct-off").hidden = social;
-    $("acct-out").hidden = !social || Boolean(P.user);
-    $("acct-in").hidden = !social || !P.profile;
-    if (P.profile && !$("acct-in").dataset.filled) fillProfile();
   }
-
-  function fillProfile() {
-    const p = P.profile;
-    $("acct-in").dataset.filled = "1";
-    $("pf-name").value = p.display_name;
-    $("pf-handle").value = p.handle;
-    document.querySelectorAll('input[name="vis"]').forEach((r) => { r.checked = r.value === p.visibility; });
-    const url = P.shareUrl();
-    $("share-url").textContent = url.replace(/^https?:\/\//, "");
-    $("share-url").href = url;
-    $("share-url").dataset.profile = p.handle;
-    $("acct-email").textContent = P.user?.email || "";
-    renderFriends();
-  }
-
-  function renderFriends() {
-    const f = P.friends();
-    const person = (p, actions) => `<li><a href="?u=${encodeURIComponent(p.handle)}" data-profile="${S.esc(p.handle)}">${S.esc(p.display_name)}</a>
-      <span class="mono">@${S.esc(p.handle)}</span><span class="you-row-actions">${actions(p)}</span></li>`;
-    const group = (title, list, actions) => list.length
-      ? `<h4 class="you-sub">${title}</h4><ul class="you-people">${list.map((p) => person(p, actions)).join("")}</ul>` : "";
-    $("friends").innerHTML =
-      group("Added you", f.requests, (p) => `<button class="btn lake" type="button" data-follow="${p.user_id}">Add back</button>`) +
-      group(`Friends (${f.friends.length})`, f.friends, (p) => `<button class="linkish" type="button" data-unfriend="${p.user_id}">Remove</button>`) +
-      group("Waiting for them to add you back", f.waiting, (p) => `<button class="linkish" type="button" data-unfriend="${p.user_id}">Cancel</button>`);
-  }
-  $("friends").addEventListener("click", async (ev) => {
-    const b = ev.target.closest("[data-follow],[data-unfriend]");
-    if (!b) return;
-    b.disabled = true;
-    if (b.dataset.follow) await P.follow(b.dataset.follow); else await P.unfriend(b.dataset.unfriend);
-  });
-
-  async function connect(promise, button) {
-    showTasteError("");
-    const label = button?.textContent;
-    if (button) { button.disabled = true; button.textContent = "Reading your taste…"; }
-    try {
-      T.save(await promise);
-      syncYou(); render();
-    } catch (err) {
-      showTasteError(err.message || String(err));
-    } finally {
-      if (button) { button.disabled = false; button.textContent = label; }
-    }
-  }
-  $("lastfm-form").onsubmit = (ev) => {
-    ev.preventDefault();
-    const u = $("lastfm-user").value.trim();
-    if (u) connect(T.fromLastfm(u), ev.submitter);
-  };
-  $("manual-form").onsubmit = (ev) => {
-    ev.preventDefault();
-    const picked = [...document.querySelectorAll("#manual-genres input:checked")].map((i) => i.value);
-    connect(T.fromManual($("manual-artists").value, picked), ev.submitter);
-  };
-  $("taste-clear").onclick = () => { T.save(null); state.onlyMatches = false; syncYou(); update(); };
-
-  $("signin-form").onsubmit = async (ev) => {
-    ev.preventDefault();
-    const btn = ev.submitter;
-    btn.disabled = true;
-    const { error } = await P.signIn($("signin-email").value.trim());
-    btn.disabled = false;
-    const msg = $("signin-msg");
-    msg.hidden = false;
-    msg.className = `notice ${error ? "err" : "ok"}`;
-    msg.textContent = error ? error.message : "Check your email and open the link on this device. Your Maybe and Going picks come with you.";
-  };
-  $("profile-form").onsubmit = async (ev) => {
-    ev.preventDefault();
-    const btn = ev.submitter;
-    btn.disabled = true;
-    $("profile-msg").textContent = "";
-    const r = await P.saveProfile({
-      display_name: $("pf-name").value,
-      handle: $("pf-handle").value,
-      visibility: document.querySelector('input[name="vis"]:checked')?.value || "friends",
-    });
-    btn.disabled = false;
-    $("profile-msg").textContent = r.error || "Saved.";
-    if (r.ok) { delete $("acct-in").dataset.filled; fillProfile(); }
-  };
-  $("share-btn").onclick = (ev) => P.shareLink(ev.currentTarget);
-  $("sign-out").onclick = async () => { await P.signOut(); delete $("acct-in").dataset.filled; };
-
-  P.onChange(() => {
-    if (P.profile) {
-      if (!$("acct-in").dataset.filled) fillProfile(); else renderFriends();
-    } else {
-      delete $("acct-in").dataset.filled;
-    }
-    syncYou();
-    if (state.onlyPlans) render();
-  });
+  P.onChange(() => { syncChips(); if (state.onlyPlans) render(); });
 
   // ---------- load ----------
   try {
@@ -397,8 +178,6 @@
     window.SLC_GENRE_LABELS = Object.fromEntries(genres.map((g) => [g.id, g.label]));
     $("genre-chips").innerHTML = genres.map((g) =>
       `<button class="chip" type="button" data-genre="${g.id}" aria-pressed="false">${S.esc(g.label)}</button>`).join("");
-    $("manual-genres").innerHTML = genres.map((g) =>
-      `<label><input type="checkbox" value="${g.id}"> ${S.esc(g.label)}</label>`).join("");
     document.querySelectorAll("[data-genre]").forEach((b) => b.onclick = () => {
       const g = b.dataset.genre;
       state.genres = state.genres.includes(g) ? state.genres.filter((x) => x !== g) : [...state.genres, g];
@@ -415,13 +194,9 @@
     // ?venue=Name (from the Venues page) opens the calendar filtered to that venue
     const wantVenue = params.get("venue");
     if (wantVenue && venues.includes(wantVenue)) { state.venue = wantVenue; $("venue").value = wantVenue; }
-    syncControls(); syncYou(); render();
+    syncControls(); syncChips(); render();
     details.fromHash();
-    P.start({ find: (id) => events.find((e) => String(e.id) === String(id)) }).then(() => {
-      if (arriveAtYou) you.open(true);
-    });
-    // Until the visitor has set it up once, You starts open
-    if (!youPref.setUp && !arriveAtYou) setOpen(true);
+    P.start({ find: (id) => events.find((e) => String(e.id) === String(id)) });
   } catch (err) {
     $("list").innerHTML = `<div class="empty"><strong>Shows didn't load</strong>${S.esc(err.message)}</div>`;
   }
