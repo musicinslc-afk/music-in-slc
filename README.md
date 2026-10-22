@@ -40,7 +40,7 @@ Every source produces the same show record. Each show gets a fingerprint (venue,
 - Spotify sign-in has been removed from the site; recommendations use Last.fm and typed-in artists.
 - Soundwell and The Hog Wallow Pub are read with layout parsers for their full calendars; Liquid Joe's comes from its Ticketsauce event list; The Union Event Center's JavaScript calendar is read in a headless browser (its shows also come from Ticketmaster). The Great Saltair comes from Ticketmaster and is marked seasonal.
 - The coverage watchdog flags any watched venue with no published show in its window, as a red `coverage:<venue>` row in Source health. The weekly digest goes to musicinslc@gmail.com on Monday mornings.
-- Flyers and band links: run `supabase/migrations/002_flyers_and_artist_links.sql` once in the SQL editor (it adds the image and link columns, the `artists` table and the public `flyers` storage bucket).
+- Flyers and band links are live: `supabase/migrations/002_flyers_and_artist_links.sql` has been run. After the first run, 306 of 567 upcoming shows had an image and 222 bands had links.
 - Still to do: Last.fm key (genre tags and similar-artist recommendations); optional SeatGeek client ID (backstop for touring shows).
 
 ## Setup
