@@ -14,7 +14,7 @@ from .. import ai_extract, fetch, music_filter, render
 from ..models import Show
 from ..normalize import Venue
 from . import ics, jsonld, ticketsauce
-from .venue_parsers import PARSERS
+from .venue_parsers import PARSERS, recurring
 
 
 @dataclass
@@ -85,6 +85,10 @@ def scrape(venue: Venue, previous_hash: Callable[[str], Optional[str]]) -> PageR
 def _scrape(venue: Venue, previous_hash: Callable[[str], Optional[str]]) -> PageResult:
     result = PageResult()
     source = f"venue:{venue.slug}"
+    if venue.recurring and not venue.calendar_urls:
+        result.shows = recurring(venue.recurring, venue.name, source)
+        result.method = "weekly schedule"
+        return result
     if venue.ticketsauce_partner:
         result.shows = ticketsauce.fetch_shows(venue.ticketsauce_partner, venue.name, source)
         result.method = "ticketsauce"

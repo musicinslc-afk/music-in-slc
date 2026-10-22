@@ -58,7 +58,7 @@ def store(db: DB, shows, venues, source: str, dry_run: bool, review_unknown_venu
     return found, inserted, updated
 
 
-COMPLETE_METHODS = ("parser:", "ticketsauce")
+COMPLETE_METHODS = ("parser:", "ticketsauce", "weekly schedule")
 
 
 def main() -> int:
@@ -102,7 +102,7 @@ def main() -> int:
         jobs.append((name, feed_job))
         review.add(name)
     for v in venues:
-        if v.strategy == "feeds_only" or not v.calendar_urls:
+        if not v.recurring and (v.strategy == "feeds_only" or not v.calendar_urls):
             continue
         if wanted and v.slug not in wanted:
             continue

@@ -12,6 +12,8 @@ from urllib.parse import urljoin, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
+from zoneinfo import ZoneInfo
+
 from ..models import Show
 from ..normalize import TZ, clean
 
@@ -229,3 +231,70 @@ def wix_events(html: str, url: str, venue_name: str, source: str, today: Optiona
 
 
 PARSERS["wix_events"] = wix_events
+
+
+# ---------------------------------------------------------------------------
+# "Add to Google Calendar" links (Squarespace event blocks, Epic Brewing and others):
+# each carries the event's title, UTC start and end, and location.
+# ---------------------------------------------------------------------------
+def gcal_links(html: str, url: str, venue_name: str, source: str, today: Optional[date] = None) -> list[Show]:
+    from urllib.parse import parse_qs
+    soup = BeautifulSoup(html, "html.parser")
+    cutoff = datetime.combine(today or datetime.now(TZ).date(), time(0, 0), TZ)
+    shows: list[Show] = []
+    seen: set[tuple[str, datetime]] = set()
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        if "google.com/calendar" not in href or "action=TEMPLATE" not in href:
+            continue
+        q = parse_qs(urlparse(href).query)
+        title = clean((q.get("text") or [""])[0])
+        dates = (q.get("dates") or [""])[0].split("/")[0]
+        try:
+            starts = datetime.strptime(dates, "%Y%m%dT%H%M%SZ").replace(tzinfo=ZoneInfo("UTC")).astimezone(TZ)
+        except ValueError:
+            continue
+        if not title or starts < cutoff or (title, starts) in seen:
+            continue
+        seen.add((title, starts))
+        artist = re.sub(r"^\s*live music\s*[:\-]\s*", "", title, flags=re.I)
+        shows.append(Show(title=title, starts_at=starts, venue_name=venue_name,
+                          artists=[artist] if artist != title else [],
+                          source_url=url, ticket_url=url, source=source))
+    return shows
+
+
+PARSERS["gcal_links"] = gcal_links
+
+
+# ---------------------------------------------------------------------------
+# Weekly schedules, for venues that post standing nights rather than dated listings
+# (venues.yaml `recurring:`), listed four weeks ahead.
+# ---------------------------------------------------------------------------
+WEEKDAYS = {d: i for i, d in enumerate(["mon", "tue", "wed", "thu", "fri", "sat", "sun"])}
+RECURRING_WEEKS = 4
+
+
+def recurring(entries: list[dict], venue_name: str, source: str, today: Optional[date] = None) -> list[Show]:
+    from datetime import timedelta
+    today = today or datetime.now(TZ).date()
+    shows: list[Show] = []
+    for e in entries:
+        weekday = WEEKDAYS[str(e["day"]).lower()[:3]]
+        hour, minute = (int(x) for x in str(e.get("time", "20:00")).split(":"))
+        first = today + timedelta(days=(weekday - today.weekday()) % 7)
+        for week in range(RECURRING_WEEKS):
+            d = first + timedelta(weeks=week)
+            shows.append(Show(
+                title=e["title"],
+                starts_at=datetime.combine(d, time(hour, minute), TZ),
+                venue_name=venue_name,
+                artists=list(e.get("artists") or []),
+                raw_genres=list(e.get("genres") or []),
+                is_free=bool(e.get("free")),
+                description=e.get("description") or f"Every {d.strftime('%A')} at {venue_name}. "
+                                                    "Lineups change, so check with the venue before you go.",
+                source_url=e.get("url"),
+                source=source,
+            ))
+    return shows

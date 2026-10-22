@@ -259,9 +259,160 @@ venues:
     age_policy: 21_plus
     calendar_urls: [https://www.driftloungeslc.com/event-list]
     parser: wix_events     # Wix event pages; recurring series list their later dates too
+    mato_venue: driftloungeslc
     music_only: true       # also hosts drag shows, screenings and parties
     strategy: auto
     expect_shows_within_days: 14
+
+  # --- Bars, lounges, breweries and markets with regular live music ----------------------
+  - slug: lake-effect
+    name: Lake Effect
+    aliases: [Lake Effect SLC, The Rabbit Hole at Lake Effect, Rabbit Hole]
+    address: 155 W 200 S
+    city: Salt Lake City
+    age_policy: 21_plus
+    calendar_urls: [https://www.lakeeffectslc.com/calendar]
+    strategy: render       # music nightly on the main floor; Flamingo Jazz Wednesdays in the Rabbit Hole
+    music_only: true
+    mato_venue: lakeeffectslc
+    expect_shows_within_days: 7
+
+  - slug: gracies
+    name: Gracie's
+    aliases: [Gracies, Gracie's SLC, Gracie's Bar]
+    address: 326 S West Temple
+    city: Salt Lake City
+    age_policy: 21_plus
+    strategy: feeds_only   # bands and DJs Thursday through Saturday; posts on Mato
+    mato_venue: graciesbar
+
+  - slug: green-pig-pub
+    name: The Green Pig Pub
+    aliases: [Green Pig Pub, Green Pig]
+    address: 31 E 400 S
+    city: Salt Lake City
+    age_policy: 21_plus
+    calendar_urls: [https://thegreenpigpub.com/salt-lake-city-downtown-salt-lake-city-the-green-pig-pub-events]
+    strategy: render       # SpotHopper calendar; blues jam Mondays, bands Fridays
+    music_only: true
+
+  - slug: hopkins-brewing
+    name: Hopkins Brewing Company
+    aliases: [Hopkins Brewing, Hopkins Brewing Co]
+    address: 1048 E 2100 S
+    city: Salt Lake City
+    age_policy: all_ages
+    default_genres: [jazz]
+    strategy: feeds_only   # the site lists standing nights without dates
+    recurring:
+      - {title: Jazz Jam, day: wed, time: "20:00", genres: [jazz], free: true,
+         url: "https://www.hopkinsbrewingcompany.com/music-events/"}
+      - {title: Jazz Trio, day: thu, time: "19:00", genres: [jazz], free: true,
+         url: "https://www.hopkinsbrewingcompany.com/music-events/"}
+
+  - slug: epic-brewing
+    name: Epic Brewing
+    aliases: [Epic Brewing Company, Epic Brewing SLC, Epic Brewing Taproom]
+    address: 825 S State St
+    city: Salt Lake City
+    age_policy: 21_plus
+    calendar_urls: [https://www.epicbrewing.com/salt-lake-city-area-events]
+    parser: gcal_links     # solo acts most Fridays among charity nights and food trucks
+    music_only: true
+    strategy: auto
+    expect_shows_within_days: 14
+
+  - slug: the-break-murray
+    name: The Break
+    aliases: [The Break Murray, The Break Sports Grill Murray]
+    city: Murray
+    age_policy: 21_plus
+    strategy: feeds_only   # the site blocks automated visits; standing nights from its own guide
+    recurring:
+      - {title: Open Jam, day: wed, time: "20:00", genres: [local], free: true,
+         url: "https://thebreakmurray.com/"}
+      - {title: Friday Night Live Band, day: fri, time: "21:00", url: "https://thebreakmurray.com/"}
+      - {title: Saturday Live Music, day: sat, time: "21:00", url: "https://thebreakmurray.com/"}
+
+  - slug: aces-high-saloon
+    name: Aces High Saloon
+    aliases: [Aces High, Aces High Saloon SLC]
+    address: 1588 S State St
+    city: Salt Lake City
+    age_policy: 21_plus
+    default_genres: [metal, punk]
+    strategy: feeds_only   # touring metal and punk; shows come from KRCL, SeatGeek, email and submissions
+
+  - slug: tailgate-tavern
+    name: Tailgate Tavern
+    aliases: [Tailgate Tavern SLC]
+    address: 3550 S State St
+    city: South Salt Lake
+    age_policy: 21_plus
+    strategy: feeds_only   # the site blocks automated visits; standing nights from its events page
+    recurring:
+      - {title: Country Music Mondays, day: mon, time: "20:00", genres: [country],
+         url: "https://www.tailgatetavernslc.com/events/"}
+      - {title: Open Mic, day: sun, time: "19:00", genres: [local], free: true,
+         url: "https://www.tailgatetavernslc.com/events/"}
+
+  - slug: handlebar
+    name: HandleBar
+    aliases: [HandleBar SLC, Handlebar, The HandleBar]
+    address: 751 N 300 W
+    city: Salt Lake City
+    age_policy: 21_plus
+    strategy: feeds_only   # patio shows posted on Mato and Instagram
+    mato_venue: handlebarslc
+
+  - slug: caputos-15th-15th
+    name: Caputo's Market - 15th & 15th
+    aliases: [Caputo's 15th & 15th, Caputos 15th and 15th]
+    city: Salt Lake City
+    age_policy: all_ages
+    strategy: feeds_only   # jazz nights posted on Mato
+    mato_venue: caputosmarket
+
+  - slug: caputos-holladay
+    name: Caputo's Market - Holladay
+    aliases: [Caputo's Holladay, Caputos Holladay]
+    city: Holladay
+    age_policy: all_ages
+    strategy: feeds_only   # jazz nights posted on Mato (same Mato page as 15th & 15th)
+
+  - slug: woodbine-food-hall
+    name: Woodbine Food Hall
+    aliases: [Woodbine Food Hall and Bar, Woodbine Foodhall, Woodbine Food Hall & Tavern]
+    address: 545 W 700 S
+    city: Salt Lake City
+    age_policy: all_ages
+    strategy: feeds_only   # Friday live music and Trashmoon jam Wednesdays, posted on Mato
+    mato_venue: woodbinefoodhall
+
+  - slug: melancholy
+    name: Melancholy
+    aliases: [Melancholy SLC, Melancholy Wine & Cocktail Lounge]
+    city: Salt Lake City
+    age_policy: 21_plus
+    strategy: feeds_only   # patio music Saturdays, posted on Mato
+    mato_venue: melancholyslc
+
+  - slug: boilerroom
+    name: Boilerroom
+    aliases: [The Boilerroom, Boiler Room SLC]
+    city: Salt Lake City
+    age_policy: 21_plus
+    strategy: feeds_only   # Gold Standard jazz residency, posted on Mato
+
+  - slug: sky-slc
+    name: SKY SLC
+    aliases: [Sky SLC, The Rooftop at SKY SLC, SKY Salt Lake City]
+    address: 149 W Pierpont Ave
+    city: Salt Lake City
+    age_policy: 21_plus
+    default_genres: [electronic]
+    strategy: feeds_only   # club shows from Mato, SeatGeek and Ticketmaster
+    mato_venue: skyslc
 
   - slug: great-saltair
     name: The Great Saltair

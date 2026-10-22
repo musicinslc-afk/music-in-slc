@@ -17,7 +17,7 @@ from slclive.normalize import TZ, headliner_key, load_venues, match_venue, parse
 import json  # noqa: E402
 
 from slclive.sources import jsonld, krcl, seatgeek, stateroom, ticketmaster, ticketsauce  # noqa: E402
-from slclive.sources.venue_parsers import hogwallow, next_date, parse_clock, soundwell, wix_events  # noqa: E402
+from slclive.sources.venue_parsers import gcal_links, hogwallow, next_date, parse_clock, recurring, soundwell, wix_events  # noqa: E402
 from slclive import music_filter  # noqa: E402
 from slclive.sources import mato  # noqa: E402
 from slclive import coverage  # noqa: E402
@@ -376,6 +376,31 @@ class TestWixAndMusicFilter(unittest.TestCase):
         for title in ("CLOSED", "NEGRONI NIGHT", "Divas After Dark - Halloween Extravaganza"):
             self.assertEqual(music_filter.classify(Show(title=title, starts_at=drag.starts_at, venue_name="x", source="x")),
                              "not_music", title)
+
+
+class TestCalendarLinksAndWeekly(unittest.TestCase):
+    def test_gcal_links(self):
+        link = ("http://www.google.com/calendar/event?action=TEMPLATE&text={}&dates={}/20261024T030000Z"
+                "&location=825%20South%20State%20Street")
+        html = "".join(f'<a href="{link.format(t, d)}">add</a>' for t, d in [
+            ("Live%20Music%3A%20Duncan%20Bedell", "20261024T010000Z"), ("Board%20Game%20Night", "20261024T010000Z"),
+            ("Live%20Music%3A%20Wes", "20261010T010000Z")])
+        shows = gcal_links(html, "https://www.epicbrewing.com/salt-lake-city-area-events", "Epic Brewing",
+                           "venue:epic-brewing", today=date(2026, 10, 21))
+        self.assertEqual([s.title for s in shows], ["Live Music: Duncan Bedell", "Board Game Night"])  # past one dropped
+        self.assertEqual(shows[0].starts_at, datetime(2026, 10, 23, 19, 0, tzinfo=TZ))
+        self.assertEqual(shows[0].artists, ["Duncan Bedell"])
+        self.assertEqual([s.title for s in music_filter.apply(shows)], ["Live Music: Duncan Bedell"])
+
+    def test_weekly(self):
+        shows = recurring([{"title": "Jazz Jam", "day": "wed", "time": "20:00", "genres": ["jazz"], "free": True}],
+                          "Hopkins Brewing Company", "venue:hopkins-brewing", today=date(2026, 10, 22))
+        self.assertEqual([s.starts_at.date() for s in shows],
+                         [date(2026, 10, 28), date(2026, 11, 4), date(2026, 11, 11), date(2026, 11, 18)])
+        self.assertEqual(shows[0].starts_at.hour, 20)
+        self.assertTrue(shows[0].is_free)
+        self.assertIn("Every Wednesday", shows[0].description)
+        self.assertEqual(resolve(shows[0], load_venues()).venue_slug, "hopkins-brewing")
 
 
 class TestMato(unittest.TestCase):

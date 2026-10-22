@@ -117,6 +117,7 @@ class Venue:
     strategy: str = "auto"                  # auto | render | feeds_only
     parser: Optional[str] = None            # a layout parser in sources/venue_parsers.py
     ticketsauce_partner: Optional[str] = None
+    recurring: list[dict] = field(default_factory=list)   # standing weekly nights (see venue_parsers.recurring)
     mato_venue: Optional[str] = None        # the venue's page slug on ma.to (read by the Mato source)
     expect_shows_within_days: Optional[int] = None   # coverage watchdog: flag if nothing upcoming
     music_only: bool = False                # mixed-use room: keep live music, drop the rest
