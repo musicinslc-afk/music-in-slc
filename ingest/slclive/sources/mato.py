@@ -12,7 +12,7 @@ listings, only clear music is kept. Shows at venues not in venues.yaml wait for 
 from __future__ import annotations
 
 import re
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from typing import Callable, Iterable, Optional
 from urllib.parse import urljoin
 
@@ -76,7 +76,8 @@ def collect(venue_slugs: Iterable[str], get: Callable[[str], str]) -> dict[str, 
         for link in event_links(html):
             found.setdefault(link, origin)
     today = datetime.now(TZ).date()
-    upcoming = {u: m for u, m in found.items() if (slug_date(u) or today) >= today}   # skip pages already past
+    # Skip pages already past. Event addresses sometimes carry the UTC date, so allow a day.
+    upcoming = {u: m for u, m in found.items() if (slug_date(u) or today) >= today - timedelta(days=1)}
     return dict(list(upcoming.items())[:MAX_EVENT_PAGES])
 
 
@@ -94,8 +95,10 @@ def fetch_shows(venue_slugs: Iterable[str], get: Optional[Callable[[str], str]] 
             if show.starts_at < cutoff:
                 continue
             kind = music_filter.classify(show)
-            if kind == "not_music" or (kind == "unclear" and origin == "general"):
-                continue   # general listings carry markets, talks and sports: keep clear music only
+            if origin == "general" and not music_filter.title_is_music(show.title):
+                continue   # general listings carry markets, talks and sports: keep titles that say music
+            if kind == "not_music":
+                continue
             if kind == "unclear" and origin == "venue":
                 show.status = "pending"
             music_filter.add_genre_words(show)

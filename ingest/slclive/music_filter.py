@@ -41,6 +41,10 @@ def classify(show: Show) -> str:
     return "unclear"
 
 
+def title_is_music(title: str) -> bool:
+    return bool(MUSIC.search(title or "")) and not NOT_MUSIC.search(title or "")
+
+
 def add_genre_words(show: Show) -> None:
     """Genres named in the title or blurb ('Jazz Night', 'Techno, Tech House'), when a source gives none."""
     if not show.raw_genres:

@@ -386,7 +386,7 @@ class TestMato(unittest.TestCase):
 
     def test_listings_and_filter(self):
         music = '<a href="/event/bluegrass-night-27-oct-2026">x</a><a href="/event/old-show-01-oct-2026">x</a>'
-        general = '<a href="/event/halloween-book-fair-24-oct-2026">x</a>'
+        general = '<a href="/event/halloween-book-fair-24-oct-2026">x</a><a href="/event/waste-drop-off-24-oct-2026">x</a>'
         venue = ('<a href="/event/last-call-karaoke-28-oct-2026">x</a><a href="/event/bluegrass-night-27-oct-2026">x</a>'
                  '<a href="/event/the-mystery-night">x</a>')
         pages = {
@@ -394,13 +394,16 @@ class TestMato(unittest.TestCase):
             "/events/salt-lake-city/today": "", "/events/salt-lake-city/this-weekend": "", "/venue/graciesbar": venue,
             "/event/bluegrass-night-27-oct-2026": self.page("Bluegrass Night", "2026-10-27T20:00:00-06:00", "Pickers welcome"),
             "/event/halloween-book-fair-24-oct-2026": self.page("Halloween Book Fair", "2026-10-24T10:00:00-06:00", "Books", "Library"),
+            "/event/waste-drop-off-24-oct-2026": self.page("E-Waste Drop-Off", "2026-10-24T09:00:00-06:00",
+                                                           "Bring old electronics; music and food trucks on site", "Lot"),
             "/event/the-mystery-night": self.page("The Mystery Night", "2026-10-30T20:00:00-06:00", "A night out"),
             "/event/last-call-karaoke-28-oct-2026": self.page("Last Call Karaoke", "2026-10-28T21:00:00-06:00", "Sing"),
         }
         get = lambda u: pages[u.replace("https://ma.to", "")]
         self.assertEqual(mato.slug_date("https://ma.to/event/old-show-01-oct-2026"), date(2026, 10, 1))
         found = mato.collect(["graciesbar"], get)
-        self.assertNotIn("https://ma.to/event/old-show-01-oct-2026", found)   # already past: never fetched
+        found_all = dict(found)
+        self.assertNotIn("https://ma.to/event/old-show-01-oct-2026", mato.collect(["graciesbar"], get))
         self.assertEqual(found["https://ma.to/event/bluegrass-night-27-oct-2026"], "music")
         shows = {s.title: s for s in mato.fetch_shows(["graciesbar"], get=get, now=datetime(2026, 10, 21, tzinfo=TZ))}
         self.assertEqual(set(shows), {"Bluegrass Night", "The Mystery Night"})
