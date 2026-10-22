@@ -7,6 +7,7 @@ A concert calendar for every live music show in Salt Lake County.
 - **Takes submissions** from the public through a form, with an admin review queue.
 - **Shows flyers and band links**: each listing carries the show's flyer (or an artist photo) and links to the headliner's website, Bandcamp, Instagram and other pages. A show opens into a detail view with the full flyer, every act on the bill, tickets, sharing and add-to-calendar.
 - **Filters** by genre, date, venue, all ages and free shows.
+- **Venues page**: a directory of every venue with a picture, type, approximate capacity, address and map link, website, and its next show.
 - **Watches its own coverage**: flags venues that should have shows but don't, and emails a weekly digest to the inbox.
 - **Recommends** shows from Last.fm (which covers Spotify and Pandora listeners), or artists a visitor types in.
 - **You**: a set-once section for taste and account, Maybe and Going on every show, and friends who can see each other's plans.
@@ -116,6 +117,8 @@ Strategies:
 - `music_only: true` for mixed-use rooms: only events that clearly say music are kept, so drag shows, screenings, trivia and food trucks stay off the calendar.
 - `recurring:` standing weekly nights for venues that post no dated calendar, listed four weeks ahead with a note to check with the venue. Each entry takes `title`, `day`, `time`, and optionally `genres`, `free`, `url` and `description`.
 
+Venues page: each venue's `kind`, `capacity` (approximate) and `website` show on the Venues page. The picture comes from `image:` if set, else the website's preview image, the `wikipedia:` article's photo, or the first photo on the site. The **Venue directory** workflow rebuilds `web/venues.json` every Monday and whenever the venue list changes, then republishes the site.
+
 Coverage watchdog: give a venue `expect_shows_within_days: N` and it is flagged when nothing is published in the next N days. Add `seasonal: true` for venues that go quiet October through March.
 
 When a source misbehaves, **Actions → Diagnose sources → Run workflow** with arguments such as `--scrape soundwell`, `--db`, or `--render --url https://...` shows what the scraper sees, as annotations on the run.
@@ -183,6 +186,7 @@ supabase/migrations/         changes to run on an existing database
 ingest/config/venues.yaml    venues, aliases and calendar URLs
 ingest/run_scrapers.py       venue pages, Ticketmaster, 24tix, State Room Presents, KRCL → database
 ingest/run_email.py          musicinslc inbox → database
+ingest/build_venues.py       venues.yaml → web/venues.json for the Venues page (links checked, pictures found)
 ingest/run_digest.py         weekly coverage and health email to the inbox
 ingest/diagnose.py           source diagnostics for the Diagnose sources workflow
 ingest/slclive/              parsing, normalizing, dedupe, AI reader, Last.fm genres,
