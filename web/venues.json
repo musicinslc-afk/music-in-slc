@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-22T12:49-06:00",
+ "updated": "2026-10-22T12:51-06:00",
  "venues": [
   {
    "slug": "801-event-center",
@@ -132,8 +132,8 @@
    "address": null,
    "city": "Holladay",
    "age_policy": "all_ages",
-   "website": null,
-   "image": null,
+   "website": "https://ma.to/venue/caputosmarket",
+   "image": "https://mato.s3.us-east-1.amazonaws.com/202885984-original.webp",
    "map": "https://www.google.com/maps/search/?api=1&query=Caputo%27s+Market+-+Holladay%2C+Holladay%2C+UT"
   },
   {
