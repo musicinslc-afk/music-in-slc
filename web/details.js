@@ -29,12 +29,53 @@
     try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return ""; }
   }
 
+  // Venue street addresses, loaded once, so the map pins the building rather than guessing from the name
+  let venuesPromise;
+  function venueAddresses() {
+    venuesPromise ||= S.loadVenues().then((vs) => {
+      const m = new Map();
+      for (const v of vs || []) if (v.name && v.address) m.set(v.name.toLowerCase(), v);
+      return m;
+    }).catch(() => new Map());
+    return venuesPromise;
+  }
+
+  function mapQuery(e, venues) {
+    const v = venues && venues.get(String(e.venue_name || "").toLowerCase());
+    const city = (v && v.city) || e.city || "Salt Lake City";
+    return v ? `${e.venue_name}, ${v.address}, ${city}, UT` : `${e.venue_name}, ${city}, UT`;
+  }
+
+  function mapBlock(e, venues) {
+    if (!e.venue_name) return "";
+    const v = venues && venues.get(String(e.venue_name).toLowerCase());
+    const q = encodeURIComponent(mapQuery(e, venues));
+    const open = `https://www.google.com/maps/search/?api=1&query=${q}`;
+    const dirs = `https://www.google.com/maps/dir/?api=1&destination=${q}`;
+    return `<div class="sd-map">
+      <a class="sd-map-frame" href="${open}" target="_blank" rel="noopener" aria-label="Open ${S.esc(e.venue_name)} in Google Maps">
+        <iframe src="https://maps.google.com/maps?q=${q}&z=15&output=embed" title="Map of ${S.esc(e.venue_name)}"
+          loading="lazy" referrerpolicy="no-referrer-when-downgrade" tabindex="-1" aria-hidden="true"></iframe>
+      </a>
+      <div class="sd-map-text">
+        <span class="sd-map-venue">${S.esc(e.venue_name)}</span>
+        ${v ? `<span class="sd-map-addr">${S.esc(v.address)}${v.city ? `, ${S.esc(v.city)}` : ""}</span>` : ""}
+        <a class="sd-map-dirs" href="${dirs}" target="_blank" rel="noopener">Directions</a>
+      </div>
+    </div>`;
+  }
+
   function create({ find, artists }) {
     const dlg = document.createElement("dialog");
     dlg.className = "show-dialog";
     dlg.setAttribute("aria-labelledby", "sd-title");
     document.body.appendChild(dlg);
-    let current = null, pushed = false;
+    let current = null, pushed = false, venueCache = null;
+    venueAddresses().then((m) => {
+      venueCache = m;
+      const slot = dlg.querySelector(".sd-map-slot");
+      if (current && slot && m.has(String(current.venue_name || "").toLowerCase())) slot.innerHTML = mapBlock(current, m);
+    });
 
     function render(e) {
       const support = (e.artists || []).filter((a) => a && a.toLowerCase() !== e.title.toLowerCase());
@@ -66,6 +107,7 @@
             <button class="btn" type="button" data-act="share">Share</button>
           </div>
           <p class="sd-note" aria-live="polite"></p>
+          <div class="sd-map-slot">${mapBlock(e, venueCache)}</div>
           ${credit}
         </div>
       </div>`;

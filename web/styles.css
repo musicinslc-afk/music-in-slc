@@ -371,6 +371,20 @@ td.err { white-space: normal; color: var(--danger); min-width: 240px; }
 .sd-note { margin: 0; font-size: 14px; color: var(--lake); min-height: 1em; }
 .sd-note:empty { display: none; }
 .sd-credit { margin: 0; font-size: 12px; color: var(--muted); }
+.sd-map-slot:empty { display: none; }
+.sd-map {
+  display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 12px; align-items: center;
+  padding: 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2);
+}
+.sd-map-frame {
+  position: relative; display: block; aspect-ratio: 4 / 3; border-radius: 6px; overflow: hidden; background: var(--line);
+}
+.sd-map-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; }
+.sd-map-frame:hover, .sd-map-frame:focus-visible { outline: 2px solid var(--lake); outline-offset: 2px; }
+.sd-map-text { display: grid; gap: 4px; min-width: 0; }
+.sd-map-venue { font-weight: 700; overflow-wrap: anywhere; }
+.sd-map-addr { font-size: 14px; color: var(--muted); }
+.sd-map-dirs { justify-self: start; font-size: 14px; font-weight: 600; color: var(--lake); }
 @media (max-width: 720px) {
   .show-dialog {
     width: 100vw; max-width: 100vw; max-height: 100dvh; margin: auto 0 0; border-radius: 16px 16px 0 0;
