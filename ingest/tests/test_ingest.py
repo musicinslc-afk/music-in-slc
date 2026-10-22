@@ -648,7 +648,7 @@ class FakeFlyerDB:
     def __init__(self, rows, existing=()):
         self.rows, self.existing, self.saved = rows, list(existing), {}
 
-    def shows_missing_images(self, limit):
+    def shows_missing_images(self, limit, **kw):
         return self.rows[:limit]
 
     def shows_with_image(self, url):
@@ -666,6 +666,17 @@ class TestFlyers(unittest.TestCase):
         self.assertEqual(flyers.page_image(ld, "https://venue.example/e/1"), "https://cdn.example/f.png")
         logo = '<meta property="og:image" content="https://venue.example/logo.png">'
         self.assertIsNone(flyers.page_image(logo, "https://venue.example/e/1"))
+
+    def test_page_image_state_room_presents_flyer_and_stand_in(self):
+        page = "https://thestateroompresents.com/state-room-presents/x"
+        body = ('<img src="https://thestateroompresents.com/images/slides/Commonwealth_icon.png">'
+                '<img src="https://thestateroompresents.com/media/acfupload/Pigeons-Playing-Ping-Pong_10-27-2026_564x564.jpg">')
+        self.assertEqual(flyers.page_image(body, page),
+                         "https://thestateroompresents.com/media/acfupload/Pigeons-Playing-Ping-Pong_10-27-2026_564x564.jpg")
+        stand_in = '<img src="https://thestateroompresents.com/media/acfupload/564_x564_Commonwealth_Room.png">'
+        self.assertIsNone(flyers.page_image(stand_in, page))
+        # The rule is only for that site
+        self.assertIsNone(flyers.page_image('<img src="/media/acfupload/a.jpg">', "https://other.example/e"))
 
     def test_candidate_pages_skip_listings_and_blocked_sellers(self):
         row = {"source_url": "https://krcl.org/events/?category=live-music",

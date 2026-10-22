@@ -217,16 +217,25 @@ class DB:
         return "updated"
 
     # -- flyers ------------------------------------------------------------
-    def shows_missing_images(self, limit: int, days_ahead: int = 120) -> list[dict]:
-        """Upcoming published shows with no image whose event page hasn't been checked yet."""
+    def shows_missing_images(self, limit: int, days_ahead: int = 365,
+                             recheck_hosts: tuple[str, ...] = (), checked_before: Optional[str] = None) -> list[dict]:
+        """Upcoming published shows with no image whose event page hasn't been checked yet, plus shows on
+        recheck_hosts whose page was checked before checked_before (when a site rule was added)."""
         now = datetime.now(TZ)
-        return self._get("events", {
+        window = f"(starts_at.lte.{(now + timedelta(days=days_ahead)).isoformat(timespec='seconds')})"
+        base = {
             "select": "id,title,artists,source_url,ticket_url,starts_at",
-            "status": "eq.published", "image_url": "is.null", "image_checked_at": "is.null",
+            "status": "eq.published", "image_url": "is.null",
             "starts_at": f"gte.{now.isoformat(timespec='seconds')}",
-            "and": f"(starts_at.lte.{(now + timedelta(days=days_ahead)).isoformat(timespec='seconds')})",
-            "order": "starts_at.asc", "limit": limit,
-        })
+            "and": window, "order": "starts_at.asc", "limit": limit,
+        }
+        rows = []
+        if recheck_hosts and checked_before:
+            hosts = ",".join(f"source_url.ilike.*{h}*" for h in recheck_hosts)
+            rows = self._get("events", {**base, "image_checked_at": f"lt.{checked_before}", "or": f"({hosts})"})
+        if len(rows) < limit:
+            rows += self._get("events", {**base, "image_checked_at": "is.null", "limit": limit - len(rows)})
+        return rows
 
     def shows_with_image(self, url: str) -> list[dict]:
         return self._get("events", {"select": "title,artists", "image_url": f"eq.{url}", "limit": 10})
