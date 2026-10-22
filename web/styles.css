@@ -172,6 +172,9 @@ main > .demo-note { margin-top: 20px; }
 .chip.lake[aria-pressed="true"] { background: var(--lake); border-color: var(--lake); color: var(--surface); }
 .genre-chips { display: flex; gap: 6px; flex-wrap: wrap; flex: 1 1 0; min-width: 0; }
 .count { font: 500 13px var(--font-mono); color: var(--muted); margin-left: auto; }
+.date-range { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.date-input { padding: 6px 12px; font-size: 14px; min-height: 34px; }
+.date-sep { font-size: 14px; color: var(--muted); }
 
 /* ---------- You ---------- */
 .you {

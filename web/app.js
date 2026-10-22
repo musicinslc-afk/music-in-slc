@@ -9,6 +9,8 @@
     S.store.get(PREFS, {}),
   );
   if (state.when === "tonight") state.when = "all"; // tonight has its own section above the calendar
+  // A saved date range that has already ended is dropped
+  if (state.when === "range" && !(state.to && state.to >= S.dayKey(Date.now()))) state.when = "all";
   let events = [];
   let genres = [];
   let artists = new Map();
@@ -20,7 +22,7 @@
 
   // ---------- date ranges in Salt Lake time ----------
   const WHEN = [
-    ["weekend", "This weekend"], ["week", "Next 7 days"], ["month", "Next 30 days"], ["all", "Everything"],
+    ["weekend", "This weekend"], ["week", "Next 7 days"], ["month", "Next 30 days"], ["all", "Everything"], ["range", "Pick dates"],
   ];
   function inRange(e) {
     const today = S.dayKey(Date.now());
@@ -29,6 +31,7 @@
     switch (state.when) {
       case "week": return k <= S.addDays(today, 6);
       case "month": return k <= S.addDays(today, 29);
+      case "range": return (!state.from || k >= state.from) && (!state.to || k <= state.to);
       case "weekend": {
         // Friday through Sunday: this one if we're in it, otherwise the next one
         const dow = new Date(`${today}T12:00:00Z`).getUTCDay(); // 0 Sun .. 6 Sat
@@ -131,12 +134,17 @@
     $("list").innerHTML = html;
   }
 
-  function persist() { S.store.set(PREFS, { when: state.when, genres: state.genres, allAges: state.allAges, free: state.free }); }
+  function persist() { S.store.set(PREFS, { when: state.when, from: state.from, to: state.to, genres: state.genres, allAges: state.allAges, free: state.free }); }
   function update() { persist(); syncControls(); render(); }
 
   // ---------- controls ----------
   function syncControls() {
     document.querySelectorAll("[data-when]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.when === state.when)));
+    $("date-range").hidden = state.when !== "range";
+    $("date-from").value = state.from || "";
+    $("date-to").value = state.to || "";
+    $("date-from").min = $("date-to").min = S.dayKey(Date.now());
+    if (state.from) $("date-to").min = state.from;
     document.querySelectorAll("[data-genre]").forEach((b) => b.setAttribute("aria-pressed", String(state.genres.includes(b.dataset.genre))));
     $("f-allages").setAttribute("aria-pressed", String(state.allAges));
     $("f-free").setAttribute("aria-pressed", String(state.free));
@@ -148,15 +156,35 @@
   for (const [id, label] of WHEN) {
     const b = document.createElement("button");
     b.type = "button"; b.className = "chip"; b.dataset.when = id; b.textContent = label;
-    b.onclick = () => { state.when = id; update(); };
+    b.onclick = () => {
+      state.when = id;
+      if (id === "range") {
+        const today = S.dayKey(Date.now());
+        if (!state.from || state.from < today) state.from = S.addDays(today, 1);
+        if (!state.to || state.to < state.from) state.to = S.addDays(state.from, 6);
+      }
+      update();
+      if (id === "range") $("date-from").focus();
+    };
     whenRow.appendChild(b);
   }
+  whenRow.appendChild($("date-range"));
+  function setRange(which, value) {
+    if (!value) return;
+    state[which] = value;
+    if (state.from && state.to && state.to < state.from) {
+      if (which === "from") state.to = state.from; else state.from = state.to;
+    }
+    update();
+  }
+  $("date-from").addEventListener("change", (ev) => setRange("from", ev.target.value));
+  $("date-to").addEventListener("change", (ev) => setRange("to", ev.target.value));
   $("q").addEventListener("input", (ev) => { state.q = ev.target.value.trim(); render(); });
   $("venue").addEventListener("change", (ev) => { state.venue = ev.target.value; render(); });
   $("f-allages").onclick = () => { state.allAges = !state.allAges; update(); };
   $("f-free").onclick = () => { state.free = !state.free; update(); };
   $("f-clear").onclick = () => {
-    Object.assign(state, { q: "", venue: "", when: "all", genres: [], allAges: false, free: false, onlyMatches: false, onlyPlans: false });
+    Object.assign(state, { q: "", venue: "", when: "all", from: "", to: "", genres: [], allAges: false, free: false, onlyMatches: false, onlyPlans: false });
     $("q").value = ""; $("venue").value = ""; update();
   };
   $("only-matches").onclick = () => { state.onlyMatches = !state.onlyMatches; update(); };
