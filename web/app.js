@@ -221,7 +221,7 @@
       setOpen(true);
       $("you").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
       if (focus) setTimeout(() => {
-        const target = !T.profile ? $("lastfm-user") : !P.user && P.social ? $("signin-email") : $("you-done");
+        const target = !P.user && P.social ? $("signin-email") : !T.profile ? $("lastfm-user") : $("you-done");
         (target && target.offsetParent ? target : $("you-toggle")).focus({ preventScroll: true });
       }, 350);
     },
@@ -271,7 +271,7 @@
     $("only-plans").hidden = !planned && !state.onlyPlans;
     $("only-plans").textContent = planned ? `My plans (${planned})` : "My plans";
 
-    // Step 1: music
+    // Step 2: music
     $("taste-intro").hidden = on;
     $("taste-connect").hidden = on;
     $("taste-on").hidden = !on;
@@ -288,7 +288,7 @@
         (s.text ? ` (${S.esc(s.text)})` : "");
     }
 
-    // Step 2: account
+    // Step 1: account
     const social = P.social;
     $("acct-off").hidden = social;
     $("acct-out").hidden = !social || Boolean(P.user);
