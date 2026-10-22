@@ -132,7 +132,7 @@ The site shows a square thumbnail on each card (initials on a color tile when th
 
 On the admin page, each queue item has **Headliner's link** and **Flyer image link** fields, and the **Band links** section edits any band's links. A band an admin saves is locked so the jobs never change it; **Let the robots fill it in again** unlocks it.
 
-Both jobs report in **Source health** as `flyers` and `artist-links`, and can be run alone with **Scrape venues → Run workflow** and `flyers` or `artist-links` as the source.
+Both jobs run automatically at the end of every calendar update: every scrape, including a single source run by hand, and every hourly inbox read (a smaller batch, which also covers shows you approved in the last hour). They report in **Source health** as `flyers` and `artist-links`; a failure there never stops the calendar update itself.
 
 ## Recommendations: what works and what doesn't
 

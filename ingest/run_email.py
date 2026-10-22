@@ -22,7 +22,7 @@ from email.utils import parseaddr
 
 from bs4 import BeautifulSoup
 
-from slclive import ai_extract, enrich, settings
+from slclive import ai_extract, enrich, listing_extras, settings
 from slclive.db import DB
 from slclive.links import artist_key
 from slclive.normalize import load_venues, resolve
@@ -166,6 +166,8 @@ def main() -> int:
 
     imap.logout()
     db.log_run("email", True, found=total, inserted=db.stats["inserted"], updated=db.stats["updated"])
+    # Flyers and band links for new and newly approved shows, a smaller batch each hour
+    listing_extras.run(db, flyer_limit=20, link_limit=15)
     print(f"done: {total} shows from email", file=sys.stderr)
     return 0
 

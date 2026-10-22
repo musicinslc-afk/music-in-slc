@@ -10,7 +10,7 @@ concurrency: { group: ingest-inbox, cancel-in-progress: false }
 jobs:
   inbox:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     defaults: { run: { working-directory: ingest } }
     steps:
       - uses: actions/checkout@v4
@@ -26,4 +26,6 @@ jobs:
           INBOX_ADDRESS: ${{ vars.INBOX_ADDRESS || 'musicinslc@gmail.com' }}
           INBOX_APP_PASSWORD: ${{ secrets.INBOX_APP_PASSWORD }}
           TRUSTED_SENDERS: ${{ vars.TRUSTED_SENDERS }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
         run: python run_email.py

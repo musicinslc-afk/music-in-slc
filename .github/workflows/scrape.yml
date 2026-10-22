@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       only:
-        description: "Run one source (venue slug, 'ticketmaster', 'seatgeek', 'flyers', 'artist-links', ...); blank for all"
+        description: "Run one source (venue slug, 'ticketmaster', 'seatgeek', ...); blank for all. Flyers and band links always run after"
         required: false
 
 concurrency: { group: ingest-scrape, cancel-in-progress: false }

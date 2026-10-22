@@ -15,7 +15,7 @@ import traceback
 from collections import defaultdict
 from datetime import datetime
 
-from slclive import coverage, enrich, flyers, musicbrainz, settings
+from slclive import coverage, enrich, flyers, listing_extras, settings
 from slclive.db import DB
 from slclive import fetch
 from slclive.links import artist_key
@@ -64,8 +64,8 @@ COMPLETE_METHODS = ("parser:", "ticketsauce")
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", action="append",
-                    help="venue slug, feed name, 'ticketmaster', 'stateroom', 'krcl', 'seatgeek', "
-                         "'flyers' or 'artist-links' (repeatable)")
+                    help="venue slug, feed name, 'ticketmaster', 'stateroom', 'krcl' or 'seatgeek' (repeatable); "
+                         "flyers and band links always run afterwards")
     args = ap.parse_args()
 
     db = DB()
@@ -130,20 +130,8 @@ def main() -> int:
             if settings.DRY_RUN:
                 traceback.print_exc()
 
-    # Flyers for shows that arrived without one, then band links for upcoming performers
-    extras = [("flyers", flyers.backfill, "event pages read={} flyers found={}"),
-              ("artist-links", musicbrainz.enrich_upcoming, "artists looked up={} with links={}")]
-    for name, task, label in extras:
-        if dry_run or (wanted and name not in wanted):
-            continue
-        try:
-            checked, hits = task(db)
-            db.log_run(name, True, found=checked, inserted=hits)
-            print(f"ok   {name:38} {label.format(checked, hits)}", file=sys.stderr)
-        except Exception as e:
-            msg = re.sub(r"\?\S*", "?…", f"{type(e).__name__}: {e}")
-            db.log_run(name, False, error=msg)
-            print(f"FAIL {name:38} {msg}", file=sys.stderr)
+    # Every update ends by finding flyers and band links for anything new
+    listing_extras.run(db)
 
     gaps = 0
     if not dry_run and not wanted:
