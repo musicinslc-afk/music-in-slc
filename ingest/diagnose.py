@@ -41,6 +41,7 @@ def body_markup(html: str, start: str | None) -> str:
 
 
 START: str | None = None
+LINKS: str | None = None
 
 
 def check_url(url: str, render: bool) -> None:
@@ -51,7 +52,13 @@ def check_url(url: str, render: bool) -> None:
         r = fetch._get(url, timeout=30)
         out.append(f"status {r.status_code}, {len(r.text)} chars, type {r.headers.get('content-type')}")
         out.append(f"json-ld events: {len(jsonld.parse(r.text, url, source='diag'))}")
-        if "json" in (r.headers.get("content-type") or "") or r.text.lstrip()[:1] in "[{":
+        if LINKS:
+            from bs4 import BeautifulSoup
+            from urllib.parse import urljoin
+            hrefs = sorted({urljoin(url, a["href"]) for a in BeautifulSoup(r.text, "html.parser").find_all("a", href=True)
+                            if re.search(LINKS, a["href"])})
+            out.append(f"--- {len(hrefs)} links ---\n" + "\n".join(hrefs))
+        elif "json" in (r.headers.get("content-type") or "") or r.text.lstrip()[:1] in "[{":
             out.append("--- json ---\n" + r.text[:16000])
         elif not render:
             out.append("--- body ---\n" + body_markup(r.text, START)[:16000])
@@ -148,10 +155,11 @@ def main() -> None:
     ap.add_argument("--grep", help="with --scrape, keep only output lines matching this pattern")
     ap.add_argument("--db", action="store_true", help="report what the database holds")
     ap.add_argument("--venue", action="append", default=[], help="list stored upcoming shows for this venue name")
+    ap.add_argument("--links", help="list the page's links matching this pattern instead of its markup")
     ap.add_argument("--start", help="show page markup from the first occurrence of this text")
     a = ap.parse_args()
-    global START, GREP
-    START, GREP = a.start, a.grep
+    global START, GREP, LINKS
+    START, GREP, LINKS = a.start, a.grep, a.links
     for u in a.url:
         check_url(u, a.render)
     for s in a.scrape:
