@@ -1,0 +1,748 @@
+{
+ "updated": "2026-10-22T12:47-06:00",
+ "venues": [
+  {
+   "slug": "801-event-center",
+   "name": "801 Event Center",
+   "aliases": [],
+   "kind": "Event hall",
+   "capacity": null,
+   "address": null,
+   "city": "Salt Lake City",
+   "age_policy": "varies",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=801+Event+Center%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "abravanel-hall",
+   "name": "Abravanel Hall",
+   "aliases": [],
+   "kind": "Concert hall",
+   "capacity": 2800,
+   "address": "123 W South Temple",
+   "city": "Salt Lake City",
+   "age_policy": "all_ages",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Abravanel+Hall%2C+123+W+South+Temple%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "aces-high-saloon",
+   "name": "Aces High Saloon",
+   "aliases": [
+    "Aces High",
+    "Aces High Saloon SLC"
+   ],
+   "kind": "Bar",
+   "capacity": 200,
+   "address": "1588 S State St",
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Aces+High+Saloon%2C+1588+S+State+St%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "the-beehive",
+   "name": "The Beehive",
+   "aliases": [],
+   "kind": "Club",
+   "capacity": 250,
+   "address": "666 S State St",
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=The+Beehive%2C+666+S+State+St%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "boilerroom",
+   "name": "Boilerroom",
+   "aliases": [
+    "The Boilerroom",
+    "Boiler Room SLC"
+   ],
+   "kind": "Bar",
+   "capacity": null,
+   "address": null,
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Boilerroom%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "the-break-murray",
+   "name": "The Break",
+   "aliases": [
+    "The Break Murray",
+    "The Break Sports Grill Murray"
+   ],
+   "kind": "Bar",
+   "capacity": null,
+   "address": null,
+   "city": "Murray",
+   "age_policy": "21_plus",
+   "website": "https://thebreakmurray.com/",
+   "image": "https://thebreakmurray.com/wp-content/uploads/2021/12/Break-South-Jordan.jpg",
+   "map": "https://www.google.com/maps/search/?api=1&query=The+Break%2C+Murray%2C+UT"
+  },
+  {
+   "slug": "capitol-theatre",
+   "name": "Capitol Theatre",
+   "aliases": [
+    "Janet Quinney Lawson Capitol Theatre",
+    "Capitol Theater"
+   ],
+   "kind": "Theater",
+   "capacity": 1900,
+   "address": "50 W 200 S",
+   "city": "Salt Lake City",
+   "age_policy": "all_ages",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Capitol+Theatre%2C+50+W+200+S%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "caputos-15th-15th",
+   "name": "Caputo's Market - 15th & 15th",
+   "aliases": [
+    "Caputo's 15th & 15th",
+    "Caputos 15th and 15th"
+   ],
+   "kind": "Market",
+   "capacity": null,
+   "address": null,
+   "city": "Salt Lake City",
+   "age_policy": "all_ages",
+   "website": "https://ma.to/venue/caputosmarket",
+   "image": "https://mato.s3.us-east-1.amazonaws.com/202885984-original.webp",
+   "map": "https://www.google.com/maps/search/?api=1&query=Caputo%27s+Market+-+15th+%26+15th%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "caputos-holladay",
+   "name": "Caputo's Market - Holladay",
+   "aliases": [
+    "Caputo's Holladay",
+    "Caputos Holladay"
+   ],
+   "kind": "Market",
+   "capacity": null,
+   "address": null,
+   "city": "Holladay",
+   "age_policy": "all_ages",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Caputo%27s+Market+-+Holladay%2C+Holladay%2C+UT"
+  },
+  {
+   "slug": "commonwealth-room",
+   "name": "The Commonwealth Room",
+   "aliases": [
+    "Commonwealth Room",
+    "The Commonwealth Room - Salt Lake City"
+   ],
+   "kind": "Concert hall",
+   "capacity": 600,
+   "address": "195 W 2100 S",
+   "city": "South Salt Lake",
+   "age_policy": "21_plus",
+   "website": "https://thestateroompresents.com/the-commonwealth-room",
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=The+Commonwealth+Room%2C+195+W+2100+S%2C+South+Salt+Lake%2C+UT"
+  },
+  {
+   "slug": "the-complex",
+   "name": "The Complex",
+   "aliases": [
+    "The Grand at The Complex SLC",
+    "The Rockwell at The Complex SLC",
+    "The Lot at The Complex SLC",
+    "The Complex SLC",
+    "The Grand at The Complex",
+    "The Rockwell at The Complex"
+   ],
+   "kind": "Concert complex",
+   "capacity": 2500,
+   "address": "536 W 100 S",
+   "city": "Salt Lake City",
+   "age_policy": "varies",
+   "website": "https://thecomplexslc.com/",
+   "image": "https://aegwebprod.blob.core.windows.net/content/seo_images/816/T2QBqDOJgTITKQkqxjj0PaRCiRd9OdygVtttiOhS.jpg",
+   "map": "https://www.google.com/maps/search/?api=1&query=The+Complex%2C+536+W+100+S%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "delta-center",
+   "name": "Delta Center",
+   "aliases": [],
+   "kind": "Arena",
+   "capacity": 18000,
+   "address": "301 S Temple",
+   "city": "Salt Lake City",
+   "age_policy": "all_ages",
+   "website": "https://www.deltacenter.com/",
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Delta+Center%2C+301+S+Temple%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "the-depot",
+   "name": "The Depot",
+   "aliases": [
+    "Depot SLC"
+   ],
+   "kind": "Concert hall",
+   "capacity": 1200,
+   "address": "13 N 400 W",
+   "city": "Salt Lake City",
+   "age_policy": "varies",
+   "website": "https://www.depotslc.com/",
+   "image": "https://assets.livenationcdn.com/uploads/8c93fb93-9f5e-4e80-8262-7e49a6a1ddaf.png",
+   "map": "https://www.google.com/maps/search/?api=1&query=The+Depot%2C+13+N+400+W%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "the-dlc",
+   "name": "The DLC",
+   "aliases": [
+    "The DLC at Quarters",
+    "DLC at Quarters",
+    "Quarters Arcade Bar",
+    "Downtown Quarters Arcade Bar"
+   ],
+   "kind": "Bar",
+   "capacity": 200,
+   "address": null,
+   "city": "Salt Lake City",
+   "age_policy": "varies",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=The+DLC%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "drift-lounge",
+   "name": "Drift Lounge",
+   "aliases": [
+    "Drift Lounge at Woodbine",
+    "Drift Lounge SLC",
+    "Drift"
+   ],
+   "kind": "Lounge",
+   "capacity": null,
+   "address": "545 W 700 S",
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": "https://www.driftloungeslc.com/",
+   "image": "https://static.wixstatic.com/media/2ee5b2_23b9aea145524580999da123e7997d08%7Emv2.png/v1/fit/w_2500,h_1330,al_c/2ee5b2_23b9aea145524580999da123e7997d08%7Emv2.png",
+   "map": "https://www.google.com/maps/search/?api=1&query=Drift+Lounge%2C+545+W+700+S%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "eccles-theater",
+   "name": "Eccles Theater",
+   "aliases": [
+    "Delta Performance Hall at the Eccles Theater"
+   ],
+   "kind": "Theater",
+   "capacity": 2500,
+   "address": "131 S Main St",
+   "city": "Salt Lake City",
+   "age_policy": "all_ages",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Eccles+Theater%2C+131+S+Main+St%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "epic-brewing",
+   "name": "Epic Brewing",
+   "aliases": [
+    "Epic Brewing Company",
+    "Epic Brewing SLC",
+    "Epic Brewing Taproom"
+   ],
+   "kind": "Brewery",
+   "capacity": null,
+   "address": "825 S State St",
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": "https://www.epicbrewing.com/",
+   "image": "https://static1.squarespace.com/static/5ecea08bff39df0155937536/t/65a19b53905a8452654b4ee1/1705089875681/EpicLogo_fullColor-01+%281%29.png?format=1500w",
+   "map": "https://www.google.com/maps/search/?api=1&query=Epic+Brewing%2C+825+S+State+St%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "gallivan-center",
+   "name": "Gallivan Center",
+   "aliases": [
+    "The Gallivan Center"
+   ],
+   "kind": "Outdoor plaza",
+   "capacity": null,
+   "address": "239 S Main St",
+   "city": "Salt Lake City",
+   "age_policy": "all_ages",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Gallivan+Center%2C+239+S+Main+St%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "gracies",
+   "name": "Gracie's",
+   "aliases": [
+    "Gracies",
+    "Gracie's SLC",
+    "Gracie's Bar"
+   ],
+   "kind": "Bar",
+   "capacity": 350,
+   "address": "326 S West Temple",
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": "https://ma.to/venue/graciesbar",
+   "image": "https://mato.s3.us-east-1.amazonaws.com/27604601-original.webp",
+   "map": "https://www.google.com/maps/search/?api=1&query=Gracie%27s%2C+326+S+West+Temple%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "granary-live",
+   "name": "Granary Live",
+   "aliases": [],
+   "kind": "Concert hall",
+   "capacity": null,
+   "address": "742 S 500 W",
+   "city": "Salt Lake City",
+   "age_policy": "varies",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Granary+Live%2C+742+S+500+W%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "great-saltair",
+   "name": "The Great Saltair",
+   "aliases": [
+    "Great Saltair",
+    "Saltair",
+    "The Saltair"
+   ],
+   "kind": "Concert hall",
+   "capacity": 4600,
+   "address": "12408 W Saltair Dr",
+   "city": "Magna",
+   "age_policy": "varies",
+   "website": "https://thesaltair.com/",
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=The+Great+Saltair%2C+12408+W+Saltair+Dr%2C+Magna%2C+UT"
+  },
+  {
+   "slug": "green-pig-pub",
+   "name": "The Green Pig Pub",
+   "aliases": [
+    "Green Pig Pub",
+    "Green Pig"
+   ],
+   "kind": "Pub",
+   "capacity": 175,
+   "address": "31 E 400 S",
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": "https://thegreenpigpub.com/",
+   "image": "https://static.spotapps.co/website_images/ab_websites/73172_website/redesign/logo.png",
+   "map": "https://www.google.com/maps/search/?api=1&query=The+Green+Pig+Pub%2C+31+E+400+S%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "handlebar",
+   "name": "HandleBar",
+   "aliases": [
+    "HandleBar SLC",
+    "Handlebar",
+    "The HandleBar"
+   ],
+   "kind": "Bar",
+   "capacity": null,
+   "address": "751 N 300 W",
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": "https://www.handlebarslc.com/",
+   "image": "https://static1.squarespace.com/static/63f3ce6213c50c06a75af1ae/t/6418931b6c7a2f268ef33d02/1764974078541/My+project-1+%281%29.png?format=1500w",
+   "map": "https://www.google.com/maps/search/?api=1&query=HandleBar%2C+751+N+300+W%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "hog-wallow",
+   "name": "The Hog Wallow Pub",
+   "aliases": [
+    "Hog Wallow Pub",
+    "Hog Wallow",
+    "The Hog Wallow"
+   ],
+   "kind": "Bar",
+   "capacity": 200,
+   "address": "3200 E Big Cottonwood Canyon Rd",
+   "city": "Cottonwood Heights",
+   "age_policy": "21_plus",
+   "website": "https://thehogwallow.com/",
+   "image": "https://thehogwallow.com//assets/components/phpthumbof/cache/hero-30.81c96564c5e586123546bac9c4075bd6.webP%3D",
+   "map": "https://www.google.com/maps/search/?api=1&query=The+Hog+Wallow+Pub%2C+3200+E+Big+Cottonwood+Canyon+Rd%2C+Cottonwood+Heights%2C+UT"
+  },
+  {
+   "slug": "hopkins-brewing",
+   "name": "Hopkins Brewing Company",
+   "aliases": [
+    "Hopkins Brewing",
+    "Hopkins Brewing Co"
+   ],
+   "kind": "Brewery",
+   "capacity": null,
+   "address": "1048 E 2100 S",
+   "city": "Salt Lake City",
+   "age_policy": "all_ages",
+   "website": "https://www.hopkinsbrewingcompany.com/",
+   "image": "https://images.getbento.com/accounts/47c6a86449547faed082095e82035fa4/media/images/59663Logo_2.png?w=1200&fit=fill&auto=compress,format&cs=origin&h=600&bg=EDEDF1&pad=100",
+   "map": "https://www.google.com/maps/search/?api=1&query=Hopkins+Brewing+Company%2C+1048+E+2100+S%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "international-bar",
+   "name": "International Bar",
+   "aliases": [
+    "The International Bar",
+    "International Artist Lounge",
+    "The International Artist Lounge"
+   ],
+   "kind": "Bar",
+   "capacity": 200,
+   "address": "342 S State St",
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=International+Bar%2C+342+S+State+St%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "kilby-court",
+   "name": "Kilby Court",
+   "aliases": [],
+   "kind": "All-ages club",
+   "capacity": 250,
+   "address": "741 S Kilby Ct",
+   "city": "Salt Lake City",
+   "age_policy": "all_ages",
+   "website": "https://kilbycourt.com/",
+   "image": "https://static1.squarespace.com/static/5dfa770c5569b03fad1fc763/t/65e0b49f20625b18e0116945/1709225122609/327301377_5690820381026621_8742584107849380245_n.jpeg?format=1500w",
+   "map": "https://www.google.com/maps/search/?api=1&query=Kilby+Court%2C+741+S+Kilby+Ct%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "kingsbury-hall",
+   "name": "Kingsbury Hall",
+   "aliases": [
+    "Kingsbury Hall at the University of Utah"
+   ],
+   "kind": "Theater",
+   "capacity": 1900,
+   "address": "1395 E Presidents Cir",
+   "city": "Salt Lake City",
+   "age_policy": "all_ages",
+   "website": "https://kingsburyhall.utah.edu/",
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Kingsbury+Hall%2C+1395+E+Presidents+Cir%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "lake-effect",
+   "name": "Lake Effect",
+   "aliases": [
+    "Lake Effect SLC",
+    "The Rabbit Hole at Lake Effect",
+    "Rabbit Hole"
+   ],
+   "kind": "Bar",
+   "capacity": 250,
+   "address": "155 W 200 S",
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": "https://www.lakeeffectslc.com/",
+   "image": "https://cdn.prod.website-files.com/64d0f7875e381f4844d82ae8/65b5d47cef338f6b24e497e4_DSCF5490-Enhanced-NR.jpg",
+   "map": "https://www.google.com/maps/search/?api=1&query=Lake+Effect%2C+155+W+200+S%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "liquid-joes",
+   "name": "Liquid Joe's",
+   "aliases": [
+    "Liquid Joes",
+    "Liquid Joe's SLC"
+   ],
+   "kind": "Bar",
+   "capacity": 399,
+   "address": "1249 E 3300 S",
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": "https://www.liquidjoes.net/",
+   "image": "https://static1.squarespace.com/static/68eddc5ec521c03e4d05e018/t/68effdc7eb695f7ccdb2d4a0/1760558535730/EST.+1995+%281%29.png?format=1500w",
+   "map": "https://www.google.com/maps/search/?api=1&query=Liquid+Joe%27s%2C+1249+E+3300+S%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "maverik-center",
+   "name": "Maverik Center",
+   "aliases": [],
+   "kind": "Arena",
+   "capacity": 12000,
+   "address": "3200 S Decker Lake Dr",
+   "city": "West Valley City",
+   "age_policy": "all_ages",
+   "website": "https://www.maverikcenter.com/",
+   "image": "https://maverikcenter.com/wp-content/uploads/2026/07/CVStage-@-MC-reverse-scaled.png",
+   "map": "https://www.google.com/maps/search/?api=1&query=Maverik+Center%2C+3200+S+Decker+Lake+Dr%2C+West+Valley+City%2C+UT"
+  },
+  {
+   "slug": "melancholy",
+   "name": "Melancholy",
+   "aliases": [
+    "Melancholy SLC",
+    "Melancholy Wine & Cocktail Lounge"
+   ],
+   "kind": "Lounge",
+   "capacity": null,
+   "address": null,
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": "https://ma.to/venue/melancholyslc",
+   "image": "https://mato.s3.us-east-1.amazonaws.com/59682283532-original.webp",
+   "map": "https://www.google.com/maps/search/?api=1&query=Melancholy%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "metro-music-hall",
+   "name": "Metro Music Hall",
+   "aliases": [
+    "Metro Music Hall Salt Lake City"
+   ],
+   "kind": "Club",
+   "capacity": 600,
+   "address": "615 W 100 S",
+   "city": "Salt Lake City",
+   "age_policy": "varies",
+   "website": "https://metromusichall.com/",
+   "image": "https://static1.squarespace.com/static/5d766d269a8f4a561ad27262/t/65e0b43263bbdb21819e39ab/1709225014293/309558509_482074620621051_1215049551955893062_n.jpeg?format=1500w",
+   "map": "https://www.google.com/maps/search/?api=1&query=Metro+Music+Hall%2C+615+W+100+S%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "murray-theater",
+   "name": "Murray Theater",
+   "aliases": [],
+   "kind": "Theater",
+   "capacity": null,
+   "address": "4961 S State St",
+   "city": "Murray",
+   "age_policy": "all_ages",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Murray+Theater%2C+4961+S+State+St%2C+Murray%2C+UT"
+  },
+  {
+   "slug": "the-pearl-on-main",
+   "name": "The Pearl on Main",
+   "aliases": [
+    "Pearl on Main"
+   ],
+   "kind": "Music hall",
+   "capacity": null,
+   "address": "7711 S Main St",
+   "city": "Midvale",
+   "age_policy": "varies",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=The+Pearl+on+Main%2C+7711+S+Main+St%2C+Midvale%2C+UT"
+  },
+  {
+   "slug": "red-butte-garden",
+   "name": "Red Butte Garden Amphitheatre",
+   "aliases": [
+    "Red Butte Garden",
+    "Red Butte Garden Amphitheater"
+   ],
+   "kind": "Amphitheater",
+   "capacity": 3000,
+   "address": "300 Wakara Way",
+   "city": "Salt Lake City",
+   "age_policy": "all_ages",
+   "website": "https://redbuttegarden.org/concerts/",
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Red+Butte+Garden+Amphitheatre%2C+300+Wakara+Way%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "rice-eccles-stadium",
+   "name": "Rice-Eccles Stadium",
+   "aliases": [
+    "Rice Eccles Stadium"
+   ],
+   "kind": "Stadium",
+   "capacity": 51000,
+   "address": "451 S 1400 E",
+   "city": "Salt Lake City",
+   "age_policy": "all_ages",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Rice-Eccles+Stadium%2C+451+S+1400+E%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "the-royal",
+   "name": "The Royal",
+   "aliases": [],
+   "kind": "Club",
+   "capacity": null,
+   "address": "4760 S 900 E",
+   "city": "Murray",
+   "age_policy": "21_plus",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=The+Royal%2C+4760+S+900+E%2C+Murray%2C+UT"
+  },
+  {
+   "slug": "sandy-amphitheater",
+   "name": "Sandy Amphitheater",
+   "aliases": [
+    "Sandy Amphitheatre"
+   ],
+   "kind": "Amphitheater",
+   "capacity": 2700,
+   "address": "1245 E 9400 S",
+   "city": "Sandy",
+   "age_policy": "all_ages",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Sandy+Amphitheater%2C+1245+E+9400+S%2C+Sandy%2C+UT"
+  },
+  {
+   "slug": "sky-slc",
+   "name": "SKY SLC",
+   "aliases": [
+    "Sky SLC",
+    "The Rooftop at SKY SLC",
+    "SKY Salt Lake City"
+   ],
+   "kind": "Club",
+   "capacity": 1000,
+   "address": "149 W Pierpont Ave",
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": "https://ma.to/venue/skyslc",
+   "image": "https://mato.s3.us-east-1.amazonaws.com/1647446396-original.webp",
+   "map": "https://www.google.com/maps/search/?api=1&query=SKY+SLC%2C+149+W+Pierpont+Ave%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "soundwell",
+   "name": "Soundwell",
+   "aliases": [
+    "Soundwell SLC"
+   ],
+   "kind": "Club",
+   "capacity": 600,
+   "address": "149 W 200 S",
+   "city": "Salt Lake City",
+   "age_policy": "varies",
+   "website": "https://soundwellslc.com/",
+   "image": "https://soundwellslc.com/wp-content/uploads/2023/01/soundwellv2_share1.png",
+   "map": "https://www.google.com/maps/search/?api=1&query=Soundwell%2C+149+W+200+S%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "the-state-room",
+   "name": "The State Room",
+   "aliases": [
+    "State Room"
+   ],
+   "kind": "Concert hall",
+   "capacity": 299,
+   "address": "638 S State St",
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": "https://thestateroompresents.com/the-state-room",
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=The+State+Room%2C+638+S+State+St%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "tailgate-tavern",
+   "name": "Tailgate Tavern",
+   "aliases": [
+    "Tailgate Tavern SLC"
+   ],
+   "kind": "Bar",
+   "capacity": 88,
+   "address": "3550 S State St",
+   "city": "South Salt Lake",
+   "age_policy": "21_plus",
+   "website": "https://www.tailgatetavernslc.com/",
+   "image": "https://www.tailgatetavernslc.com/assets/uploads/Images/Hero/tailgate-video-jan-27-2023.jpg",
+   "map": "https://www.google.com/maps/search/?api=1&query=Tailgate+Tavern%2C+3550+S+State+St%2C+South+Salt+Lake%2C+UT"
+  },
+  {
+   "slug": "the-union-event-center",
+   "name": "The Union Event Center",
+   "aliases": [
+    "The Union",
+    "Union Event Center"
+   ],
+   "kind": "Concert hall",
+   "capacity": 3500,
+   "address": "235 N 500 W",
+   "city": "Salt Lake City",
+   "age_policy": "all_ages",
+   "website": "https://theunioneventcenter.com/",
+   "image": "https://static1.squarespace.com/static/5a48752132601ea2c0890ed8/t/5a48790ce4966b19e3f70e89/1514699023604/UNION_LogoIcon_Orange.png?format=1500w",
+   "map": "https://www.google.com/maps/search/?api=1&query=The+Union+Event+Center%2C+235+N+500+W%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "urban-lounge",
+   "name": "The Urban Lounge",
+   "aliases": [
+    "Urban Lounge",
+    "The Urban Lounge SLC"
+   ],
+   "kind": "Club",
+   "capacity": 500,
+   "address": "241 S 500 E",
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": "https://theurbanloungeslc.com/",
+   "image": "https://static1.squarespace.com/static/5dfb9b14047a8637eec009e4/t/65e0b4edbe51eb5f81722b2c/1709225200161/326535344_481352584201719_499700406572667695_n.jpeg?format=1500w",
+   "map": "https://www.google.com/maps/search/?api=1&query=The+Urban+Lounge%2C+241+S+500+E%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "utah-first-amphitheatre",
+   "name": "Utah First Credit Union Amphitheatre",
+   "aliases": [
+    "USANA Amphitheatre",
+    "Utah First Credit Union Amphitheatre (formerly USANA Amphitheatre)"
+   ],
+   "kind": "Amphitheater",
+   "capacity": 20000,
+   "address": "5150 S 6055 W",
+   "city": "West Valley City",
+   "age_policy": "all_ages",
+   "website": "https://www.livenation.com/venue/KovZpZAEAEJA/utah-first-credit-union-amphitheatre-events",
+   "image": "https://assets.livenationcdn.com/map-images/KovZpZAEAEJA_MAP.png",
+   "map": "https://www.google.com/maps/search/?api=1&query=Utah+First+Credit+Union+Amphitheatre%2C+5150+S+6055+W%2C+West+Valley+City%2C+UT"
+  },
+  {
+   "slug": "utah-state-fairpark",
+   "name": "Utah State Fairpark",
+   "aliases": [],
+   "kind": "Fairgrounds",
+   "capacity": null,
+   "address": "155 N 1000 W",
+   "city": "Salt Lake City",
+   "age_policy": "all_ages",
+   "website": "https://www.utahstatefairpark.com/",
+   "image": "https://cdn.saffire.com/images.ashx?t=ig&rid=UtahStateFair&i=fairpark-logo.png",
+   "map": "https://www.google.com/maps/search/?api=1&query=Utah+State+Fairpark%2C+155+N+1000+W%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "woodbine-food-hall",
+   "name": "Woodbine Food Hall",
+   "aliases": [
+    "Woodbine Food Hall and Bar",
+    "Woodbine Foodhall",
+    "Woodbine Food Hall & Tavern"
+   ],
+   "kind": "Food hall",
+   "capacity": null,
+   "address": "545 W 700 S",
+   "city": "Salt Lake City",
+   "age_policy": "all_ages",
+   "website": "https://www.woodbineslc.com/",
+   "image": "https://static.wixstatic.com/media/0b11d2_723f18dc9c1340c2ba18c50cca111d72%7Emv2.jpg/v1/fit/w_2500,h_1330,al_c/0b11d2_723f18dc9c1340c2ba18c50cca111d72%7Emv2.jpg",
+   "map": "https://www.google.com/maps/search/?api=1&query=Woodbine+Food+Hall%2C+545+W+700+S%2C+Salt+Lake+City%2C+UT"
+  }
+ ]
+}
