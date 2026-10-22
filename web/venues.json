@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-22T12:47-06:00",
+ "updated": "2026-10-22T12:49-06:00",
  "venues": [
   {
    "slug": "801-event-center",
@@ -23,8 +23,8 @@
    "address": "123 W South Temple",
    "city": "Salt Lake City",
    "age_policy": "all_ages",
-   "website": null,
-   "image": null,
+   "website": "https://utahsymphony.org/",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Slc_abravanel_hall.jpg/960px-Slc_abravanel_hall.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
    "map": "https://www.google.com/maps/search/?api=1&query=Abravanel+Hall%2C+123+W+South+Temple%2C+Salt+Lake+City%2C+UT"
   },
   {
@@ -100,8 +100,8 @@
    "address": "50 W 200 S",
    "city": "Salt Lake City",
    "age_policy": "all_ages",
-   "website": null,
-   "image": null,
+   "website": "https://artsaltlake.org/venue/capitol-theatre/",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/Orpheum_Theatre%2C_Salt_Lake_City.jpg/960px-Orpheum_Theatre%2C_Salt_Lake_City.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
    "map": "https://www.google.com/maps/search/?api=1&query=Capitol+Theatre%2C+50+W+200+S%2C+Salt+Lake+City%2C+UT"
   },
   {
@@ -149,7 +149,7 @@
    "city": "South Salt Lake",
    "age_policy": "21_plus",
    "website": "https://thestateroompresents.com/the-commonwealth-room",
-   "image": null,
+   "image": "https://thestateroompresents.com/images/admin/stateroompresents-home-2019-2.png",
    "map": "https://www.google.com/maps/search/?api=1&query=The+Commonwealth+Room%2C+195+W+2100+S%2C+South+Salt+Lake%2C+UT"
   },
   {
@@ -182,7 +182,7 @@
    "city": "Salt Lake City",
    "age_policy": "all_ages",
    "website": "https://www.deltacenter.com/",
-   "image": null,
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Delta_Center_2023.jpg/960px-Delta_Center_2023.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
    "map": "https://www.google.com/maps/search/?api=1&query=Delta+Center%2C+301+S+Temple%2C+Salt+Lake+City%2C+UT"
   },
   {
@@ -246,8 +246,8 @@
    "address": "131 S Main St",
    "city": "Salt Lake City",
    "age_policy": "all_ages",
-   "website": null,
-   "image": null,
+   "website": "https://artsaltlake.org/venue/delta-performance-hall-at-the-eccles-theater/",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9e/George_S._and_Dolores_Dor%C3%A9_Eccles_Theater.jpg/960px-George_S._and_Dolores_Dor%C3%A9_Eccles_Theater.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
    "map": "https://www.google.com/maps/search/?api=1&query=Eccles+Theater%2C+131+S+Main+St%2C+Salt+Lake+City%2C+UT"
   },
   {
@@ -278,7 +278,7 @@
    "address": "239 S Main St",
    "city": "Salt Lake City",
    "age_policy": "all_ages",
-   "website": null,
+   "website": "https://www.thegallivancenter.com/",
    "image": null,
    "map": "https://www.google.com/maps/search/?api=1&query=Gallivan+Center%2C+239+S+Main+St%2C+Salt+Lake+City%2C+UT"
   },
@@ -326,7 +326,7 @@
    "city": "Magna",
    "age_policy": "varies",
    "website": "https://thesaltair.com/",
-   "image": null,
+   "image": "https://i0.wp.com/thesaltair.com/wp-content/uploads/2026/08/GetFreaky_2026_1920x1005.jpg?fit=1920%2C1005&ssl=1",
    "map": "https://www.google.com/maps/search/?api=1&query=The+Great+Saltair%2C+12408+W+Saltair+Dr%2C+Magna%2C+UT"
   },
   {
@@ -437,7 +437,7 @@
    "city": "Salt Lake City",
    "age_policy": "all_ages",
    "website": "https://kingsburyhall.utah.edu/",
-   "image": null,
+   "image": "https://upload.wikimedia.org/wikipedia/commons/1/18/Kingsbury_Hall.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
    "map": "https://www.google.com/maps/search/?api=1&query=Kingsbury+Hall%2C+1395+E+Presidents+Cir%2C+Salt+Lake+City%2C+UT"
   },
   {
@@ -558,7 +558,7 @@
    "city": "Salt Lake City",
    "age_policy": "all_ages",
    "website": "https://redbuttegarden.org/concerts/",
-   "image": null,
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Entry_-_Red_Butte_Garden_and_Arboretum_-_DSC07474.JPG/960px-Entry_-_Red_Butte_Garden_and_Arboretum_-_DSC07474.JPG?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
    "map": "https://www.google.com/maps/search/?api=1&query=Red+Butte+Garden+Amphitheatre%2C+300+Wakara+Way%2C+Salt+Lake+City%2C+UT"
   },
   {
@@ -573,7 +573,7 @@
    "city": "Salt Lake City",
    "age_policy": "all_ages",
    "website": null,
-   "image": null,
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Ken-Garff-Red-Zone-at-Rice-Eccles-Stadium-4_081121.jpg/960px-Ken-Garff-Red-Zone-at-Rice-Eccles-Stadium-4_081121.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
    "map": "https://www.google.com/maps/search/?api=1&query=Rice-Eccles+Stadium%2C+451+S+1400+E%2C+Salt+Lake+City%2C+UT"
   },
   {
@@ -648,7 +648,7 @@
    "city": "Salt Lake City",
    "age_policy": "21_plus",
    "website": "https://thestateroompresents.com/the-state-room",
-   "image": null,
+   "image": "https://thestateroompresents.com/images/admin/stateroompresents-home-2019-2.png",
    "map": "https://www.google.com/maps/search/?api=1&query=The+State+Room%2C+638+S+State+St%2C+Salt+Lake+City%2C+UT"
   },
   {
