@@ -39,6 +39,8 @@ Every source produces the same show record. Each show gets a fingerprint (venue,
 - musicinslc@gmail.com is an admin.
 - Spotify sign-in has been removed from the site; recommendations use Last.fm and typed-in artists.
 - Soundwell and The Hog Wallow Pub are read with layout parsers for their full calendars; Liquid Joe's comes from its Ticketsauce event list; The Union Event Center's JavaScript calendar is read in a headless browser (its shows also come from Ticketmaster). The Great Saltair comes from Ticketmaster and is marked seasonal.
+- Bars, breweries and lounges: Lake Effect (a week of nightly acts from its rendered calendar), Drift Lounge (Wix event pages), Epic Brewing (its calendar links), and weekly standing nights at Hopkins Brewing, The Green Pig Pub, The Break and Tailgate Tavern. Gracie's, HandleBar, Caputo's, Woodbine Food Hall, Melancholy, Boilerroom and SKY SLC come through Mato. Aces High Saloon is listed so KRCL, SeatGeek and emailed shows attach to it.
+- Mato (ma.to), where many small rooms post, is read every run: its Salt Lake live-music listing, the general listings (titles that say music only) and the Mato pages of listed venues.
 - The coverage watchdog flags any watched venue with no published show in its window, as a red `coverage:<venue>` row in Source health. The weekly digest goes to musicinslc@gmail.com on Monday mornings.
 - Flyers and band links are live: `supabase/migrations/002_flyers_and_artist_links.sql` has been run. After the first run, 306 of 567 upcoming shows had an image and 222 bands had links.
 - Still to do: Last.fm key (genre tags and similar-artist recommendations); optional SeatGeek client ID (backstop for touring shows).
@@ -101,13 +103,16 @@ Edit `web/config.js` with the Supabase URL and anon key, plus the Last.fm key if
 
 ### 7. Check the venue list
 
-`ingest/config/venues.yaml` lists 32 Salt Lake County venues with their best-known calendar pages. Open each URL in a browser before launch; venue sites move often. Anything that fails shows up red in **Source health** with the error. To add a venue, copy an entry, give it a unique `slug`, and add any alternate spellings ticket sites use under `aliases` so duplicates merge.
+`ingest/config/venues.yaml` lists 48 Salt Lake County venues with their best-known calendar pages. Open each URL in a browser before launch; venue sites move often. Anything that fails shows up red in **Source health** with the error. To add a venue, copy an entry, give it a unique `slug`, and add any alternate spellings ticket sites use under `aliases` so duplicates merge.
 
 Strategies:
 - `auto` uses the venue's layout parser if it has one (`parser:`), then JSON-LD event data from the page (most ticketing widgets publish it), then links to 24tix event pages, then an iCal feed if you set `ics_url`, then falls back to Claude reading the page.
 - `render` does the same on the page as a browser draws it, for calendars built with JavaScript.
 - `feeds_only` doesn't scrape a page; shows come from Ticketmaster, feeds, email and submissions.
 - `ticketsauce_partner:` reads a Ticketsauce seller's event list directly (Liquid Joe's).
+- `mato_venue:` the venue's page slug on ma.to, read by the Mato source.
+- `music_only: true` for mixed-use rooms: only events that clearly say music are kept, so drag shows, screenings, trivia and food trucks stay off the calendar.
+- `recurring:` standing weekly nights for venues that post no dated calendar, listed four weeks ahead with a note to check with the venue. Each entry takes `title`, `day`, `time`, and optionally `genres`, `free`, `url` and `description`.
 
 Coverage watchdog: give a venue `expect_shows_within_days: N` and it is flagged when nothing is published in the next N days. Add `seasonal: true` for venues that go quiet October through March.
 
@@ -151,7 +156,7 @@ The scraper identifies itself with your site and contact email, obeys `robots.tx
 ```bash
 cd ingest
 pip install -r requirements.txt
-python -m unittest discover -s tests              # 57 tests, no network needed
+python -m unittest discover -s tests              # 63 tests, no network needed
 DRY_RUN=1 python run_scrapers.py --only kilby-court   # print shows without writing
 ```
 
