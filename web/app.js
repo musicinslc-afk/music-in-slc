@@ -156,14 +156,12 @@
   };
   $("only-matches").onclick = () => { state.onlyMatches = !state.onlyMatches; update(); };
 
-  // A reload starts at the top of the page. Browsers otherwise restore the old scroll position or jump to a
-  // leftover #for-you, which lands on the For you panel before the listings above it have loaded.
-  const nav = performance.getEntriesByType?.("navigation")[0];
-  if (location.hash === "#for-you" || nav?.type === "reload") {
-    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-    if (location.hash === "#for-you") history.replaceState(history.state, "", location.pathname + location.search);
-    if (!location.hash) window.scrollTo(0, 0);
-  }
+  // The calendar always opens at the top. The browser's own scroll restoration would put a reload back where the
+  // visitor was (often the For you panel) and then keep it pinned there while the listings above it load. It has
+  // to be switched off on the page being left, so it is set on every load, not only on a reload.
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  if (location.hash === "#for-you") history.replaceState(history.state, "", location.pathname + location.search);
+  if (!location.hash.startsWith("#show-")) window.scrollTo(0, 0);
   // The For you link scrolls to the panel without leaving #for-you in the address
   document.querySelector('.nav a[href="#for-you"]')?.addEventListener("click", (ev) => {
     ev.preventDefault();
