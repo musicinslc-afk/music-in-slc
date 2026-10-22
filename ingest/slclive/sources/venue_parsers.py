@@ -209,6 +209,7 @@ def wix_events(html: str, url: str, venue_name: str, source: str, today: Optiona
     from .. import fetch
     from . import jsonld
     get = get or (lambda u: fetch.get(u).text)
+    cutoff = datetime.combine(today or datetime.now(TZ).date(), time(0, 0), TZ)
     shows: list[Show] = []
     seen: set[tuple[str, str]] = set()
     for link in wix_event_links(html, url):
@@ -220,7 +221,7 @@ def wix_events(html: str, url: str, venue_name: str, source: str, today: Optiona
             show.venue_name = venue_name   # Wix gives the room name ("Drift Lounge at Woodbine")
             for starts in [show.starts_at, *other_dates(page, today)]:
                 key = (show.title, starts.isoformat())
-                if key not in seen:
+                if starts >= cutoff and key not in seen:   # the list also links past events
                     seen.add(key)
                     shows.append(replace(show, starts_at=starts, doors_at=None,
                                          source_url=link, ticket_url=show.ticket_url or link))

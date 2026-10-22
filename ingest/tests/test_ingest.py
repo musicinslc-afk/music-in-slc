@@ -372,6 +372,9 @@ class TestWixAndMusicFilter(unittest.TestCase):
         drag = Show(title="Divas After Dark", starts_at=datetime(2026, 10, 23, 19, 30, tzinfo=TZ),
                     venue_name="Drift Lounge", source="x", description="A drag extravaganza")
         self.assertEqual(music_filter.classify(drag), "not_music")
+        for title in ("CLOSED", "NEGRONI NIGHT", "Divas After Dark - Halloween Extravaganza"):
+            self.assertEqual(music_filter.classify(Show(title=title, starts_at=drag.starts_at, venue_name="x", source="x")),
+                             "not_music", title)
 
 
 class TestTicketsauce(unittest.TestCase):

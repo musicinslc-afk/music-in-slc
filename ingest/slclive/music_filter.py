@@ -15,9 +15,10 @@ MUSIC = re.compile(
     r"quartet|trio|duo|ensemble|choir|dj|djs|techno|tech house|house music|edm|electronic|disco|salsa|cumbia|"
     r"mariachi|samba|bossa|vinyl|live set|performances? by|music)\b", re.I)
 NOT_MUSIC = re.compile(
-    r"\b(drag|screening|watch party|viewing party|housewives|trivia|bingo|comedy|comedian|stand-?up|"
+    r"\b(drag|divas|screening|watch party|viewing party|housewives|trivia|bingo|comedy|comedian|stand-?up|"
     r"karaoke|costume contest|match night|speed dating|singles|dating|yoga|paint|sip and|market|brunch|"
-    r"game night|board games|book club|fundraiser|networking|private event|closed for)\b", re.I)
+    r"game night|board games|book club|fundraiser|networking|private event|closed|cocktail|negroni|"
+    r"happy hour|tasting|wine night)\b", re.I)
 
 GENRE_WORDS = re.compile(r"\b(jazz|blues|funk|soul|reggae|folk|bluegrass|country|americana|techno|house|"
                          r"salsa|cumbia|samba|bossa nova|hip[- ]?hop|rock|punk|metal|disco)\b", re.I)
