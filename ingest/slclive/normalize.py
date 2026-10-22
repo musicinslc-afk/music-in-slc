@@ -117,6 +117,7 @@ class Venue:
     strategy: str = "auto"                  # auto | render | feeds_only
     parser: Optional[str] = None            # a layout parser in sources/venue_parsers.py
     ticketsauce_partner: Optional[str] = None
+    mato_venue: Optional[str] = None        # the venue's page slug on ma.to (read by the Mato source)
     expect_shows_within_days: Optional[int] = None   # coverage watchdog: flag if nothing upcoming
     music_only: bool = False                # mixed-use room: keep live music, drop the rest
     seasonal: bool = False                  # watchdog stays quiet in the off season (Oct through Mar)

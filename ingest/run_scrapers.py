@@ -20,7 +20,7 @@ from slclive.db import DB
 from slclive import fetch
 from slclive.links import artist_key
 from slclive.normalize import TZ, load_feeds, load_venues, resolve
-from slclive.sources import ics, krcl, seatgeek, stateroom, ticketmaster, venue_page
+from slclive.sources import ics, krcl, mato, seatgeek, stateroom, ticketmaster, venue_page
 
 
 def drop_shared_images(shows) -> None:
@@ -64,7 +64,7 @@ COMPLETE_METHODS = ("parser:", "ticketsauce")
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", action="append",
-                    help="venue slug, feed name, 'ticketmaster', 'stateroom', 'krcl' or 'seatgeek' (repeatable); "
+                    help="venue slug, feed name, 'ticketmaster', 'stateroom', 'krcl', 'mato' or 'seatgeek' (repeatable); "
                          "flyers and band links always run afterwards")
     args = ap.parse_args()
 
@@ -85,6 +85,11 @@ def main() -> int:
         # The State Room Presents calendar: State Room, Commonwealth Room and Eccles shows sold on AXS
         jobs.append(("stateroom", lambda: (stateroom.fetch_shows(), None, "promoter calendar (AXS)")))
         review.add("stateroom")
+    if not wanted or "mato" in wanted:
+        # Mato: small bars, lounges and markets; unknown venues and unclear events wait for review
+        slugs = [v.mato_venue for v in venues if v.mato_venue]
+        jobs.append(("mato", lambda: (mato.fetch_shows(slugs), None, "Mato listings")))
+        review.add("mato")
     if not wanted or "krcl" in wanted:
         jobs.append(("krcl", lambda: (krcl.fetch_shows(venues), None, "KRCL live music calendar")))
         review.add("krcl")

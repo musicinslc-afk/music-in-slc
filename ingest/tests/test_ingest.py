@@ -19,6 +19,7 @@ import json  # noqa: E402
 from slclive.sources import jsonld, krcl, seatgeek, stateroom, ticketmaster, ticketsauce  # noqa: E402
 from slclive.sources.venue_parsers import hogwallow, next_date, parse_clock, soundwell, wix_events  # noqa: E402
 from slclive import music_filter  # noqa: E402
+from slclive.sources import mato  # noqa: E402
 from slclive import coverage  # noqa: E402
 from datetime import date, timedelta  # noqa: E402
 import run_email  # noqa: E402
@@ -375,6 +376,37 @@ class TestWixAndMusicFilter(unittest.TestCase):
         for title in ("CLOSED", "NEGRONI NIGHT", "Divas After Dark - Halloween Extravaganza"):
             self.assertEqual(music_filter.classify(Show(title=title, starts_at=drag.starts_at, venue_name="x", source="x")),
                              "not_music", title)
+
+
+class TestMato(unittest.TestCase):
+    def page(self, name, start, desc, place="Gracie's", city="Salt Lake City"):
+        ld = {"@context": "https://schema.org", "@type": "Event", "name": name, "startDate": start, "description": desc,
+              "location": {"@type": "Place", "name": place, "address": {"@type": "PostalAddress", "addressLocality": city}}}
+        return f'<html><head><script type="application/ld+json">{json.dumps(ld)}</script></head><body></body></html>'
+
+    def test_listings_and_filter(self):
+        music = '<a href="/event/bluegrass-night-27-oct-2026">x</a><a href="/event/old-show-01-oct-2026">x</a>'
+        general = '<a href="/event/halloween-book-fair-24-oct-2026">x</a>'
+        venue = ('<a href="/event/last-call-karaoke-28-oct-2026">x</a><a href="/event/bluegrass-night-27-oct-2026">x</a>'
+                 '<a href="/event/the-mystery-night">x</a>')
+        pages = {
+            "/events/salt-lake-city/anytime/live-music": music, "/events/salt-lake-city": general,
+            "/events/salt-lake-city/today": "", "/events/salt-lake-city/this-weekend": "", "/venue/graciesbar": venue,
+            "/event/bluegrass-night-27-oct-2026": self.page("Bluegrass Night", "2026-10-27T20:00:00-06:00", "Pickers welcome"),
+            "/event/halloween-book-fair-24-oct-2026": self.page("Halloween Book Fair", "2026-10-24T10:00:00-06:00", "Books", "Library"),
+            "/event/the-mystery-night": self.page("The Mystery Night", "2026-10-30T20:00:00-06:00", "A night out"),
+            "/event/last-call-karaoke-28-oct-2026": self.page("Last Call Karaoke", "2026-10-28T21:00:00-06:00", "Sing"),
+        }
+        get = lambda u: pages[u.replace("https://ma.to", "")]
+        self.assertEqual(mato.slug_date("https://ma.to/event/old-show-01-oct-2026"), date(2026, 10, 1))
+        found = mato.collect(["graciesbar"], get)
+        self.assertNotIn("https://ma.to/event/old-show-01-oct-2026", found)   # already past: never fetched
+        self.assertEqual(found["https://ma.to/event/bluegrass-night-27-oct-2026"], "music")
+        shows = {s.title: s for s in mato.fetch_shows(["graciesbar"], get=get, now=datetime(2026, 10, 21, tzinfo=TZ))}
+        self.assertEqual(set(shows), {"Bluegrass Night", "The Mystery Night"})
+        self.assertEqual(shows["Bluegrass Night"].status, "published")
+        self.assertEqual(shows["Bluegrass Night"].raw_genres, ["bluegrass"])
+        self.assertEqual(shows["The Mystery Night"].status, "pending")    # unclear, on a listed venue's page
 
 
 class TestTicketsauce(unittest.TestCase):

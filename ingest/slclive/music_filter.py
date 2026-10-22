@@ -41,6 +41,12 @@ def classify(show: Show) -> str:
     return "unclear"
 
 
+def add_genre_words(show: Show) -> None:
+    """Genres named in the title or blurb ('Jazz Night', 'Techno, Tech House'), when a source gives none."""
+    if not show.raw_genres:
+        show.raw_genres = sorted({m.lower() for m in GENRE_WORDS.findall(f"{show.title} {show.description or ''}")})
+
+
 def apply(shows: list[Show]) -> list[Show]:
     kept = []
     for show in shows:
@@ -49,7 +55,6 @@ def apply(shows: list[Show]) -> list[Show]:
             continue
         if kind == "unclear":
             show.status = "pending"
-        if not show.raw_genres:
-            show.raw_genres = sorted({m.lower() for m in GENRE_WORDS.findall(f"{show.title} {show.description or ''}")})
+        add_genre_words(show)
         kept.append(show)
     return kept
