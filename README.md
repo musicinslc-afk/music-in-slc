@@ -5,6 +5,7 @@ A concert calendar for every live music show in Salt Lake County.
 - **Scrapes** venue calendars and the Ticketmaster feed every 6 hours, with SeatGeek as an optional backstop.
 - **Reads the musicinslc@gmail.com inbox** every hour, including flyer images, and turns show announcements into listings.
 - **Takes submissions** from the public through a form, with an admin review queue.
+- **Shows flyers and band links**: each listing carries the show's flyer (or an artist photo) and links to the headliner's website, Bandcamp, Instagram and other pages. A show opens into a detail view with the full flyer, every act on the bill, tickets, sharing and add-to-calendar.
 - **Filters** by genre, date, venue, all ages and free shows.
 - **Watches its own coverage**: flags venues that should have shows but don't, and emails a weekly digest to the inbox.
 - **Recommends** shows from Last.fm (which covers Spotify and Pandora listeners), or artists a visitor types in.
@@ -39,6 +40,7 @@ Every source produces the same show record. Each show gets a fingerprint (venue,
 - Spotify sign-in has been removed from the site; recommendations use Last.fm and typed-in artists.
 - Soundwell and The Hog Wallow Pub are read with layout parsers for their full calendars; Liquid Joe's comes from its Ticketsauce event list; The Union Event Center's JavaScript calendar is read in a headless browser (its shows also come from Ticketmaster). The Great Saltair comes from Ticketmaster and is marked seasonal.
 - The coverage watchdog flags any watched venue with no published show in its window, as a red `coverage:<venue>` row in Source health. The weekly digest goes to musicinslc@gmail.com on Monday mornings.
+- Flyers and band links: run `supabase/migrations/002_flyers_and_artist_links.sql` once in the SQL editor (it adds the image and link columns, the `artists` table and the public `flyers` storage bucket).
 - Still to do: Last.fm key (genre tags and similar-artist recommendations); optional SeatGeek client ID (backstop for touring shows).
 
 ## Setup
@@ -113,6 +115,25 @@ When a source misbehaves, **Actions → Diagnose sources → Run workflow** with
 
 Breweries, coffee shops and bars that only post on Instagram are what the inbox and the submit form are for. Ask them to email flyers to musicinslc@gmail.com.
 
+## Flyers and band links
+
+**Flyers.** Every source that publishes a show image keeps it: venue calendars and 24tix event pages (usually the flyer), Ticketsauce, Soundwell's listing cards, and the Hog Wallow's band photos. Ticketmaster and SeatGeek supply artist press photos, which a flyer from any other source replaces. After each scrape, the **flyers** job reads the event page of up to 60 upcoming shows that still have no image and keeps the page's preview image (`og:image`) or event-data image. Each page is read once. An image that turns up for three or more different bands is a venue logo and is ignored.
+
+Emailed flyers: the inbox reader picks which attached image belongs to which show and stores it in the public `flyers` bucket in Supabase. An email from an untrusted sender can add a flyer to a show waiting for review but can't change the picture on a show that is already public.
+
+The site shows a square thumbnail on each card (initials on a color tile when there's no image), a 4:3 image on the week view, and the full flyer in the detail view with a credit link to the page it came from.
+
+**Band links.** Links live in the `artists` table, one row per band, matched to shows by a normalized name. They come from:
+
+1. Ticketmaster's performer data (official site, Instagram, YouTube, Spotify and so on), on every scrape.
+2. MusicBrainz, for performers on upcoming shows that have none. The **artist-links** job looks up 50 a run, soonest shows first. Many bands share a name, so a match is used only if the band is from Utah, or it is the only active band by that exact name and its tags fit the show's genres. Otherwise the band stays blank and is checked again in 45 days.
+3. Emails: links from trusted senders are saved directly; otherwise the headliner's link waits on the show for review.
+4. The submit form's optional "Headliner's website or music page" field, also checked on review.
+
+On the admin page, each queue item has **Headliner's link** and **Flyer image link** fields, and the **Band links** section edits any band's links. A band an admin saves is locked so the jobs never change it; **Let the robots fill it in again** unlocks it.
+
+Both jobs report in **Source health** as `flyers` and `artist-links`, and can be run alone with **Scrape venues → Run workflow** and `flyers` or `artist-links` as the source.
+
 ## Recommendations: what works and what doesn't
 
 - **Typed-in artists and genres** work for everyone with no setup.
@@ -130,23 +151,26 @@ The scraper identifies itself with your site and contact email, obeys `robots.tx
 ```bash
 cd ingest
 pip install -r requirements.txt
-python -m unittest discover -s tests              # 39 tests, no network needed
+python -m unittest discover -s tests              # 57 tests, no network needed
 DRY_RUN=1 python run_scrapers.py --only kilby-court   # print shows without writing
 ```
 
-For the website, serve the `web/` folder with any static server (`python -m http.server -d web 8000`). With `supabaseUrl` blank it runs on sample listings, so you can work on the design without a database.
+For the website, serve the `web/` folder with any static server (`python -m http.server -d web 8000`). With `supabaseUrl` blank it runs on sample listings with made-up posters and band links, so you can work on the design without a database.
 
 ## Files
 
 ```
 supabase/schema.sql          tables, row-level security, admin role, health view
+supabase/migrations/         changes to run on an existing database
 ingest/config/venues.yaml    venues, aliases and calendar URLs
 ingest/run_scrapers.py       venue pages, Ticketmaster, 24tix, State Room Presents, KRCL → database
 ingest/run_email.py          musicinslc inbox → database
 ingest/run_digest.py         weekly coverage and health email to the inbox
 ingest/diagnose.py           source diagnostics for the Diagnose sources workflow
-ingest/slclive/              parsing, normalizing, dedupe, AI reader, Last.fm genres
+ingest/slclive/              parsing, normalizing, dedupe, AI reader, Last.fm genres,
+                             flyer finder (flyers.py), band links (links.py, musicbrainz.py)
 web/                         the site (no build step)
+web/details.js               the show detail view: flyer, band links, share, add to calendar
 web/genres.json              genre list shared by the site and the ingest jobs
 .github/workflows/           schedules and deployment
 ```

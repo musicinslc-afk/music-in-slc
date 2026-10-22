@@ -6,6 +6,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from .. import fetch, settings
+from ..links import clean_links
 from ..models import Show
 from ..normalize import clean, parse_dt
 
@@ -67,8 +68,8 @@ def _to_show(e: dict) -> Show | None:
     prices = e.get("priceRanges") or []
     lows = [p["min"] for p in prices if p.get("min") is not None]
     highs = [p["max"] for p in prices if p.get("max") is not None]
-    images = sorted(e.get("images", []), key=lambda i: i.get("width", 0), reverse=True)
-    image = next((i["url"] for i in images if i.get("ratio") == "16_9"), images[0]["url"] if images else None)
+    image = pick_image(e.get("images") or [])
+    attractions = e.get("_embedded", {}).get("attractions", [])
     age = (e.get("ageRestrictions") or {})
     status = (dates.get("status") or {}).get("code", "")
     return Show(
@@ -76,14 +77,44 @@ def _to_show(e: dict) -> Show | None:
         starts_at=starts,
         venue_name=clean(venue.get("name")) or "",
         city=clean((venue.get("city") or {}).get("name")),
-        artists=[a["name"] for a in e.get("_embedded", {}).get("attractions", []) if a.get("name")],
+        artists=[a["name"] for a in attractions if a.get("name")],
+        artist_links={a["name"]: band_links(a) for a in attractions if a.get("name") and band_links(a)},
         raw_genres=raw_genres,
         price_min=min(lows) if lows else None,
         price_max=max(highs) if highs else None,
         age_restriction="21_plus" if age.get("legalAgeEnforced") else None,
         ticket_url=e.get("url"),
         image_url=image,
+        image_kind="photo" if image else None,
         source_url=e.get("url"),
         cancelled=status == "cancelled",
         source="ticketmaster",
     )
+
+
+def pick_image(images: list[dict]) -> str | None:
+    """A 16:9 artist photo big enough for the detail view without sending the 2048px original."""
+    wide = sorted((i for i in images if i.get("url") and i.get("ratio") == "16_9"), key=lambda i: i.get("width", 0))
+    big = [i for i in wide if i.get("width", 0) >= 640]
+    if big:
+        return big[0]["url"]
+    if wide:
+        return wide[-1]["url"]
+    rest = sorted((i for i in images if i.get("url")), key=lambda i: -i.get("width", 0))
+    return rest[0]["url"] if rest else None
+
+
+def band_links(attraction: dict) -> dict[str, str]:
+    """The performer's own pages from Ticketmaster's externalLinks: {"homepage": [{"url": ...}], ...}."""
+    ext = attraction.get("externalLinks") or {}
+    urls, homepage = [], None
+    for kind, entries in ext.items():
+        for entry in entries or []:
+            url = (entry or {}).get("url")
+            if not url:
+                continue
+            if kind == "homepage" and not homepage:
+                homepage = url
+            elif kind != "homepage":
+                urls.append(url)
+    return clean_links(urls, homepage=homepage)

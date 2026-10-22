@@ -5,6 +5,9 @@
   const PREFS = "slc.week.v1";
   const state = Object.assign({ allAges: false, free: false }, S.store.get(PREFS, {}));
   let events = [];
+  const artists = new Map();
+  const D = window.SLCDetails;
+  const details = D.create({ find: (id) => events.find((e) => String(e.id) === String(id)), artists });
 
   $("inbox-addr").textContent = S.cfg.inboxAddress || "musicinslc@gmail.com";
   $("demo-note").hidden = S.live;
@@ -40,14 +43,16 @@
     const support = (e.artists || []).slice(1).filter((a) => a.toLowerCase() !== e.title.toLowerCase());
     const price = S.priceLabel(e);
     const age = S.AGE[e.age_restriction] || "";
-    const title = url && !cancelled
-      ? `<a href="${S.esc(url)}" target="_blank" rel="noopener">${S.esc(e.title)}</a>`
-      : S.esc(e.title);
+    const id = S.esc(e.id);
+    const title = `<a href="#show-${id}" data-show="${id}">${S.esc(e.title)}</a>`;
+    const hasArt = S.safeUrl(e.image_url) || String(e.image_url || "").startsWith("data:image/svg+xml");
     return `<article class="wshow${cancelled ? " cancelled" : ""}">
+      ${hasArt ? `<a class="wthumb" href="#show-${id}" data-show="${id}" tabindex="-1" aria-hidden="true">${D.art(e, "wthumb-img")}</a>` : ""}
       <div class="wtime">${S.esc(S.timeLabel(e.starts_at))}${cancelled ? " · Cancelled" : ""}</div>
       <h3 class="wtitle">${title}</h3>
       ${support.length ? `<div class="support">with ${S.esc(support.join(", "))}</div>` : ""}
       <div class="wwhere">${S.esc(e.venue_name)}</div>
+      ${D.cardLinks(e, artists)}
       ${price || age ? `<div class="wmeta">${price ? `<span class="${price === "Free" ? "free" : ""}">${S.esc(price)}</span>` : ""}${price && age ? "<span>·</span>" : ""}${age ? `<span>${S.esc(age)}</span>` : ""}</div>` : ""}
     </article>`;
   }
@@ -93,8 +98,11 @@
   $("this-week").onclick = () => setOffset(0);
 
   try {
+    const artistsLoad = S.loadArtists();
     events = await S.loadEvents();
+    for (const [k, v] of await artistsLoad) artists.set(k, v);
     render();
+    details.fromHash();
   } catch (err) {
     $("week").innerHTML = `<div class="empty"><strong>Shows didn't load</strong>${S.esc(err.message)}</div>`;
   }

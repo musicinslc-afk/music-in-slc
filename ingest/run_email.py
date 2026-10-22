@@ -24,6 +24,7 @@ from bs4 import BeautifulSoup
 
 from slclive import ai_extract, enrich, settings
 from slclive.db import DB
+from slclive.links import artist_key
 from slclive.normalize import load_venues, resolve
 
 IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
@@ -64,6 +65,35 @@ def message_parts(msg: Message) -> tuple[str, list[tuple[str, bytes]]]:
 def is_trusted(sender: str) -> bool:
     sender = sender.lower()
     return any(sender == t or (t.startswith("@") and sender.endswith(t)) for t in settings.TRUSTED_SENDERS)
+
+
+def attach_flyer(db: DB, show, images: list[tuple[str, bytes]]) -> None:
+    """Store the attached image the reader picked as this show's flyer."""
+    n = show.flyer_index
+    if not (1 <= n <= len(images[:6])):
+        return
+    media_type, data = images[n - 1]
+    try:
+        url = db.upload_flyer(data, media_type)
+    except Exception as e:
+        print(f"     flyer upload failed: {e}", file=sys.stderr)
+        return
+    if url:
+        show.image_url, show.image_kind = url, "flyer"
+
+
+def keep_band_links(db: DB, show, trusted: bool) -> None:
+    """Links from a trusted sender go straight to the band's entry. Otherwise the headliner's
+    link waits on the show for an admin to check when they review it."""
+    if trusted and not db.dry_run:
+        for name, links in show.artist_links.items():
+            db.save_artist(name, links, "email")
+        return
+    head = artist_key((show.artists or [show.title])[0])
+    for name, links in show.artist_links.items():
+        if artist_key(name) == head and links:
+            show.artist_url = next(iter(links.values()))
+            return
 
 
 def main() -> int:
@@ -123,6 +153,8 @@ def main() -> int:
             show.submitter_email = sender
             show.submitter_notes = f"From email: {subject}"[:500]
             enrich.fill_genres(show)
+            attach_flyer(db, show, images)
+            keep_band_links(db, show, trusted)
             kept += 1
             if db.dry_run:
                 print(json.dumps({k: v for k, v in show.to_row().items() if v not in (None, [], "")}, default=str))

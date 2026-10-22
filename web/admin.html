@@ -47,6 +47,28 @@
     <p id="queue-summary"></p>
     <div class="queue" id="queue"></div>
 
+    <h2 class="section-title">Band links</h2>
+    <p class="hint">Links come from Ticketmaster, MusicBrainz and emails from trusted senders. Fix a wrong or missing one here; a band you save is never changed by the robots again.</p>
+    <form class="card" id="band-form">
+      <div class="form-actions">
+        <div class="field" style="flex:1 1 260px">
+          <label for="band-name">Band name</label>
+          <input id="band-name" list="band-names" autocomplete="off" required placeholder="Start typing a band on the calendar">
+          <datalist id="band-names"></datalist>
+        </div>
+        <button class="btn" type="button" id="band-load">Look up</button>
+      </div>
+      <div id="band-fields" hidden>
+        <p class="hint" id="band-status"></p>
+        <div class="grid-2" id="band-inputs"></div>
+        <div class="notice" id="band-msg" hidden></div>
+        <div class="form-actions">
+          <button class="btn primary" type="submit">Save links</button>
+          <button class="btn ghost" type="button" id="band-unlock">Let the robots fill it in again</button>
+        </div>
+      </div>
+    </form>
+
     <h2 class="section-title">Source health</h2>
     <p class="hint">The latest run for each scraper and the inbox. A red row means that source needs attention, usually a changed venue website.</p>
     <div class="card table-wrap"><table><thead><tr><th>Source</th><th>Status</th><th>Last run</th><th>Shows</th><th>New</th><th>Error</th></tr></thead><tbody id="health"></tbody></table></div>

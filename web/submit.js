@@ -3,6 +3,7 @@
   const $ = (id) => document.getElementById(id);
   const form = $("submit-form");
   $("inbox-addr").textContent = S.cfg.inboxAddress || "musicinslc@gmail.com";
+  document.querySelectorAll(".inbox-addr").forEach((el) => { el.textContent = S.cfg.inboxAddress || "musicinslc@gmail.com"; });
   $("date").min = S.dayKey(Date.now());
 
   const genres = await S.loadGenres();
@@ -37,6 +38,8 @@
     if (!$("email").checkValidity()) return fail("That email address doesn't look right.", "email");
     const ticket = f.ticket ? S.safeUrl(f.ticket.trim()) : null;
     if (f.ticket && !ticket) return fail("The ticket link should start with https://", "ticket");
+    const artistUrl = f.artist_url ? S.safeUrl(f.artist_url.trim()) : null;
+    if (f.artist_url && !artistUrl) return fail("The band link should start with https://", "artist-url");
 
     const [hh, mm] = f.time.split(":").map(Number);
     const starts = S.mountainTime(f.date, hh, mm);
@@ -59,6 +62,7 @@
       age_restriction: f.age || null,
       genres: [...document.querySelectorAll('input[name="genre"]:checked')].map((b) => b.value),
       ticket_url: ticket,
+      artist_url: artistUrl,
       description: (f.description || "").trim() || null,
       status: "pending",
       source: "submission",

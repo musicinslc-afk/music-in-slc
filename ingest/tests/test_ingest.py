@@ -426,3 +426,208 @@ class TestDigest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# ---------------------------------------------------------------------------
+# Flyers and band links
+# ---------------------------------------------------------------------------
+from slclive import ai_extract, flyers, links, musicbrainz  # noqa: E402
+import run_scrapers  # noqa: E402
+
+
+class TestBandLinks(unittest.TestCase):
+    def test_link_kinds(self):
+        k = links.link_kind
+        self.assertEqual(k("https://rheavance.com/"), "homepage")
+        self.assertEqual(k("https://rheavance.bandcamp.com/album/x"), "bandcamp")
+        self.assertEqual(k("https://www.instagram.com/rheavance/"), "instagram")
+        self.assertEqual(k("https://open.spotify.com/artist/0abc"), "spotify")
+        self.assertIsNone(k("https://open.spotify.com/track/0abc"))
+        self.assertIsNone(k("https://www.instagram.com/p/Cxyz/"))
+        self.assertIsNone(k("https://www.ticketmaster.com/event/1"))
+        self.assertIsNone(k("https://www.24tix.com/event/abc"))
+        self.assertIsNone(k("https://kilbycourt.com/events"))
+        self.assertIsNone(k("javascript:alert(1)"))
+
+    def test_clean_links_orders_and_keeps_first_of_each_kind(self):
+        got = links.clean_links(["https://a.bandcamp.com", "https://b.bandcamp.com", "https://ticketmaster.com/x"],
+                                homepage="https://band.example")
+        self.assertEqual(list(got.items()), [("homepage", "https://band.example"), ("bandcamp", "https://a.bandcamp.com")])
+
+    def test_artist_key(self):
+        self.assertEqual(links.artist_key("The Beths"), links.artist_key("beths"))
+        self.assertEqual(links.artist_key("Sigur Rós"), "sigurros")
+
+    def test_ticketmaster_attraction_links(self):
+        a = {"name": "Evanescence", "externalLinks": {
+            "homepage": [{"url": "https://www.evanescence.com/"}],
+            "instagram": [{"url": "https://www.instagram.com/evanescenceofficial"}],
+            "musicbrainz": [{"id": "f4a31f0a"}],
+            "itunes": [{"url": "https://music.apple.com/us/artist/evanescence/42102393"}]}}
+        self.assertEqual(ticketmaster.band_links(a), {
+            "homepage": "https://www.evanescence.com/", "instagram": "https://www.instagram.com/evanescenceofficial"})
+        e = {"name": "Evanescence", "dates": {"start": {"dateTime": "2027-07-25T01:00:00Z"}},
+             "_embedded": {"venues": [{"name": "Delta Center"}], "attractions": [a, {"name": "Support"}]}}
+        s = ticketmaster._to_show(e)
+        self.assertEqual(list(s.artist_links), ["Evanescence"])
+        self.assertNotIn("artist_links", s.to_row())
+
+    def test_ticketmaster_image_size(self):
+        imgs = [{"url": "small.jpg", "width": 305, "ratio": "16_9"}, {"url": "mid.jpg", "width": 1024, "ratio": "16_9"},
+                {"url": "huge.jpg", "width": 2048, "ratio": "16_9"}, {"url": "sq.jpg", "width": 900, "ratio": "4_3"}]
+        self.assertEqual(ticketmaster.pick_image(imgs), "mid.jpg")
+        self.assertEqual(ticketmaster.pick_image(imgs[:1]), "small.jpg")
+        self.assertIsNone(ticketmaster.pick_image([]))
+
+    def test_save_artist_fills_blanks_and_respects_admin_lock(self):
+        db = DB(dry_run=True)
+        db._artists = {"rheavance": {"key": "rheavance", "name": "Rhea Vance", "homepage": "https://old.example",
+                                     "links": {}, "locked": False},
+                       "junebug": {"key": "junebug", "name": "Junebug", "homepage": None, "links": {}, "locked": True}}
+        self.assertTrue(db.save_artist("Rhea Vance", {"homepage": "https://new.example",
+                                                     "bandcamp": "https://rhea.bandcamp.com"}, "ticketmaster"))
+        row = db._artists["rheavance"]
+        self.assertEqual(row["homepage"], "https://old.example")
+        self.assertEqual(row["links"], {"bandcamp": "https://rhea.bandcamp.com"})
+        self.assertFalse(db.save_artist("Rhea Vance", {"bandcamp": "https://other.bandcamp.com"}, "ticketmaster"))
+        self.assertFalse(db.save_artist("Junebug", {"homepage": "https://junebug.example"}, "ticketmaster"))
+
+
+class TestMusicBrainz(unittest.TestCase):
+    def cand(self, name, score=100, area=None, tags=(), ended=False, mbid="x"):
+        return {"id": mbid, "name": name, "score": score, "area": {"name": area} if area else None,
+                "tags": [{"name": t, "count": 3} for t in tags], "life-span": {"ended": ended}}
+
+    def test_utah_band_wins_a_shared_name(self):
+        c = [self.cand("The Moths", area="London", mbid="uk"), self.cand("The Moths", area="Salt Lake City", mbid="ut")]
+        self.assertEqual(musicbrainz.pick(c, "The Moths", ["indie"])["id"], "ut")
+
+    def test_single_match_needs_matching_genre(self):
+        c = [self.cand("Lo Velo", tags=["electronic", "house"])]
+        self.assertIsNotNone(musicbrainz.pick(c, "Lo Velo", ["electronic"]))
+        self.assertIsNone(musicbrainz.pick(c, "Lo Velo", ["country"]))
+        self.assertIsNone(musicbrainz.pick(c, "Lo Velo", ["local"]))
+
+    def test_ambiguous_ended_or_inexact_is_skipped(self):
+        two = [self.cand("Junebug", tags=["folk"], mbid="a"), self.cand("Junebug", tags=["folk"], mbid="b")]
+        self.assertIsNone(musicbrainz.pick(two, "Junebug", ["folk"]))
+        self.assertIsNone(musicbrainz.pick([self.cand("Junebug", tags=["folk"], ended=True)], "Junebug", ["folk"]))
+        self.assertIsNone(musicbrainz.pick([self.cand("Junebug Carter", tags=["folk"])], "Junebug", ["folk"]))
+
+    def test_recheck_schedule(self):
+        now = datetime.now(TZ)
+        self.assertTrue(musicbrainz.needs_lookup(None, now))
+        self.assertFalse(musicbrainz.needs_lookup({"homepage": "https://x.example"}, now))
+        self.assertFalse(musicbrainz.needs_lookup({"checked_at": now.isoformat()}, now))
+        self.assertTrue(musicbrainz.needs_lookup({"checked_at": (now - timedelta(days=60)).isoformat()}, now))
+
+
+class FakeFlyerDB:
+    def __init__(self, rows, existing=()):
+        self.rows, self.existing, self.saved = rows, list(existing), {}
+
+    def shows_missing_images(self, limit):
+        return self.rows[:limit]
+
+    def shows_with_image(self, url):
+        return [r for r in self.existing if r["image_url"] == url]
+
+    def set_image(self, event_id, url, kind):
+        self.saved[event_id] = (url, kind)
+
+
+class TestFlyers(unittest.TestCase):
+    def test_page_image_prefers_og_then_event_data(self):
+        og = '<meta property="og:image" content="/img/flyer-123.jpg">'
+        self.assertEqual(flyers.page_image(og, "https://venue.example/e/1"), "https://venue.example/img/flyer-123.jpg")
+        ld = '<script type="application/ld+json">{"@type":"MusicEvent","image":["https://cdn.example/f.png"]}</script>'
+        self.assertEqual(flyers.page_image(ld, "https://venue.example/e/1"), "https://cdn.example/f.png")
+        logo = '<meta property="og:image" content="https://venue.example/logo.png">'
+        self.assertIsNone(flyers.page_image(logo, "https://venue.example/e/1"))
+
+    def test_candidate_pages_skip_listings_and_blocked_sellers(self):
+        row = {"source_url": "https://krcl.org/events/?category=live-music",
+               "ticket_url": "https://www.ticketmaster.com/event/1"}
+        self.assertEqual(flyers.candidate_pages(row), [])
+        row = {"source_url": "https://thestateroompresents.com/x", "ticket_url": "https://thestateroompresents.com/x"}
+        self.assertEqual(flyers.candidate_pages(row), ["https://thestateroompresents.com/x"])
+
+    def test_backfill_drops_shared_logo_and_records_checks(self):
+        rows = [{"id": str(i), "title": t, "artists": [t], "source_url": f"https://v.example/{i}"}
+                for i, t in enumerate(["A Band", "B Band", "C Band", "D Band"])]
+        pages = {"https://v.example/0": "https://v.example/site.jpg", "https://v.example/1": "https://v.example/site.jpg",
+                 "https://v.example/2": "https://v.example/c-flyer.jpg", "https://v.example/3": None}
+        existing = [{"image_url": "https://v.example/site.jpg", "title": "Z Band", "artists": ["Z Band"]}]
+        db = FakeFlyerDB(rows, existing)
+
+        class Resp:
+            def __init__(self, url):
+                self.text = f'<meta property="og:image" content="{pages[url]}">' if pages[url] else ""
+        orig = flyers.fetch.get
+        flyers.fetch.get = lambda url, **kw: Resp(url)
+        try:
+            checked, found = flyers.backfill(db)
+        finally:
+            flyers.fetch.get = orig
+        self.assertEqual((checked, found), (4, 1))
+        self.assertEqual(db.saved["2"], ("https://v.example/c-flyer.jpg", "flyer"))
+        self.assertEqual(db.saved["0"], (None, None))
+        self.assertEqual(db.saved["3"], (None, None))
+
+    def test_scrape_batch_drops_venue_logo(self):
+        mk = lambda t, img: Show(title=t, starts_at=parse_dt("2026-12-01"), venue_name="Kilby Court", source="x",
+                                 image_url=img, image_kind="flyer")
+        shows = [mk("A", "logo.png"), mk("B", "logo.png"), mk("C", "logo.png"), mk("D", "d.png")]
+        run_scrapers.drop_shared_images(shows)
+        self.assertEqual([s.image_url for s in shows], [None, None, None, "d.png"])
+
+    def test_flyer_replaces_photo_but_not_from_unreviewed_email(self):
+        db = DB(dry_run=True)
+        db._existing = {}
+        tm = resolve(Show(title="Lo Velo", starts_at=parse_dt("2026-12-12"), venue_name="Soundwell",
+                          source="ticketmaster", image_url="photo.jpg", image_kind="photo"))
+        mail = resolve(Show(title="Lo Velo", starts_at=parse_dt("2026-12-12"), venue_name="Soundwell",
+                            source="email", status="pending", image_url="spam.jpg", image_kind="flyer"))
+        venue = resolve(Show(title="Lo Velo", starts_at=parse_dt("2026-12-12"), venue_name="Soundwell",
+                             source="venue:soundwell", image_url="flyer.jpg", image_kind="flyer"))
+        db.upsert_show(tm)
+        db.upsert_show(mail)
+        self.assertEqual(db._existing[tm.fingerprint]["image_url"], "photo.jpg")
+        db.upsert_show(venue)
+        self.assertEqual(db._existing[tm.fingerprint]["image_url"], "flyer.jpg")
+        self.assertEqual(db._existing[tm.fingerprint]["image_kind"], "flyer")
+        other = resolve(Show(title="Lo Velo", starts_at=parse_dt("2026-12-12"), venue_name="Soundwell",
+                             source="seatgeek", image_url="p2.jpg", image_kind="photo"))
+        db.upsert_show(other)
+        self.assertEqual(db._existing[tm.fingerprint]["image_url"], "flyer.jpg")
+
+
+class TestEmailFlyersAndLinks(unittest.TestCase):
+    def test_reader_output(self):
+        s = ai_extract._to_show({"title": "Rhea Vance", "date": "2026-12-01", "venue": "Kilby Court", "flyer_image": 2,
+                                 "artist_links": [{"artist": "Rhea Vance", "url": "https://rheavance.bandcamp.com"},
+                                                  {"artist": "Rhea Vance", "url": "https://24tix.com/event/x"}]},
+                                source="email", default_venue=None, status="pending")
+        self.assertEqual(s.flyer_index, 2)
+        self.assertEqual(s.artist_links, {"Rhea Vance": {"bandcamp": "https://rheavance.bandcamp.com"}})
+
+    def test_untrusted_link_waits_on_the_show(self):
+        db = DB(dry_run=True)
+        s = Show(title="Rhea Vance", artists=["Rhea Vance", "Junebug"], starts_at=parse_dt("2026-12-01"),
+                 venue_name="Kilby Court", source="email", status="pending",
+                 artist_links={"Junebug": {"homepage": "https://junebug.example"},
+                               "Rhea Vance": {"instagram": "https://instagram.com/rheavance"}})
+        run_email.keep_band_links(db, s, trusted=False)
+        self.assertEqual(s.artist_url, "https://instagram.com/rheavance")
+
+    def test_attach_flyer_uses_the_picked_image(self):
+        class UploadDB:
+            dry_run = False
+            def upload_flyer(self, data, media_type):
+                return f"https://store.example/{data.decode()}.{media_type.split('/')[1]}"
+        s = Show(title="X", starts_at=parse_dt("2026-12-01"), venue_name="Kilby Court", source="email", flyer_index=2)
+        run_email.attach_flyer(UploadDB(), s, [("image/png", b"logo"), ("image/jpeg", b"flyer")])
+        self.assertEqual((s.image_url, s.image_kind), ("https://store.example/flyer.jpeg", "flyer"))
+        s2 = Show(title="Y", starts_at=parse_dt("2026-12-01"), venue_name="Kilby Court", source="email", flyer_index=5)
+        run_email.attach_flyer(UploadDB(), s2, [("image/png", b"logo")])
+        self.assertIsNone(s2.image_url)

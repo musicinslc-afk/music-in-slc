@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       only:
-        description: "Run one source (venue slug, 'ticketmaster', 'seatgeek', ...); blank for all"
+        description: "Run one source (venue slug, 'ticketmaster', 'seatgeek', 'flyers', 'artist-links', ...); blank for all"
         required: false
 
 concurrency: { group: ingest-scrape, cancel-in-progress: false }
@@ -14,7 +14,7 @@ concurrency: { group: ingest-scrape, cancel-in-progress: false }
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     defaults: { run: { working-directory: ingest } }
     steps:
       - uses: actions/checkout@v4

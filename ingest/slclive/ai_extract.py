@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Optional
 
 from . import settings
+from .links import link_kind
 from .models import Show
 from .normalize import TZ, clean, parse_dt
 
@@ -37,6 +38,18 @@ TOOL = {
                         "ticket_url": {"type": "string"},
                         "description": {"type": "string", "description": "One or two sentences, optional"},
                         "cancelled": {"type": "boolean"},
+                        "artist_links": {
+                            "type": "array",
+                            "description": "Pages that belong to the performers themselves (official site, Bandcamp, "
+                                           "Instagram, Spotify artist page, YouTube channel...), only when the material "
+                                           "gives them. Never ticket, venue, promoter or event pages.",
+                            "items": {"type": "object", "properties": {
+                                "artist": {"type": "string"}, "url": {"type": "string"}},
+                                "required": ["artist", "url"]},
+                        },
+                        "flyer_image": {"type": "integer",
+                                        "description": "Number of the attached image that is this show's flyer or "
+                                                       "poster (1 for Image 1); 0 if none is"},
                     },
                     "required": ["title", "date", "venue"],
                 },
@@ -71,7 +84,8 @@ def extract(text: str, *, source: str, context: str = "", images: Optional[list[
     client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
     today = datetime.now(TZ).strftime("%A, %B %d, %Y")
     content: list[dict] = []
-    for media_type, data in (images or [])[:6]:
+    for n, (media_type, data) in enumerate((images or [])[:6], 1):
+        content.append({"type": "text", "text": f"Image {n}:"})
         content.append({"type": "image", "source": {
             "type": "base64", "media_type": media_type, "data": base64.b64encode(data).decode()}})
     body = (text or "")[:MAX_TEXT_CHARS]
@@ -113,6 +127,16 @@ def _to_show(item: dict, *, source: str, default_venue: Optional[str], status: s
     title = clean(item.get("title"))
     if not venue or not title:
         return None
+    links: dict[str, dict[str, str]] = {}
+    for entry in item.get("artist_links") or []:
+        artist, url = clean((entry or {}).get("artist")), clean((entry or {}).get("url"))
+        kind = link_kind(url)
+        if artist and kind:
+            links.setdefault(artist, {}).setdefault(kind, url)
+    try:
+        flyer_index = max(0, int(item.get("flyer_image") or 0))
+    except (TypeError, ValueError):
+        flyer_index = 0
     return Show(
         title=title,
         artists=[a for a in (clean(x) for x in item.get("artists") or []) if a],
@@ -128,6 +152,8 @@ def _to_show(item: dict, *, source: str, default_venue: Optional[str], status: s
         ticket_url=clean(item.get("ticket_url")),
         description=clean(item.get("description")),
         cancelled=bool(item.get("cancelled")),
+        artist_links=links,
+        flyer_index=flyer_index,
         source=source,
         status=status,
     )

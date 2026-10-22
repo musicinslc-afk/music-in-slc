@@ -3,12 +3,14 @@ Merges incoming shows with what is already stored so several sources reporting t
 same show produce one listing."""
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime, timedelta
 from typing import Iterable, Optional
 
 import requests
 
 from . import settings
+from .links import KINDS, artist_key, clean_links
 from .models import Show
 from .normalize import TZ, Venue, similar
 
@@ -26,6 +28,8 @@ class DB:
             "Content-Type": "application/json", "Prefer": "return=representation",
         })
         self._existing: Optional[dict[str, dict]] = None
+        self._artists: Optional[dict[str, dict]] = None
+        self.url = url
         self.stats = {"inserted": 0, "updated": 0}
 
     # -- low level ---------------------------------------------------------
@@ -116,8 +120,8 @@ class DB:
             while True:
                 page = self._get("events", {
                     "select": "id,fingerprint,title,artists,venue_name,starts_at,status,sources,genres,raw_genres,"
-                              "price_min,price_max,ticket_url,image_url,description,age_restriction,doors_at,"
-                              "venue_id,city,is_free",
+                              "price_min,price_max,ticket_url,image_url,image_kind,description,age_restriction,"
+                              "doors_at,venue_id,city,is_free,artist_url,source_url",
                     # rejected rows are loaded too, so a show an admin hid is never re-added
                     "starts_at": f"gte.{since}",
                     "order": "starts_at.asc", "limit": 1000, "offset": offset,
@@ -175,10 +179,17 @@ class DB:
 
         changes: dict = {"last_seen_at": row["last_seen_at"]}
         # Fill blanks, never overwrite what an admin or earlier source already set
-        for k in ("price_min", "price_max", "ticket_url", "image_url", "description", "age_restriction",
-                  "doors_at", "venue_id", "city"):
+        for k in ("price_min", "price_max", "ticket_url", "description", "age_restriction",
+                  "doors_at", "venue_id", "city", "artist_url"):
             if row.get(k) not in (None, "", []) and match.get(k) in (None, "", []):
                 changes[k] = row[k]
+        # An image fills a blank, and a flyer replaces an artist photo. An unreviewed email
+        # can't change the picture on a show that is already public.
+        unreviewed = row["status"] == "pending" and match.get("status") == "published"
+        if row.get("image_url") and not unreviewed and row["image_url"] != match.get("image_url") and (
+                not match.get("image_url") or (row.get("image_kind") == "flyer" and match.get("image_kind") != "flyer")):
+            changes["image_url"] = row["image_url"]
+            changes["image_kind"] = row.get("image_kind")
         if row.get("genres") and not match.get("genres"):
             changes["genres"] = row["genres"]
         if row.get("artists") and len(row["artists"]) > len(match.get("artists") or []):
@@ -204,3 +215,83 @@ class DB:
         match.update(changes)
         self.stats["updated"] += 1
         return "updated"
+
+    # -- flyers ------------------------------------------------------------
+    def shows_missing_images(self, limit: int, days_ahead: int = 120) -> list[dict]:
+        """Upcoming published shows with no image whose event page hasn't been checked yet."""
+        now = datetime.now(TZ)
+        return self._get("events", {
+            "select": "id,title,artists,source_url,ticket_url,starts_at",
+            "status": "eq.published", "image_url": "is.null", "image_checked_at": "is.null",
+            "starts_at": f"gte.{now.isoformat(timespec='seconds')}",
+            "and": f"(starts_at.lte.{(now + timedelta(days=days_ahead)).isoformat(timespec='seconds')})",
+            "order": "starts_at.asc", "limit": limit,
+        })
+
+    def shows_with_image(self, url: str) -> list[dict]:
+        return self._get("events", {"select": "title,artists", "image_url": f"eq.{url}", "limit": 10})
+
+    def set_image(self, event_id: str, url: Optional[str], kind: Optional[str]) -> None:
+        values = {"image_checked_at": datetime.now(TZ).isoformat()}
+        if url:
+            values.update(image_url=url, image_kind=kind)
+        self._patch("events", {"id": event_id}, values)
+
+    def upload_flyer(self, data: bytes, media_type: str) -> Optional[str]:
+        """Store an emailed flyer in the public 'flyers' bucket; returns its public address."""
+        if self.dry_run:
+            return None
+        ext = {"image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp"}.get(media_type, "img")
+        name = f"{hashlib.sha256(data).hexdigest()[:24]}.{ext}"
+        r = self.s.post(f"{self.url}/storage/v1/object/flyers/{name}", data=data, timeout=60,
+                        headers={"Content-Type": media_type, "x-upsert": "true", "Prefer": ""})
+        if r.status_code >= 400:
+            raise RuntimeError(f"flyer upload failed: {r.status_code} {r.text[:300]}")
+        return f"{self.url}/storage/v1/object/public/flyers/{name}"
+
+    # -- band links --------------------------------------------------------
+    def artists(self) -> dict[str, dict]:
+        if self._artists is None:
+            rows, offset = [], 0
+            while True:
+                page = self._get("artists", {"select": "key,name,homepage,links,source,locked,checked_at",
+                                             "order": "key.asc", "limit": 1000, "offset": offset})
+                rows += page
+                if len(page) < 1000:
+                    break
+                offset += 1000
+            self._artists = {r["key"]: r for r in rows}
+        return self._artists
+
+    def save_artist(self, name: str, links: dict, source: str, checked: bool = False) -> bool:
+        """Add band links for `name`, filling kinds it doesn't have yet. An admin-locked artist is
+        never changed. `checked` records a MusicBrainz lookup even when nothing was found.
+        Returns True when something was written."""
+        key = artist_key(name)
+        if not key:
+            return False
+        links = clean_links(links or {})
+        current = self.artists().get(key)
+        if current and current.get("locked"):
+            return False
+        have = dict(current.get("links") or {}) if current else {}
+        if current and current.get("homepage"):
+            have["homepage"] = current["homepage"]
+        merged = {**links, **have}
+        merged = {k: merged[k] for k in KINDS if k in merged}
+        if current and merged == have and not checked:
+            return False
+        if not current and not merged and not checked:
+            return False
+        row = {
+            "key": key, "name": (current or {}).get("name") or name,
+            "homepage": merged.pop("homepage", None), "links": merged,
+            "source": (current or {}).get("source") if current and have else source,
+        }
+        if checked:
+            row["checked_at"] = datetime.now(TZ).isoformat()
+        elif current and current.get("checked_at"):
+            row["checked_at"] = current["checked_at"]
+        self._post("artists", row, params={"on_conflict": "key"}, prefer="resolution=merge-duplicates,return=minimal")
+        self.artists()[key] = {**(current or {}), **row}
+        return True

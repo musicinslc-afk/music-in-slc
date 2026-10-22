@@ -36,6 +36,7 @@ def parse(data: dict, venue_name: str, source: str) -> list[Show]:
             ticket_url=f"{url}/tickets" if url else None,
             source_url=url,
             image_url=image,
+            image_kind="flyer" if image else None,
             status="published" if topic in ("", "concert", "music", "festival") else "pending",
             source=source,
         ))

@@ -24,11 +24,16 @@ class Show:
     description: Optional[str] = None
     ticket_url: Optional[str] = None
     image_url: Optional[str] = None
+    image_kind: Optional[str] = None         # flyer | photo (an artist press photo)
     source_url: Optional[str] = None
     cancelled: bool = False
     status: str = "published"                # published for trusted scrapers, pending for email
     submitter_email: Optional[str] = None
     submitter_notes: Optional[str] = None
+    artist_url: Optional[str] = None         # headliner link waiting for an admin to check it
+    # band links the source gave: {artist name: {kind: url}}; saved to the artists table
+    artist_links: dict = field(default_factory=dict)
+    flyer_index: int = 0                     # emailed shows: which attached image is the flyer (1-based)
     # filled in by normalize.resolve()
     venue_id: Optional[str] = None
     venue_slug: Optional[str] = None
@@ -40,6 +45,6 @@ class Show:
         d["doors_at"] = self.doors_at.isoformat() if self.doors_at else None
         d["status"] = "cancelled" if self.cancelled else self.status
         d["sources"] = [self.source]
-        for k in ("cancelled", "venue_slug"):
+        for k in ("cancelled", "venue_slug", "artist_links", "flyer_index"):
             d.pop(k)
         return d

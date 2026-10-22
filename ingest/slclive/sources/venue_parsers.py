@@ -50,6 +50,23 @@ def _artist_list(text: str) -> list[str]:
     return [p.title() if p.isupper() else p for p in parts]
 
 
+_NOT_FLYER = re.compile(r"logo|icon|favicon|placeholder|default|spacer|pixel|\.svg(\?|$)", re.I)
+
+
+def card_image(el: Optional[Tag], base: str) -> Optional[str]:
+    """The first real image in a listing card: src, a lazy-load attribute, or the first srcset entry."""
+    if el is None:
+        return None
+    for img in el.select("img"):
+        src = img.get("data-src") or img.get("data-lazy-src") or img.get("src") or ""
+        if not src and img.get("srcset"):
+            src = img["srcset"].split(",")[0].split()[0]
+        src = src.strip()
+        if src and not src.startswith("data:") and not _NOT_FLYER.search(src):
+            return urljoin(base, src)
+    return None
+
+
 def billed_headliner(title: str) -> str:
     """The headlining act in a marketing title, so the show merges with ticket-site listings:
     'Shwayze – The Nostalgia Tour', 'Amtrac (Live Set)', 'Medium Build Presents The King of
@@ -89,6 +106,7 @@ def soundwell(html: str, url: str, venue_name: str, source: str, today: Optional
         sold_out = bool(re.match(r"\s*sold\s*out", name, re.I)) or bool(card.select_one(".sold-out"))
         title = re.sub(r"^\s*sold\s*out\s*[:!-]*\s*", "", name, flags=re.I)
         headliner = billed_headliner(title)
+        flyer = card_image(card, url)
         doors_at = datetime.combine(d, doors, TZ) if doors else None
         shows.append(Show(
             title=title,
@@ -99,6 +117,8 @@ def soundwell(html: str, url: str, venue_name: str, source: str, today: Optional
             artists=[headliner, *_artist_list(support)],
             description="Sold out." if sold_out else None,
             ticket_url=ticket,
+            image_url=flyer,
+            image_kind="flyer" if flyer else None,
             source_url=url,
             source=source,
         ))
@@ -127,6 +147,7 @@ def hogwallow(html: str, url: str, venue_name: str, source: str, today: Optional
         seen.add((href, d))
         start = parse_clock(_text(block.select_one(".text-secondary.small"))) or time(21, 0)
         genre = _text(block.select_one(".text-primary"))
+        photo = card_image(block, base)
         shows.append(Show(
             title=name.title() if name.isupper() else name,
             starts_at=datetime.combine(d, start, TZ),
@@ -135,6 +156,8 @@ def hogwallow(html: str, url: str, venue_name: str, source: str, today: Optional
             ticket_url=None,
             source_url=href,
             age_restriction="21_plus",
+            image_url=photo,
+            image_kind="photo" if photo else None,   # the pub shows a round band photo, not a flyer
             source=source,
         ))
     return shows

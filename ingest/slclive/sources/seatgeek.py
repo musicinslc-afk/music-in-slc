@@ -65,6 +65,7 @@ def to_show(e: dict) -> Show | None:
         city=clean(venue.get("city")),
         artists=[p["name"] for p in performers if p.get("name")][:12],
         image_url=image,
+        image_kind="photo" if image else None,
         ticket_url=e.get("url"),
         source_url=e.get("url"),
         source="seatgeek",

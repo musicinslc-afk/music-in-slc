@@ -12,17 +12,32 @@ import json
 import re
 import sys
 import traceback
+from collections import defaultdict
 from datetime import datetime
 
-from slclive import coverage, enrich, settings
+from slclive import coverage, enrich, flyers, musicbrainz, settings
 from slclive.db import DB
 from slclive import fetch
+from slclive.links import artist_key
 from slclive.normalize import TZ, load_feeds, load_venues, resolve
 from slclive.sources import ics, krcl, seatgeek, stateroom, ticketmaster, venue_page
 
 
+def drop_shared_images(shows) -> None:
+    """A source that gives the same image to several different bands is sending its logo."""
+    bands = defaultdict(set)
+    for s in shows:
+        if s.image_url:
+            bands[s.image_url].add(artist_key((s.artists or [s.title])[0]))
+    for s in shows:
+        if s.image_url and len(bands[s.image_url]) >= flyers.SHARED_IMAGE_LIMIT:
+            s.image_url = s.image_kind = None
+
+
 def store(db: DB, shows, venues, source: str, dry_run: bool, review_unknown_venues: bool = False) -> tuple[int, int, int]:
     found = inserted = updated = 0
+    shows = list(shows)
+    drop_shared_images(shows)
     for raw in shows:
         show = resolve(raw, venues)
         if not show:
@@ -31,6 +46,9 @@ def store(db: DB, shows, venues, source: str, dry_run: bool, review_unknown_venu
             show.status = "pending"  # a venue we don't list yet, possibly outside the county
         found += 1
         enrich.fill_genres(show)
+        for name, links in show.artist_links.items():
+            if not dry_run:
+                db.save_artist(name, links, source.split(":")[0])
         if dry_run:
             print(json.dumps({k: v for k, v in show.to_row().items() if v not in (None, [], "")}, default=str))
             continue
@@ -46,7 +64,8 @@ COMPLETE_METHODS = ("parser:", "ticketsauce")
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", action="append",
-                    help="venue slug, feed name, 'ticketmaster', 'stateroom', 'krcl' or 'seatgeek' (repeatable)")
+                    help="venue slug, feed name, 'ticketmaster', 'stateroom', 'krcl', 'seatgeek', "
+                         "'flyers' or 'artist-links' (repeatable)")
     args = ap.parse_args()
 
     db = DB()
@@ -110,6 +129,21 @@ def main() -> int:
             print(f"FAIL {source:38} {msg}", file=sys.stderr)
             if settings.DRY_RUN:
                 traceback.print_exc()
+
+    # Flyers for shows that arrived without one, then band links for upcoming performers
+    extras = [("flyers", flyers.backfill, "event pages read={} flyers found={}"),
+              ("artist-links", musicbrainz.enrich_upcoming, "artists looked up={} with links={}")]
+    for name, task, label in extras:
+        if dry_run or (wanted and name not in wanted):
+            continue
+        try:
+            checked, hits = task(db)
+            db.log_run(name, True, found=checked, inserted=hits)
+            print(f"ok   {name:38} {label.format(checked, hits)}", file=sys.stderr)
+        except Exception as e:
+            msg = re.sub(r"\?\S*", "?…", f"{type(e).__name__}: {e}")
+            db.log_run(name, False, error=msg)
+            print(f"FAIL {name:38} {msg}", file=sys.stderr)
 
     gaps = 0
     if not dry_run and not wanted:

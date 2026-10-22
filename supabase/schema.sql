@@ -43,6 +43,9 @@ create table if not exists events (
   description     text,
   ticket_url      text,
   image_url       text,
+  image_kind      text check (image_kind in ('flyer','photo')),  -- flyers replace artist photos
+  image_checked_at timestamptz,              -- when the flyer finder read the event page
+  artist_url      text,                      -- headliner link offered by a submitter or email
   status          text not null default 'pending'
                   check (status in ('published','pending','rejected','cancelled')),
   source          text not null,             -- 'jsonld:kilby-court', 'ticketmaster', 'email', 'submission', ...
@@ -137,6 +140,8 @@ create policy events_public_submit on events for insert
     and char_length(title) between 2 and 200
     and starts_at > now() - interval '1 day'
     and starts_at < now() + interval '2 years'
+    and image_url is null
+    and (artist_url is null or (artist_url ~* '^https?://' and char_length(artist_url) <= 500))
   );
 
 drop policy if exists events_admin_write on events;
@@ -164,6 +169,37 @@ end $$;
 drop trigger if exists events_submission_fp on events;
 create trigger events_submission_fp before insert on events
 for each row execute function submission_fingerprint();
+
+-- ---------------------------------------------------------------------------
+-- Band links, one row per artist, matched to shows by a normalized name
+-- (artist_key in ingest/slclive/links.py, artistKey in web/data.js)
+-- ---------------------------------------------------------------------------
+create table if not exists artists (
+  key        text primary key,
+  name       text not null,
+  homepage   text,
+  links      jsonb not null default '{}',   -- {"bandcamp": url, "instagram": url, ...}
+  source     text,                         -- ticketmaster, musicbrainz, email, admin
+  locked     boolean not null default false, -- set by an admin; the ingest jobs leave it alone
+  checked_at timestamptz,                  -- last MusicBrainz lookup, found or not
+  updated_at timestamptz default now()
+);
+
+drop trigger if exists artists_touch on artists;
+create trigger artists_touch before update on artists
+for each row execute function touch_updated_at();
+
+alter table artists enable row level security;
+drop policy if exists artists_read on artists;
+create policy artists_read on artists for select using (true);
+drop policy if exists artists_admin on artists;
+create policy artists_admin on artists for all using (is_admin()) with check (is_admin());
+
+-- Flyers attached to emails are stored here and served from a public address
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('flyers', 'flyers', true, 6291456, array['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
+on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 
 -- Health summary for the admin page
 create or replace view source_health with (security_invoker = true) as

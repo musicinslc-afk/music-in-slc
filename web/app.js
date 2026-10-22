@@ -11,6 +11,9 @@
   if (state.when === "tonight") state.when = "all"; // tonight has its own section above the calendar
   let events = [];
   let genres = [];
+  let artists = new Map();
+  const D = window.SLCDetails;
+  const details = D.create({ find: (id) => events.find((e) => String(e.id) === String(id)), artists });
 
   $("inbox-addr").textContent = S.cfg.inboxAddress || "musicinslc@gmail.com";
   $("demo-note").hidden = S.live;
@@ -66,12 +69,15 @@
     const tags = (e.genres || []).map((g) => `<span class="tag">${S.esc(window.SLC_GENRE_LABELS[g] || g)}</span>`).join("");
     const age = S.AGE[e.age_restriction] ? `<span class="tag age">${S.AGE[e.age_restriction]}</span>` : "";
     const cancelled = e.status === "cancelled";
+    const id = S.esc(e.id);
     return `<article class="show${e._match ? " matched" : ""}${cancelled ? " cancelled" : ""}">
       <div class="time">${S.esc(S.timeLabel(e.starts_at))}${e.doors_at ? `<small>doors ${S.esc(S.timeLabel(e.doors_at))}</small>` : ""}</div>
+      <a class="thumb" href="#show-${id}" data-show="${id}" tabindex="-1" aria-hidden="true">${D.art(e, "thumb-img")}</a>
       <div class="show-main">
-        <h3 class="title">${S.esc(e.title)}</h3>
+        <h3 class="title"><a href="#show-${id}" data-show="${id}">${S.esc(e.title)}</a></h3>
         ${support.length ? `<div class="support">with ${S.esc(support.join(", "))}</div>` : ""}
         <div class="where">${S.esc(e.venue_name)}${e.city && e.city !== "Salt Lake City" ? ` <span>· ${S.esc(e.city)}</span>` : ""}</div>
+        ${D.cardLinks(e, artists)}
         <div class="tags">${cancelled ? '<span class="tag status">Cancelled</span>' : ""}${age}${tags}</div>
         ${e._match ? `<div class="match">${S.esc(e._match.reason)}</div>` : ""}
       </div>
@@ -210,12 +216,15 @@
       update();
     });
 
+    const artistsLoad = S.loadArtists();
     events = await S.loadEvents();
+    for (const [k, v] of await artistsLoad) artists.set(k, v);
     // Alphabetize without a leading "The", so The Union Event Center sits under U
     const sortKey = (v) => v.replace(/^the\s+/i, "");
     const venues = [...new Set(events.map((e) => e.venue_name))].sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
     $("venue").insertAdjacentHTML("beforeend", venues.map((v) => `<option>${S.esc(v)}</option>`).join(""));
     syncControls(); syncTaste(); render();
+    details.fromHash();
   } catch (err) {
     $("list").innerHTML = `<div class="empty"><strong>Shows didn't load</strong>${S.esc(err.message)}</div>`;
   }

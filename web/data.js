@@ -35,18 +35,83 @@
   async function loadEvents() {
     if (!live) return sampleEvents();
     const since = new Date(Date.now() - 6 * 3600e3).toISOString();
-    const cols = "id,title,artists,venue_name,city,starts_at,doors_at,price_min,price_max,is_free," +
-      "age_restriction,genres,ticket_url,image_url,status,description";
+    let cols = "id,title,artists,venue_name,city,starts_at,doors_at,price_min,price_max,is_free," +
+      "age_restriction,genres,ticket_url,image_url,image_kind,status,description";
     const all = [];
     for (let offset = 0; offset < 6000; offset += 1000) {
-      const r = await rest(`events?select=${cols}&status=in.(published,cancelled)&starts_at=gte.${since}` +
+      const get = () => rest(`events?select=${cols}&status=in.(published,cancelled)&starts_at=gte.${since}` +
         `&order=starts_at.asc&limit=1000&offset=${offset}`);
+      let r = await get();
+      if (r.status === 400 && cols.includes("image_kind")) {
+        cols = cols.replace(",image_kind", ""); // database not migrated yet
+        r = await get();
+      }
       if (!r.ok) throw new Error(`Couldn't load shows (${r.status}). Check supabaseUrl and supabaseAnonKey in config.js.`);
       const page = await r.json();
       all.push(...page);
       if (page.length < 1000) break;
     }
     return all;
+  }
+
+  // ---------- band links ----------
+  // Same rules as ingest/slclive/links.py, so names match the artists table
+  function artistKey(name) {
+    return String(name || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim()
+      .replace(/^the\s+/, "").replace(/[^a-z0-9]+/g, "").slice(0, 60);
+  }
+  const LINK_LABELS = {
+    homepage: "Website", bandcamp: "Bandcamp", instagram: "Instagram", spotify: "Spotify", youtube: "YouTube",
+    soundcloud: "SoundCloud", tiktok: "TikTok", facebook: "Facebook", twitter: "X", linktree: "Links",
+  };
+  const LINK_ORDER = Object.keys(LINK_LABELS);
+  const HOST_KINDS = [["bandcamp.com", "bandcamp"], ["instagram.com", "instagram"], ["open.spotify.com", "spotify"],
+    ["youtube.com", "youtube"], ["youtu.be", "youtube"], ["soundcloud.com", "soundcloud"], ["tiktok.com", "tiktok"],
+    ["facebook.com", "facebook"], ["fb.com", "facebook"], ["twitter.com", "twitter"], ["x.com", "twitter"], ["linktr.ee", "linktree"]];
+  function linkKind(url) {
+    const u = safeUrl(url);
+    if (!u) return null;
+    const host = new URL(u).hostname.replace(/^www\./, "");
+    const hit = HOST_KINDS.find(([d]) => host === d || host.endsWith(`.${d}`));
+    return hit ? hit[1] : "homepage";
+  }
+
+  let artistsPromise;
+  function loadArtists() {
+    artistsPromise ||= (async () => {
+      if (!live) return sampleArtists();
+      const map = new Map();
+      for (let offset = 0; offset < 20000; offset += 1000) {
+        const r = await rest(`artists?select=key,name,homepage,links&or=(homepage.not.is.null,links.neq.{})` +
+          `&order=key.asc&limit=1000&offset=${offset}`);
+        if (!r.ok) break; // no artists table yet: shows simply have no band links
+        const page = await r.json();
+        for (const a of page) map.set(a.key, a);
+        if (page.length < 1000) break;
+      }
+      return map;
+    })().catch(() => new Map());
+    return artistsPromise;
+  }
+
+  // [{kind, label, url}] for one artist, in display order
+  function bandLinks(artists, name) {
+    const a = artists && artists.get(artistKey(name));
+    if (!a) return [];
+    const all = { ...(a.links || {}), ...(a.homepage ? { homepage: a.homepage } : {}) };
+    return LINK_ORDER.filter((k) => all[k] && safeUrl(all[k])).map((k) => ({ kind: k, label: LINK_LABELS[k], url: safeUrl(all[k]) }));
+  }
+
+  // A stand-in tile for shows without a flyer: the headliner's initials on a color picked from the name
+  const TILE_COLORS = ["#6b3fa0", "#0d6f6b", "#b4441b", "#1f4e8c", "#7a5c00", "#8c1f4e"];
+  function tileStyle(name) {
+    let h = 0;
+    for (const c of String(name || "")) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+    return `--tile:${TILE_COLORS[h % TILE_COLORS.length]}`;
+  }
+  function initials(name) {
+    const words = String(name || "").replace(/^the\s+/i, "").split(/[\s&/+-]+/).filter((w) => /[a-z0-9]/i.test(w));
+    return (words.slice(0, 2).map((w) => w.match(/[a-z0-9]/i)[0]).join("") || "♪").toUpperCase();
   }
 
   async function loadVenues() {
@@ -149,12 +214,46 @@
         starts_at: starts.toISOString(), doors_at: new Date(starts - 3600e3).toISOString(),
         price_min: lo, price_max: hi, is_free: lo === 0, age_restriction: age, genres,
         ticket_url: null, status: "published", sample: true,
+        ...(i % 3 !== 2 ? { image_url: samplePoster(title, venue, day, i), image_kind: "flyer" } : {}),
       };
     });
   }
 
+  // Made-up gig posters for the sample listings, drawn as SVG so the demo needs no image files
+  function samplePoster(title, venue, day, i) {
+    const palettes = [["#0E1A2B", "#FF6B35", "#F4EDE1"], ["#2b1240", "#f0c419", "#fbf3dc"], ["#0d3b3a", "#ff8fab", "#e1f3f1"],
+      ["#3a0d0d", "#ffd166", "#fff4e0"], ["#14213d", "#8ecae6", "#ffffff"]];
+    const [bg, accent, ink] = palettes[i % palettes.length];
+    const words = title.toUpperCase().split(/\s+/);
+    const lines = [];
+    for (const w of words) {
+      const last = lines[lines.length - 1];
+      if (last && (last + " " + w).length <= 11) lines[lines.length - 1] = `${last} ${w}`; else lines.push(w);
+    }
+    const x = (t) => t.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+    const date = new Date(`${day}T19:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).toUpperCase();
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 560"><rect width="400" height="560" fill="${bg}"/>` +
+      `<circle cx="${120 + (i * 53) % 200}" cy="${150 + (i * 37) % 120}" r="${110 + (i * 17) % 60}" fill="${accent}" opacity=".9"/>` +
+      `<g font-family="Arial Narrow, Arial, sans-serif" font-weight="800" fill="${ink}">` +
+      lines.slice(0, 4).map((l, n) => `<text x="28" y="${330 + n * 52}" font-size="50">${x(l)}</text>`).join("") +
+      `<text x="28" y="520" font-size="22" fill="${accent}">${x(date)} · ${x(venue.toUpperCase())}</text></g></svg>`;
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  }
+
+  // Sample band links for the demo, pointing at example.com
+  function sampleArtists() {
+    const map = new Map();
+    for (const name of ["Sun Valley Static", "Rhea Vance", "Marrow Saints", "Lo Velo", "Copper Cathedral", "Bonneville Drift"]) {
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "");
+      map.set(artistKey(name), { key: artistKey(name), name, homepage: `https://example.com/${slug}`,
+        links: { bandcamp: `https://example.com/${slug}/music`, instagram: `https://example.com/${slug}/photos` } });
+    }
+    return map;
+  }
+
   window.SLC = {
     cfg, live, TZ, store, mountainTime, rest, loadGenres, loadEvents, loadVenues, submitShow,
+    loadArtists, artistKey, linkKind, bandLinks, LINK_LABELS, LINK_ORDER, tileStyle, initials,
     dayKey, addDays, timeLabel, priceLabel, AGE, esc, safeUrl,
     fmtDow: (d) => dowFmt.format(new Date(d)), fmtMon: (d) => monFmt.format(new Date(d)),
     fmtNum: (d) => numFmt.format(new Date(d)), fmtLong: (d) => longFmt.format(new Date(d)),

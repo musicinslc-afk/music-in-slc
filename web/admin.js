@@ -43,7 +43,8 @@
     if (!admin) { $("who").textContent = session.user.email; $("not-admin").hidden = false; return; }
     $("admin").hidden = false;
     venues = (await sb.from("venues").select("id,slug,name,aliases,city")).data || [];
-    await Promise.all([loadQueue(), loadHealth(), loadRecent()]);
+    await loadArtistRows();
+    await Promise.all([loadQueue(), loadHealth(), loadRecent(), loadBandNames()]);
   }
 
   // ---------- queue ----------
@@ -54,10 +55,39 @@
     return { day, t };
   };
 
+  let artistRows = new Map();
+  async function loadArtistRows() {
+    const { data } = await sb.from("artists").select("key,name,homepage,links,source,locked").limit(10000);
+    artistRows = new Map((data || []).map((a) => [a.key, a]));
+  }
+  function mainLink(name) {
+    const a = artistRows.get(S.artistKey(name));
+    if (!a) return "";
+    return a.homepage || Object.values(a.links || {})[0] || "";
+  }
+
+  // Save one link for a band, keeping the others; admin-saved bands are locked
+  async function saveBandLink(name, url) {
+    const key = S.artistKey(name);
+    if (!key || !url) return null;
+    const cur = artistRows.get(key) || { key, name, homepage: null, links: {} };
+    const kind = S.linkKind(url);
+    if (!kind) return "That link doesn't look like a web address.";
+    const row = { key, name: cur.name || name, homepage: cur.homepage, links: { ...(cur.links || {}) }, source: "admin", locked: true };
+    if (kind === "homepage") row.homepage = url; else row.links[kind] = url;
+    const { error } = await sb.from("artists").upsert(row);
+    if (error) return error.message;
+    artistRows.set(key, row);
+    return null;
+  }
+
   function itemHtml(e) {
     const { day, t } = localInput(e.starts_at);
+    const head = (e.artists || [])[0] || e.title;
+    const offered = e.artist_url || "";
+    const known = mainLink(head);
     const from = e.source === "email" ? `Email from ${e.submitter_email || "unknown"}` : `Submitted by ${e.submitter_name || "?"} (${e.submitter_email || "no email"})`;
-    return `<form class="card queue-item" data-id="${e.id}">
+    return `<form class="card queue-item" data-id="${e.id}" data-image="${S.esc(e.image_url || "")}">
       <header><strong>${S.esc(e.title)}</strong><span class="meta">${S.esc(from)}${e.submitter_notes ? ` · ${S.esc(e.submitter_notes)}` : ""}</span></header>
       <div class="grid-2">
         <div class="field"><label for="t-${e.id}">Title</label><input id="t-${e.id}" name="title" value="${S.esc(e.title)}" required></div>
@@ -78,6 +108,13 @@
       <div class="field"><span class="label">Genres</span><div class="checks">${genres.map((g) =>
         `<label><input type="checkbox" name="genre" value="${g.id}"${(e.genres || []).includes(g.id) ? " checked" : ""}> ${S.esc(g.label)}</label>`).join("")}</div></div>
       <div class="field"><label for="u-${e.id}">Ticket link</label><input id="u-${e.id}" name="ticket" type="url" value="${S.esc(e.ticket_url || "")}"></div>
+      <div class="grid-2">
+        <div class="field"><label for="l-${e.id}">Headliner's link <span class="opt">${offered && offered !== known ? "(offered by the sender, check it)" : known ? "(already on file)" : "(optional)"}</span></label>
+          <input id="l-${e.id}" name="artist_link" type="url" value="${S.esc(offered || known)}" data-known="${S.esc(known)}"></div>
+        <div class="field"><label for="i-${e.id}">Flyer image link <span class="opt">(optional)</span></label>
+          <input id="i-${e.id}" name="image" type="url" value="${S.esc(S.safeUrl(e.image_url) || "")}"></div>
+      </div>
+      ${S.safeUrl(e.image_url) ? `<img class="queue-flyer" src="${S.esc(S.safeUrl(e.image_url))}" alt="Flyer for ${S.esc(e.title)}" loading="lazy" referrerpolicy="no-referrer">` : ""}
       ${e.description ? `<p class="meta">${S.esc(e.description)}</p>` : ""}
       <div class="notice err" hidden></div>
       <div class="form-actions">
@@ -122,8 +159,17 @@
         age_restriction: f.age || null,
         genres: [...form.querySelectorAll('input[name="genre"]:checked')].map((b) => b.value),
         ticket_url: S.safeUrl(f.ticket) || null,
+        image_url: S.safeUrl(f.image) || null,
       };
+      if (update.image_url && update.image_url !== S.safeUrl(form.dataset.image || "")) update.image_kind = "flyer";
+      if (!update.image_url) update.image_kind = null;
       update.fingerprint = fingerprint(update);
+      const link = S.safeUrl(f.artist_link || "");
+      const known = form.querySelector('[name="artist_link"]').dataset.known;
+      if (link && link !== known) {
+        const problem = await saveBandLink(update.artists[0], link);
+        if (problem) { err.hidden = false; err.textContent = problem; return; }
+      }
     }
     const { error } = await sb.from("events").update(update).eq("id", id);
     if (error) {
@@ -137,6 +183,68 @@
     const left = document.querySelectorAll(".queue-item").length;
     $("queue-summary").textContent = left ? `${left} show${left === 1 ? "" : "s"} waiting for review.` : "Nothing waiting. Nice.";
     if (update.status === "published") loadRecent();
+  }
+
+  // ---------- band links ----------
+  const KIND_HINT = { homepage: "https://band.com", bandcamp: "https://band.bandcamp.com", instagram: "https://www.instagram.com/band",
+    spotify: "https://open.spotify.com/artist/...", youtube: "https://www.youtube.com/@band", soundcloud: "https://soundcloud.com/band",
+    tiktok: "https://www.tiktok.com/@band", facebook: "https://www.facebook.com/band", twitter: "https://x.com/band", linktree: "https://linktr.ee/band" };
+  let bandKey = null;
+
+  async function loadBandNames() {
+    const { data } = await sb.from("events").select("artists").eq("status", "published")
+      .gte("starts_at", new Date().toISOString()).limit(2000);
+    const names = new Set();
+    for (const e of data || []) for (const a of (e.artists || []).slice(0, 3)) names.add(a);
+    $("band-names").innerHTML = [...names].sort((a, b) => a.localeCompare(b)).map((n) => `<option value="${S.esc(n)}">`).join("");
+  }
+
+  function showBand() {
+    const name = $("band-name").value.trim();
+    bandKey = S.artistKey(name);
+    if (!bandKey) return;
+    const a = artistRows.get(bandKey);
+    const all = { ...((a && a.links) || {}), ...(a && a.homepage ? { homepage: a.homepage } : {}) };
+    $("band-status").textContent = !a ? "No links on file yet."
+      : a.locked ? "Saved by an admin; the robots leave this band alone."
+      : `Filled in automatically from ${a.source || "an unknown source"}.`;
+    $("band-inputs").innerHTML = S.LINK_ORDER.map((k) => `<div class="field"><label for="bl-${k}">${S.esc(S.LINK_LABELS[k] === "Links" ? "Linktree" : S.LINK_LABELS[k])}</label>
+      <input id="bl-${k}" data-kind="${k}" type="url" value="${S.esc(all[k] || "")}" placeholder="${S.esc(KIND_HINT[k])}"></div>`).join("");
+    $("band-unlock").hidden = !(a && a.locked);
+    $("band-msg").hidden = true;
+    $("band-fields").hidden = false;
+  }
+  $("band-load").onclick = showBand;
+  $("band-name").addEventListener("change", showBand);
+  $("band-form").onsubmit = async (ev) => {
+    ev.preventDefault();
+    if (!bandKey) return showBand();
+    const name = $("band-name").value.trim();
+    const row = { key: bandKey, name: (artistRows.get(bandKey) || {}).name || name, homepage: null, links: {}, source: "admin", locked: true };
+    for (const input of $("band-inputs").querySelectorAll("input")) {
+      const url = S.safeUrl(input.value.trim());
+      if (input.value.trim() && !url) { bandMsg(`The ${input.dataset.kind} link should start with https://`, true); return; }
+      if (!url) continue;
+      if (input.dataset.kind === "homepage") row.homepage = url; else row.links[input.dataset.kind] = url;
+    }
+    const { error } = await sb.from("artists").upsert(row);
+    if (error) return bandMsg(error.message, true);
+    artistRows.set(bandKey, row);
+    bandMsg(Object.keys(row.links).length || row.homepage ? "Saved." : "Saved with no links, so none will show.", false);
+    $("band-unlock").hidden = false;
+  };
+  $("band-unlock").onclick = async () => {
+    const cur = artistRows.get(bandKey);
+    if (!cur) return;
+    const { error } = await sb.from("artists").update({ locked: false, checked_at: null }).eq("key", bandKey);
+    if (error) return bandMsg(error.message, true);
+    artistRows.set(bandKey, { ...cur, locked: false });
+    bandMsg("The robots can add to this band's links again.", false);
+    $("band-unlock").hidden = true;
+  };
+  function bandMsg(text, bad) {
+    const m = $("band-msg");
+    m.hidden = false; m.className = `notice ${bad ? "err" : "ok"}`; m.textContent = text;
   }
 
   // ---------- health + recent ----------
