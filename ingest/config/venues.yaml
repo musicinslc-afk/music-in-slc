@@ -12,6 +12,9 @@
 # Use strategy "feeds_only" for venues whose shows come through Ticketmaster, email or submissions (no page to scrape).
 # `ticketsauce_partner` reads a Ticketsauce seller's event list directly (see sources/ticketsauce.py).
 #
+# `music_only: true` is for mixed-use rooms: live music publishes, events that are clearly not
+# music (drag shows, screenings, trivia) are dropped, and anything unclear waits for review.
+#
 # Coverage watchdog: `expect_shows_within_days: N` flags the venue in Source health and the
 # weekly digest when it has no published show in the next N days. `seasonal: true` keeps it
 # quiet from October through March.
@@ -247,6 +250,18 @@ venues:
     parser: hogwallow      # local bands five nights a week; no ticketing
     strategy: auto
     expect_shows_within_days: 7
+
+  - slug: drift-lounge
+    name: Drift Lounge
+    aliases: [Drift Lounge at Woodbine, Drift Lounge SLC, Drift]
+    address: 545 W 700 S
+    city: Salt Lake City
+    age_policy: 21_plus
+    calendar_urls: [https://www.driftloungeslc.com/event-list]
+    parser: wix_events     # Wix event pages; recurring series list their later dates too
+    music_only: true       # also hosts drag shows, screenings and parties
+    strategy: auto
+    expect_shows_within_days: 14
 
   - slug: great-saltair
     name: The Great Saltair

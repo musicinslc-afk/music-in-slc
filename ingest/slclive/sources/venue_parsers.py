@@ -5,9 +5,10 @@ iCal and AI steps run instead and Source health shows which method was used."""
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 from datetime import date, datetime, time
 from typing import Callable, Optional
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
@@ -167,3 +168,63 @@ PARSERS: dict[str, Callable[..., list[Show]]] = {
     "soundwell": soundwell,
     "hogwallow": hogwallow,
 }
+
+
+# ---------------------------------------------------------------------------
+# Wix Events sites (Drift Lounge and others): the event list links to /event-details/ pages,
+# each carrying schema.org Event data. A recurring series lists only its next date on the list
+# and its later dates under "Other dates" on the event page, so those are added too.
+# ---------------------------------------------------------------------------
+MAX_WIX_EVENTS = 60
+_OTHER_DATE = re.compile(r"([A-Z][a-z]{2}),\s+([A-Z][a-z]{2})\s+(\d{1,2}),\s+(\d{1,2}:\d{2}\s*[AP]M)")
+
+
+def wix_event_links(html: str, url: str) -> list[str]:
+    soup = BeautifulSoup(html, "html.parser")
+    host = urlparse(url).netloc
+    links: list[str] = []
+    for a in soup.find_all("a", href=True):
+        href = urljoin(url, a["href"]).split("?")[0]
+        if urlparse(href).netloc == host and "/event-details/" in href and href not in links:
+            links.append(href)
+    return links[:MAX_WIX_EVENTS]
+
+
+def other_dates(html: str, today: Optional[date] = None) -> list[datetime]:
+    text = BeautifulSoup(html, "html.parser").get_text(" ")
+    if "Other dates" not in text:
+        return []
+    section = text.split("Other dates", 1)[1][:1500]
+    found = []
+    for _dow, mon, day, clock in _OTHER_DATE.findall(section):
+        d = next_date(MONTHS.get(mon.lower(), 0), int(day), today) if mon.lower() in MONTHS else None
+        t = parse_clock(clock)
+        if d and t:
+            found.append(datetime.combine(d, t, TZ))
+    return found
+
+
+def wix_events(html: str, url: str, venue_name: str, source: str, today: Optional[date] = None,
+               get: Optional[Callable[[str], str]] = None) -> list[Show]:
+    from .. import fetch
+    from . import jsonld
+    get = get or (lambda u: fetch.get(u).text)
+    shows: list[Show] = []
+    seen: set[tuple[str, str]] = set()
+    for link in wix_event_links(html, url):
+        try:
+            page = get(link)
+        except Exception:
+            continue   # one dead event page shouldn't sink the venue
+        for show in jsonld.parse(page, link, source=source, default_venue=venue_name):
+            show.venue_name = venue_name   # Wix gives the room name ("Drift Lounge at Woodbine")
+            for starts in [show.starts_at, *other_dates(page, today)]:
+                key = (show.title, starts.isoformat())
+                if key not in seen:
+                    seen.add(key)
+                    shows.append(replace(show, starts_at=starts, doors_at=None,
+                                         source_url=link, ticket_url=show.ticket_url or link))
+    return shows
+
+
+PARSERS["wix_events"] = wix_events

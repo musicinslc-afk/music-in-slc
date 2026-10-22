@@ -10,7 +10,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-from .. import ai_extract, fetch, render
+from .. import ai_extract, fetch, music_filter, render
 from ..models import Show
 from ..normalize import Venue
 from . import ics, jsonld, ticketsauce
@@ -76,6 +76,13 @@ def follow(links: list[str], source: str) -> list[Show]:
 
 
 def scrape(venue: Venue, previous_hash: Callable[[str], Optional[str]]) -> PageResult:
+    result = _scrape(venue, previous_hash)
+    if venue.music_only:
+        result.shows = music_filter.apply(result.shows)
+    return result
+
+
+def _scrape(venue: Venue, previous_hash: Callable[[str], Optional[str]]) -> PageResult:
     result = PageResult()
     source = f"venue:{venue.slug}"
     if venue.ticketsauce_partner:

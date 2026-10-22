@@ -17,7 +17,8 @@ from slclive.normalize import TZ, headliner_key, load_venues, match_venue, parse
 import json  # noqa: E402
 
 from slclive.sources import jsonld, krcl, seatgeek, stateroom, ticketmaster, ticketsauce  # noqa: E402
-from slclive.sources.venue_parsers import hogwallow, next_date, parse_clock, soundwell  # noqa: E402
+from slclive.sources.venue_parsers import hogwallow, next_date, parse_clock, soundwell, wix_events  # noqa: E402
+from slclive import music_filter  # noqa: E402
 from slclive import coverage  # noqa: E402
 from datetime import date, timedelta  # noqa: E402
 import run_email  # noqa: E402
@@ -344,6 +345,33 @@ class TestVenueParsers(unittest.TestCase):
         self.assertEqual((resolved.venue_slug, resolved.city, resolved.age_restriction),
                          ("hog-wallow", "Cottonwood Heights", "21_plus"))
         self.assertIn("country", resolved.genres)
+
+
+class TestWixAndMusicFilter(unittest.TestCase):
+    def setUp(self):
+        html = (HERE / "fixtures" / "wix_event_list.html").read_text()
+        pages = json.loads((HERE / "fixtures" / "wix_event_pages.json").read_text())
+        get = lambda u: pages[u.rsplit("/", 1)[1]]
+        self.shows = wix_events(html, "https://www.driftloungeslc.com/event-list", "Drift Lounge",
+                                "venue:drift-lounge", today=date(2026, 10, 21), get=get)
+
+    def test_reads_event_pages_and_later_dates(self):
+        jazz = [s for s in self.shows if s.title == "Brazilian Jazz Night"]
+        self.assertEqual([s.starts_at for s in jazz], [datetime(2026, 10, 22, 20, 0, tzinfo=TZ),
+                         datetime(2026, 11, 12, 20, 0, tzinfo=TZ), datetime(2026, 12, 30, 20, 0, tzinfo=TZ)])
+        self.assertTrue(all(s.venue_name == "Drift Lounge" for s in self.shows))
+        self.assertEqual(resolve(jazz[0], load_venues()).venue_slug, "drift-lounge")
+
+    def test_music_filter(self):
+        kept = {s.title: s for s in music_filter.apply(self.shows)}
+        self.assertNotIn("Real Housewives Official Screening", kept)
+        self.assertEqual(kept["Brazilian Jazz Night"].status, "published")
+        self.assertEqual(kept["Brazilian Jazz Night"].raw_genres, ["jazz", "soul"])
+        self.assertEqual(kept["THE TECHOMA X DRIFT"].status, "published")      # techno, from the description
+        self.assertEqual(kept["HALO WEEN"].status, "pending")                  # unclear: waits for review
+        drag = Show(title="Divas After Dark", starts_at=datetime(2026, 10, 23, 19, 30, tzinfo=TZ),
+                    venue_name="Drift Lounge", source="x", description="A drag extravaganza")
+        self.assertEqual(music_filter.classify(drag), "not_music")
 
 
 class TestTicketsauce(unittest.TestCase):
