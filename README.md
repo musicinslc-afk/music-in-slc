@@ -9,6 +9,7 @@ A concert calendar for every live music show in Salt Lake County.
 - **Filters** by genre, date, venue, all ages and free shows.
 - **Watches its own coverage**: flags venues that should have shows but don't, and emails a weekly digest to the inbox.
 - **Recommends** shows from Last.fm (which covers Spotify and Pandora listeners), or artists a visitor types in.
+- **You**: a set-once section for taste and account, Maybe and Going on every show, and friends who can see each other's plans.
 
 Hosting is free or nearly free: a static site on GitHub Pages, a free Supabase database, and scheduled GitHub Actions. The only metered cost is the Claude API used to read emails and venue pages that have no structured data.
 
@@ -43,6 +44,7 @@ Every source produces the same show record. Each show gets a fingerprint (venue,
 - Mato (ma.to), where many small rooms post, is read every run: its Salt Lake live-music listing, the general listings (titles that say music only) and the Mato pages of listed venues.
 - The coverage watchdog flags any watched venue with no published show in its window, as a red `coverage:<venue>` row in Source health. The weekly digest goes to musicinslc@gmail.com on Monday mornings.
 - Flyers and band links are live: `supabase/migrations/002_flyers_and_artist_links.sql` has been run. After the first run, 306 of 567 upcoming shows had an image and 222 bands had links.
+- The You section (Maybe and Going, friends, visibility) is live on the site. It needs `supabase/migrations/003_you_plans_and_friends.sql` run and the sign-in redirect URL added; until then picks stay in each browser.
 - Still to do: Last.fm key (genre tags and similar-artist recommendations); optional SeatGeek client ID (backstop for touring shows).
 
 ## Setup
@@ -187,6 +189,7 @@ ingest/slclive/              parsing, normalizing, dedupe, AI reader, Last.fm ge
                              flyer finder (flyers.py), band links (links.py, musicbrainz.py)
 web/                         the site (no build step)
 web/details.js               the show detail view: flyer, band links, share, add to calendar
+web/plans.js                 Maybe and Going, sign-in, friends, and people's pages (?u=handle)
 web/genres.json              genre list shared by the site and the ingest jobs
 .github/workflows/           schedules and deployment
 ```
