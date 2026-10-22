@@ -23,7 +23,8 @@
 # websites often; the admin page's "Source health" panel flags any URL that stops working.
 # `aliases` are other spellings ticket sites use, so duplicates merge correctly.
 # `kind`, `capacity` (approximate, standing or seated) and `website` feed the Venues page;
-# `image:` overrides the picture, which otherwise comes from the website's preview image.
+# `image:` overrides the picture, which otherwise comes from the website's preview image,
+# then the `wikipedia:` article's photo, then the first photo on the site.
 
 # Calendar feeds that cover many venues at once. Shows at venues listed below publish
 # directly; shows at venues not listed here go to the review queue, since a feed can
@@ -36,6 +37,7 @@ venues:
   - slug: kilby-court
     name: Kilby Court
     kind: All-ages club
+    wikipedia: Kilby Court
     capacity: 250
     address: 741 S Kilby Ct
     city: Salt Lake City
@@ -73,6 +75,7 @@ venues:
   - slug: the-state-room
     name: The State Room
     kind: Concert hall
+    wikipedia: The State Room
     capacity: 299
     website: https://thestateroompresents.com/the-state-room
     aliases: [State Room]
@@ -113,6 +116,7 @@ venues:
   - slug: the-depot
     name: The Depot
     kind: Concert hall
+    wikipedia: The Depot (Salt Lake City)
     capacity: 1200
     website: https://www.depotslc.com/
     aliases: [Depot SLC]
@@ -150,6 +154,7 @@ venues:
   - slug: delta-center
     name: Delta Center
     kind: Arena
+    wikipedia: Delta Center
     capacity: 18000
     website: https://www.deltacenter.com/
     address: 301 S Temple
@@ -160,6 +165,7 @@ venues:
   - slug: maverik-center
     name: Maverik Center
     kind: Arena
+    wikipedia: Maverik Center
     capacity: 12000
     website: https://www.maverikcenter.com/
     address: 3200 S Decker Lake Dr
@@ -170,6 +176,7 @@ venues:
   - slug: utah-first-amphitheatre
     name: Utah First Credit Union Amphitheatre
     kind: Amphitheater
+    wikipedia: Utah First Credit Union Amphitheatre
     capacity: 20000
     website: https://www.livenation.com/venue/KovZpZAEAEJA/utah-first-credit-union-amphitheatre-events
     aliases: [USANA Amphitheatre, Utah First Credit Union Amphitheatre (formerly USANA Amphitheatre)]
@@ -181,6 +188,7 @@ venues:
   - slug: red-butte-garden
     name: Red Butte Garden Amphitheatre
     kind: Amphitheater
+    wikipedia: Red Butte Garden and Arboretum
     capacity: 3000
     aliases: [Red Butte Garden, Red Butte Garden Amphitheater]
     address: 300 Wakara Way
@@ -192,6 +200,7 @@ venues:
   - slug: eccles-theater
     name: Eccles Theater
     kind: Theater
+    wikipedia: Eccles Theater
     capacity: 2500
     website: https://artsaltlake.org/venue/delta-performance-hall-at-the-eccles-theater/
     aliases: [Delta Performance Hall at the Eccles Theater]
@@ -203,6 +212,7 @@ venues:
   - slug: abravanel-hall
     name: Abravanel Hall
     kind: Concert hall
+    wikipedia: Abravanel Hall
     capacity: 2800
     website: https://artsaltlake.org/venue/abravanel-hall/
     address: 123 W South Temple
@@ -215,6 +225,7 @@ venues:
   - slug: gallivan-center
     name: Gallivan Center
     kind: Outdoor plaza
+    wikipedia: Gallivan Center
     website: https://www.thegallivancenter.com/
     aliases: [The Gallivan Center]
     address: 239 S Main St
@@ -225,6 +236,7 @@ venues:
   - slug: murray-theater
     name: Murray Theater
     kind: Theater
+    wikipedia: Murray Theater
     address: 4961 S State St
     city: Murray
     age_policy: all_ages
@@ -251,6 +263,7 @@ venues:
   - slug: utah-state-fairpark
     name: Utah State Fairpark
     kind: Fairgrounds
+    wikipedia: Utah State Fairgrounds
     website: https://www.utahstatefairpark.com/
     address: 155 N 1000 W
     city: Salt Lake City
@@ -516,6 +529,7 @@ venues:
   - slug: great-saltair
     name: The Great Saltair
     kind: Concert hall
+    wikipedia: Saltair
     capacity: 4600
     website: https://thesaltair.com/
     aliases: [Great Saltair, Saltair, The Saltair]
@@ -538,6 +552,7 @@ venues:
   - slug: kingsbury-hall
     name: Kingsbury Hall
     kind: Theater
+    wikipedia: Kingsbury Hall
     capacity: 1900
     website: https://kingsburyhall.utah.edu/
     aliases: [Kingsbury Hall at the University of Utah]
@@ -549,6 +564,7 @@ venues:
   - slug: sandy-amphitheater
     name: Sandy Amphitheater
     kind: Amphitheater
+    wikipedia: Sandy Amphitheater
     capacity: 2700
     aliases: [Sandy Amphitheatre]
     address: 1245 E 9400 S
@@ -559,6 +575,7 @@ venues:
   - slug: rice-eccles-stadium
     name: Rice-Eccles Stadium
     kind: Stadium
+    wikipedia: Rice-Eccles Stadium
     capacity: 51000
     aliases: [Rice Eccles Stadium]
     address: 451 S 1400 E
@@ -569,6 +586,7 @@ venues:
   - slug: capitol-theatre
     name: Capitol Theatre
     kind: Theater
+    wikipedia: Capitol Theatre (Salt Lake City)
     capacity: 1900
     website: https://artsaltlake.org/venue/capitol-theatre/
     aliases: [Janet Quinney Lawson Capitol Theatre, Capitol Theater]

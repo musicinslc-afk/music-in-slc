@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from typing import Optional
@@ -54,20 +55,67 @@ def preview_image(html: str, base: str) -> Optional[str]:
     return None
 
 
+def first_photo(html: str, base: str) -> Optional[str]:
+    """The first sizable photo on a page that has no preview picture (skips logos and icons)."""
+    if not html:
+        return None
+    soup = BeautifulSoup(html, "html.parser")
+    for img in soup.find_all("img"):
+        src = img.get("src") or img.get("data-src") or ""
+        if not src and img.get("srcset"):
+            src = img["srcset"].split(",")[0].split()[0]
+        if not re.search(r"\.(jpe?g|png|webp)(\?|$)", src, re.I) or re.search(r"logo|icon|sprite|avatar|badge|pixel", src, re.I):
+            continue
+        width = img.get("width") or ""
+        if width.isdigit() and int(width) < 400:
+            continue
+        url = urljoin(base, src.replace("http://", "https://", 1))
+        if urlparse(url).scheme == "https":
+            return url
+    return None
+
+
+def wikipedia_image(title: str) -> Optional[str]:
+    try:
+        data = fetch.get("https://en.wikipedia.org/w/api.php", check_robots=False, params={
+            "action": "query", "titles": title, "prop": "pageimages", "piprop": "thumbnail",
+            "pithumbsize": 960, "redirects": 1, "format": "json"}).json()
+    except Exception:
+        return None
+    for page in (data.get("query", {}).get("pages") or {}).values():
+        src = (page.get("thumbnail") or {}).get("source")
+        if src:
+            return src
+    return None
+
+
 def build() -> tuple[list[dict], list[str]]:
     problems: list[str] = []
     rows = []
     for v in load_venues():
-        site = v.website or (v.calendar_urls[0] if v.calendar_urls else None)
+        candidates = [u for u in (v.website, *(v.calendar_urls or [])) if u]
         mato = f"https://ma.to/venue/{v.mato_venue}" if v.mato_venue else None
         image = v.image
-        if site:
-            status, html = get_page(site)
-            if status is None or (status >= 400 and status not in CHALLENGE_STATUSES):
-                problems.append(f"{v.slug}: website {site} answered {status or 'nothing'}; link left out")
-                site = None
-            elif not image:
-                image = preview_image(html, site)
+        site, html = None, ""
+        for url in dict.fromkeys(candidates):
+            status, page = get_page(url)
+            if status is None:
+                # Unreachable from the build machine, often a bot block: keep the link, flag it
+                problems.append(f"{v.slug}: couldn't check {url}; link kept")
+                site = site or url
+                continue
+            if status >= 400 and status not in CHALLENGE_STATUSES:
+                problems.append(f"{v.slug}: {url} answered {status}; link left out")
+                continue
+            site = url
+            html = page
+            break
+        if not image and html:
+            image = preview_image(html, site)
+        if not image and v.wikipedia:
+            image = wikipedia_image(v.wikipedia)
+        if not image and html:
+            image = first_photo(html, site)
         if not image and mato:
             _, html = get_page(mato)
             image = preview_image(html, mato)

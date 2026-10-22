@@ -126,6 +126,7 @@ class Venue:
     capacity: Optional[int] = None          # approximate
     website: Optional[str] = None           # the venue's own site, when it isn't the calendar page
     image: Optional[str] = None             # picture override for the Venues page
+    wikipedia: Optional[str] = None         # Wikipedia article whose photo the Venues page can use
     id: Optional[str] = None  # filled from the database
 
     @property
