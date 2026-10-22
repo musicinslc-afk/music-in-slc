@@ -222,7 +222,7 @@ venues:
 
   - slug: international-bar
     name: International Bar
-    aliases: [The International Bar]
+    aliases: [The International Bar, International Artist Lounge, The International Artist Lounge]
     address: 342 S State St
     city: Salt Lake City
     age_policy: 21_plus
