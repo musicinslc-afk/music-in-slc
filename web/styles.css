@@ -342,11 +342,11 @@ td.err { white-space: normal; color: var(--danger); min-width: 240px; }
 }
 .show-dialog::backdrop { background: rgb(8 12 16 / 0.72); }
 .sd-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); min-height: 420px; }
-.sd-art { margin: 0; background: #0b0f13; display: grid; place-items: center; min-width: 0; }
+.sd-art { position: relative; margin: 0; background: #0b0f13; display: grid; place-items: center; min-width: 0; }
 .sd-art img.sd-img { width: 100%; height: 100%; max-height: calc(100dvh - 48px); object-fit: contain; display: block; }
 .sd-art img.sd-img.is-photo { object-fit: cover; }
 .sd-art .tile.sd-img { width: 100%; height: 100%; min-height: 320px; font-size: clamp(90px, 14vw, 160px); }
-.sd-info { position: relative; padding: 22px 24px 24px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.sd-info { position: relative; padding: 22px 24px 24px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .sd-close-row { position: absolute; top: 12px; right: 12px; margin: 0; z-index: 2; }
 .sd-close {
   width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface);
@@ -370,21 +370,24 @@ td.err { white-space: normal; color: var(--danger); min-width: 240px; }
 .sd-actions .btn { min-height: 44px; padding-inline: 16px; }
 .sd-note { margin: 0; font-size: 14px; color: var(--lake); min-height: 1em; }
 .sd-note:empty { display: none; }
-.sd-credit { margin: 0; font-size: 12px; color: var(--muted); }
+.sd-credit {
+  position: absolute; right: 8px; bottom: 8px; max-width: calc(100% - 16px); padding: 3px 8px; border-radius: 999px;
+  background: rgb(8 12 16 / 0.62); color: rgb(255 255 255 / 0.82); font-size: 11px; line-height: 1.4;
+}
+.sd-credit a { color: #fff; }
+/* The map takes whatever height is left at the bottom of the info column */
+.sd-map-slot { flex: 1 1 auto; display: flex; min-height: 240px; margin-top: 4px; }
 .sd-map-slot:empty { display: none; }
 .sd-map {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(76px, 108px); gap: 10px; align-items: center;
-  padding: 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2);
+  flex: 1; display: flex; flex-direction: column; min-height: 0;
+  border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface-2);
 }
-.sd-map-frame {
-  position: relative; display: block; aspect-ratio: 4 / 3; border-radius: 6px; overflow: hidden; background: var(--line);
-}
+.sd-map-frame { position: relative; display: block; flex: 1 1 auto; min-height: 200px; background: var(--line); }
 .sd-map-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; }
-.sd-map-frame:hover, .sd-map-frame:focus-visible { outline: 2px solid var(--lake); outline-offset: 2px; }
-.sd-map-text { display: grid; gap: 2px; min-width: 0; line-height: 1.25; }
-.sd-map-venue { font-size: 12px; font-weight: 700; overflow-wrap: anywhere; }
-.sd-map-addr { font-size: 11px; color: var(--muted); }
-.sd-map-dirs { justify-self: start; margin-top: 2px; font-size: 12px; font-weight: 600; color: var(--lake); }
+.sd-map-frame:focus-visible { outline: 2px solid var(--lake); outline-offset: -2px; }
+.sd-map-text { display: flex; align-items: baseline; gap: 10px; padding: 7px 10px; font-size: 12px; line-height: 1.3; }
+.sd-map-addr { flex: 1; min-width: 0; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sd-map-dirs { font-weight: 600; color: var(--lake); white-space: nowrap; }
 @media (max-width: 720px) {
   .show-dialog {
     width: 100vw; max-width: 100vw; max-height: 100dvh; margin: auto 0 0; border-radius: 16px 16px 0 0;
@@ -394,6 +397,8 @@ td.err { white-space: normal; color: var(--danger); min-width: 240px; }
   .sd-art img.sd-img.is-photo { aspect-ratio: 16 / 9; height: auto; }
   .sd-art .tile.sd-img { min-height: 180px; aspect-ratio: 16 / 9; height: auto; font-size: 88px; }
   .sd-info { padding: 18px 16px calc(20px + env(safe-area-inset-bottom, 0px)); }
+  .sd-map-slot { min-height: 0; }
+  .sd-map-frame { flex: none; aspect-ratio: 16 / 10; min-height: 0; }
   .sd-close { background: rgb(8 12 16 / 0.6); color: #fff; border-color: rgb(255 255 255 / 0.35); }
   .sd-when { padding-right: 0; }
 }

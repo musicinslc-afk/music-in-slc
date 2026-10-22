@@ -58,8 +58,7 @@
           loading="lazy" referrerpolicy="no-referrer-when-downgrade" tabindex="-1" aria-hidden="true"></iframe>
       </a>
       <div class="sd-map-text">
-        <span class="sd-map-venue">${S.esc(e.venue_name)}</span>
-        ${v ? `<span class="sd-map-addr">${S.esc(v.address)}${v.city ? `, ${S.esc(v.city)}` : ""}</span>` : ""}
+        <span class="sd-map-addr">${v ? `${S.esc(v.address)}${v.city ? `, ${S.esc(v.city)}` : ""}` : S.esc(e.venue_name)}</span>
         <a class="sd-map-dirs" href="${dirs}" target="_blank" rel="noopener">Directions</a>
       </div>
     </div>`;
@@ -86,14 +85,14 @@
       const age = S.AGE[e.age_restriction];
       const tags = (e.genres || []).map((g) => `<span class="tag">${S.esc((window.SLC_GENRE_LABELS || {})[g] || g)}</span>`).join("");
       const when = `${S.fmtLong(e.starts_at)} · ${S.timeLabel(e.starts_at)}${e.doors_at ? ` (doors ${S.timeLabel(e.doors_at)})` : ""}`;
-      const credit = S.safeUrl(e.image_url) && ticket ? `<p class="sd-credit">${e.image_kind === "photo" ? "Photo" : "Flyer"} via <a href="${S.esc(ticket)}" target="_blank" rel="noopener">${S.esc(host(ticket))}</a></p>` : "";
+      const credit = S.safeUrl(e.image_url) && ticket ? `<figcaption class="sd-credit">${e.image_kind === "photo" ? "Photo" : "Flyer"} via <a href="${S.esc(ticket)}" target="_blank" rel="noopener">${S.esc(host(ticket))}</a></figcaption>` : "";
       const actRows = acts.map((a, i) => {
         const links = S.bandLinks(artists, a);
         return `<li><span class="sd-act${i === 0 ? " head" : ""}">${S.esc(a)}</span>${links.length ? `<span class="blinks">${chips(links)}</span>` : ""}</li>`;
       }).join("");
       dlg.innerHTML = `<form method="dialog" class="sd-close-row"><button class="sd-close" aria-label="Close">×</button></form>
       <div class="sd-grid">
-        <figure class="sd-art">${art(e, "sd-img")}</figure>
+        <figure class="sd-art">${art(e, "sd-img")}${credit}</figure>
         <div class="sd-info">
           <p class="sd-when">${S.esc(when)}</p>
           <h2 class="sd-title" id="sd-title">${S.esc(e.title)}</h2>
@@ -108,7 +107,6 @@
           </div>
           <p class="sd-note" aria-live="polite"></p>
           <div class="sd-map-slot">${mapBlock(e, venueCache)}</div>
-          ${credit}
         </div>
       </div>`;
       dlg.querySelector('[data-act="ics"]')?.addEventListener("click", () => downloadIcs(e));
