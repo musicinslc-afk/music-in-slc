@@ -4,6 +4,7 @@ in venues.yaml; if the parser finds nothing (the site was redesigned), the usual
 iCal and AI steps run instead and Source health shows which method was used."""
 from __future__ import annotations
 
+import html as html_lib
 import re
 from dataclasses import replace
 from datetime import date, datetime, time
@@ -248,7 +249,7 @@ def gcal_links(html: str, url: str, venue_name: str, source: str, today: Optiona
         if "google.com/calendar" not in href or "action=TEMPLATE" not in href:
             continue
         q = parse_qs(urlparse(href).query)
-        title = clean((q.get("text") or [""])[0])
+        title = clean(html_lib.unescape((q.get("text") or [""])[0]))
         dates = (q.get("dates") or [""])[0].split("/")[0]
         try:
             starts = datetime.strptime(dates, "%Y%m%dT%H%M%SZ").replace(tzinfo=ZoneInfo("UTC")).astimezone(TZ)
@@ -298,3 +299,53 @@ def recurring(entries: list[dict], venue_name: str, source: str, today: Optional
                 source=source,
             ))
     return shows
+
+
+# ---------------------------------------------------------------------------
+# Lake Effect (lakeeffectslc.com/calendar): a JavaScript week view ("Thu. 22 Matthew & the Hope
+# 9:30 pm Max Steele 6:00 pm Fri. 23 ..."), read after rendering. "(RH)" marks the Rabbit Hole room.
+# ---------------------------------------------------------------------------
+_DAY_LABEL = re.compile(r"\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\.\s+(\d{1,2})\b")
+_SET = re.compile(r"(.+?)\s+(\d{1,2}:\d{2}\s*[ap]m)", re.I)
+
+
+def label_date(weekday: str, day: int, today: date) -> Optional[date]:
+    """The date within the coming weeks that falls on this weekday and day of the month."""
+    from datetime import timedelta
+    for offset in range(-2, 70):
+        d = today + timedelta(days=offset)
+        if d.day == day and d.weekday() == WEEKDAYS[weekday.lower()]:
+            return d
+    return None
+
+
+def lake_effect(html: str, url: str, venue_name: str, source: str, today: Optional[date] = None) -> list[Show]:
+    soup = BeautifulSoup(html, "html.parser")
+    cal = soup.select_one(".ncf-calendar") or soup
+    text = clean(cal.get_text(" ")) or ""
+    today = today or datetime.now(TZ).date()
+    parts = _DAY_LABEL.split(text)
+    shows: list[Show] = []
+    # parts: [lead, weekday, day, body, weekday, day, body, ...]
+    for i in range(1, len(parts) - 2, 3):
+        weekday, day, body = parts[i], int(parts[i + 1]), parts[i + 2]
+        d = label_date(weekday, day, today)
+        if not d or d < today:
+            continue
+        for name, clock in _SET.findall(body):
+            name = clean(name) or ""
+            room = "the Rabbit Hole" if re.search(r"\(RH\)", name) else None
+            name = clean(re.sub(r"\s*\(RH\)\s*", " ", name)) or ""
+            t = parse_clock(clock)
+            if not name or not t:
+                continue
+            shows.append(Show(
+                title=name, starts_at=datetime.combine(d, t, TZ), venue_name=venue_name,
+                artists=[re.sub(r"^DJ\s+", "DJ ", name)],
+                raw_genres=["dj"] if re.match(r"DJ\b", name) else [],
+                description=f"In {room}, Lake Effect's downstairs listening room." if room else None,
+                is_free=True, source_url=url, source=source))
+    return shows
+
+
+PARSERS["lake_effect"] = lake_effect

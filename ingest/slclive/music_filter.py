@@ -1,8 +1,8 @@
 """Sorts a mixed-use venue's events into live music, not music, and unclear.
 
-Used by venues with `music_only: true` in venues.yaml (bars and lounges whose calendars also
-carry drag shows, screenings, trivia and parties). Music is published, non-music is dropped,
-and anything unclear waits in the review queue."""
+Used by venues with `music_only: true` in venues.yaml (bars, breweries and lounges whose
+calendars also carry drag shows, screenings, trivia, food trucks and parties). Only events that
+clearly say music are kept, so the calendar and the review queue stay free of everything else."""
 from __future__ import annotations
 
 import re
@@ -18,7 +18,8 @@ NOT_MUSIC = re.compile(
     r"\b(drag|divas|screening|watch party|viewing party|housewives|trivia|bingo|comedy|comedian|stand-?up|"
     r"karaoke|costume contest|match night|speed dating|singles|dating|yoga|paint|sip and|market|brunch|"
     r"game night|board games|book club|fundraiser|networking|private event|closed|cocktail|negroni|"
-    r"happy hour|tasting|wine night)\b", re.I)
+    r"happy hour|tasting|wine night|food truck|painting|pumpkin|swap|charity|cinema|film|movie|pop-?up|"
+    r"run club|runners|pixels|pairing|workshop|book fair|costume party)\b", re.I)
 
 GENRE_WORDS = re.compile(r"\b(jazz|blues|funk|soul|reggae|folk|bluegrass|country|americana|techno|house|"
                          r"salsa|cumbia|samba|bossa nova|hip[- ]?hop|rock|punk|metal|disco)\b", re.I)
@@ -54,11 +55,8 @@ def add_genre_words(show: Show) -> None:
 def apply(shows: list[Show]) -> list[Show]:
     kept = []
     for show in shows:
-        kind = classify(show)
-        if kind == "not_music":
+        if classify(show) != "music":
             continue
-        if kind == "unclear":
-            show.status = "pending"
         add_genre_words(show)
         kept.append(show)
     return kept

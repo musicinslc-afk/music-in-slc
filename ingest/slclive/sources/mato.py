@@ -6,9 +6,9 @@ venues named in venues.yaml (`mato_venue:`), and reads each event page's schema.
 Running every six hours, the rolling window picks up events as they come within reach.
 
 Mato also lists talks, markets, sports and workshops, so the live-music filter applies:
-events from the live-music listing are kept unless they are clearly not music; from a listed
-venue's page, clear music publishes and unclear events wait for review; from the general
-listings, only clear music is kept. Shows at venues not in venues.yaml wait for review too."""
+events from the live-music listing are kept unless they are clearly not music; from the
+general listings, and from the pages of mixed-use venues (`music_only: true`), only clear
+music is kept. Shows at venues not in venues.yaml wait for review."""
 from __future__ import annotations
 
 import re
@@ -61,10 +61,10 @@ def slug_date(url: str) -> Optional[date]:
 
 
 def collect(venue_slugs: Iterable[str], get: Callable[[str], str]) -> dict[str, str]:
-    """Event URL -> where it was found: 'music' (live-music listing), 'venue' (a listed venue's
-    Mato page) or 'general' (Salt Lake listings of every kind)."""
+    """Event URL -> where it was found: 'music' (live-music listing), 'venue:<slug>' (a listed
+    venue's Mato page) or 'general' (Salt Lake listings of every kind)."""
     found: dict[str, str] = {}
-    pages = [(p, "music") for p in MUSIC_LISTINGS] + [(f"/venue/{s}", "venue") for s in venue_slugs] \
+    pages = [(p, "music") for p in MUSIC_LISTINGS] + [(f"/venue/{s}", f"venue:{s}") for s in venue_slugs] \
         + [(p, "general") for p in OTHER_LISTINGS]
     for path, origin in pages:
         try:
@@ -82,7 +82,10 @@ def collect(venue_slugs: Iterable[str], get: Callable[[str], str]) -> dict[str, 
 
 
 def fetch_shows(venue_slugs: Iterable[str], get: Optional[Callable[[str], str]] = None,
-                now: Optional[datetime] = None) -> list[Show]:
+                now: Optional[datetime] = None, mixed_use: Iterable[str] = ()) -> list[Show]:
+    """`mixed_use`: Mato venue slugs whose pages also carry non-music events; from those,
+    only clear music is kept. Other venue pages keep everything that isn't clearly non-music."""
+    mixed = set(mixed_use)
     get = get or (lambda u: fetch.get(u).text)
     cutoff = datetime.combine((now or datetime.now(TZ)).date(), time(0, 0), TZ)
     shows: list[Show] = []
@@ -99,8 +102,8 @@ def fetch_shows(venue_slugs: Iterable[str], get: Optional[Callable[[str], str]] 
                 continue   # general listings carry markets, talks and sports: keep titles that say music
             if kind == "not_music":
                 continue
-            if kind == "unclear" and origin == "venue":
-                show.status = "pending"
+            if kind == "unclear" and origin.startswith("venue:") and origin[6:] in mixed:
+                continue
             music_filter.add_genre_words(show)
             show.source_url = url
             shows.append(show)

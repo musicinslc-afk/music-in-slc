@@ -369,7 +369,7 @@ class TestWixAndMusicFilter(unittest.TestCase):
         self.assertEqual(kept["Brazilian Jazz Night"].status, "published")
         self.assertEqual(kept["Brazilian Jazz Night"].raw_genres, ["jazz", "soul"])
         self.assertEqual(kept["THE TECHOMA X DRIFT"].status, "published")      # techno, from the description
-        self.assertEqual(kept["HALO WEEN"].status, "pending")                  # unclear: waits for review
+        self.assertNotIn("HALO WEEN", kept)                                    # unclear: left off
         drag = Show(title="Divas After Dark", starts_at=datetime(2026, 10, 23, 19, 30, tzinfo=TZ),
                     venue_name="Drift Lounge", source="x", description="A drag extravaganza")
         self.assertEqual(music_filter.classify(drag), "not_music")
@@ -403,6 +403,21 @@ class TestCalendarLinksAndWeekly(unittest.TestCase):
         self.assertEqual(resolve(shows[0], load_venues()).venue_slug, "hopkins-brewing")
 
 
+class TestLakeEffect(unittest.TestCase):
+    def test_week_view(self):
+        from slclive.sources.venue_parsers import lake_effect
+        html = ('<div class="ncf-calendar">10.22. 10.28. Today Thu. 01 Fri. 02 Wed. 21 DJ Chaseone2 10:00 pm '
+                'Cherry Thomas 6:00 pm Thu. 22 Matthew &amp; the Hope 9:30 pm Max Steele 6:00 pm '
+                'Wed. 28 Flamingo (RH) 8:00 pm Sun. 01 Wasatch Valley Drifters 9:30 pm Mon. 02 </div>')
+        shows = lake_effect(html, "https://www.lakeeffectslc.com/calendar", "Lake Effect", "venue:lake-effect",
+                            today=date(2026, 10, 22))
+        by = {s.title: s for s in shows}
+        self.assertEqual(set(by), {"Matthew & the Hope", "Max Steele", "Flamingo", "Wasatch Valley Drifters"})
+        self.assertEqual(by["Matthew & the Hope"].starts_at, datetime(2026, 10, 22, 21, 30, tzinfo=TZ))
+        self.assertEqual(by["Wasatch Valley Drifters"].starts_at.date(), date(2026, 11, 1))
+        self.assertIn("Rabbit Hole", by["Flamingo"].description)
+
+
 class TestMato(unittest.TestCase):
     def page(self, name, start, desc, place="Gracie's", city="Salt Lake City"):
         ld = {"@context": "https://schema.org", "@type": "Event", "name": name, "startDate": start, "description": desc,
@@ -430,11 +445,13 @@ class TestMato(unittest.TestCase):
         found_all = dict(found)
         self.assertNotIn("https://ma.to/event/old-show-01-oct-2026", mato.collect(["graciesbar"], get))
         self.assertEqual(found["https://ma.to/event/bluegrass-night-27-oct-2026"], "music")
-        shows = {s.title: s for s in mato.fetch_shows(["graciesbar"], get=get, now=datetime(2026, 10, 21, tzinfo=TZ))}
-        self.assertEqual(set(shows), {"Bluegrass Night", "The Mystery Night"})
+        now = datetime(2026, 10, 21, tzinfo=TZ)
+        shows = {s.title: s for s in mato.fetch_shows(["graciesbar"], get=get, now=now)}
+        self.assertEqual(set(shows), {"Bluegrass Night", "The Mystery Night"})   # music-only venue page: unclear kept
         self.assertEqual(shows["Bluegrass Night"].status, "published")
         self.assertEqual(shows["Bluegrass Night"].raw_genres, ["bluegrass"])
-        self.assertEqual(shows["The Mystery Night"].status, "pending")    # unclear, on a listed venue's page
+        mixed = {s.title for s in mato.fetch_shows(["graciesbar"], get=get, now=now, mixed_use=["graciesbar"])}
+        self.assertEqual(mixed, {"Bluegrass Night"})                            # mixed-use venue: clear music only
 
 
 class TestTicketsauce(unittest.TestCase):

@@ -272,9 +272,8 @@ venues:
     city: Salt Lake City
     age_policy: 21_plus
     calendar_urls: [https://www.lakeeffectslc.com/calendar]
-    strategy: render       # music nightly on the main floor; Flamingo Jazz Wednesdays in the Rabbit Hole
-    music_only: true
-    mato_venue: lakeeffectslc
+    parser: lake_effect    # a week of named acts, nightly on the main floor plus the Rabbit Hole
+    strategy: render
     expect_shows_within_days: 7
 
   - slug: gracies
@@ -285,6 +284,7 @@ venues:
     age_policy: 21_plus
     strategy: feeds_only   # bands and DJs Thursday through Saturday; posts on Mato
     mato_venue: graciesbar
+    music_only: true       # its Mato page also carries non-music events
 
   - slug: green-pig-pub
     name: The Green Pig Pub
@@ -292,9 +292,12 @@ venues:
     address: 31 E 400 S
     city: Salt Lake City
     age_policy: 21_plus
-    calendar_urls: [https://thegreenpigpub.com/salt-lake-city-downtown-salt-lake-city-the-green-pig-pub-events]
-    strategy: render       # SpotHopper calendar; blues jam Mondays, bands Fridays
-    music_only: true
+    strategy: feeds_only   # its calendar lists only holidays; standing music nights from its homepage
+    recurring:
+      - {title: Monday Blues Jam, day: mon, time: "21:00", genres: [blues], url: "https://thegreenpigpub.com/",
+         description: "The Green Pig's long-running Monday blues jam. The pub doesn't post a start time, so check before you go."}
+      - {title: Friday Live Music, day: fri, time: "21:00", url: "https://thegreenpigpub.com/",
+         description: "Live music every Friday at The Green Pig Pub. The pub doesn't post a start time, so check before you go."}
 
   - slug: hopkins-brewing
     name: Hopkins Brewing Company
@@ -364,6 +367,7 @@ venues:
     age_policy: 21_plus
     strategy: feeds_only   # patio shows posted on Mato and Instagram
     mato_venue: handlebarslc
+    music_only: true       # its Mato page also carries non-music events
 
   - slug: caputos-15th-15th
     name: Caputo's Market - 15th & 15th
@@ -372,6 +376,7 @@ venues:
     age_policy: all_ages
     strategy: feeds_only   # jazz nights posted on Mato
     mato_venue: caputosmarket
+    music_only: true       # its Mato page also carries non-music events
 
   - slug: caputos-holladay
     name: Caputo's Market - Holladay
@@ -388,6 +393,7 @@ venues:
     age_policy: all_ages
     strategy: feeds_only   # Friday live music and Trashmoon jam Wednesdays, posted on Mato
     mato_venue: woodbinefoodhall
+    music_only: true       # its Mato page also carries non-music events
 
   - slug: melancholy
     name: Melancholy
@@ -396,6 +402,7 @@ venues:
     age_policy: 21_plus
     strategy: feeds_only   # patio music Saturdays, posted on Mato
     mato_venue: melancholyslc
+    music_only: true       # its Mato page also carries non-music events
 
   - slug: boilerroom
     name: Boilerroom

@@ -88,7 +88,8 @@ def main() -> int:
     if not wanted or "mato" in wanted:
         # Mato: small bars, lounges and markets; unknown venues and unclear events wait for review
         slugs = [v.mato_venue for v in venues if v.mato_venue]
-        jobs.append(("mato", lambda: (mato.fetch_shows(slugs), None, "Mato listings")))
+        mixed = [v.mato_venue for v in venues if v.mato_venue and v.music_only]
+        jobs.append(("mato", lambda: (mato.fetch_shows(slugs, mixed_use=mixed), None, "Mato listings")))
         review.add("mato")
     if not wanted or "krcl" in wanted:
         jobs.append(("krcl", lambda: (krcl.fetch_shows(venues), None, "KRCL live music calendar")))
