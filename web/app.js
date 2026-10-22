@@ -1,11 +1,11 @@
-// Calendar page: filters, grouping by night, and "For you" matching.
+// Calendar page: filters, grouping by night, and the You section (taste, plans, friends).
 (async function () {
-  const S = window.SLC, T = window.SLCTaste;
+  const S = window.SLC, T = window.SLCTaste, P = window.SLCPlans;
   const $ = (id) => document.getElementById(id);
   const PREFS = "slc.filters.v1";
 
   const state = Object.assign(
-    { q: "", venue: "", when: "all", genres: [], allAges: false, free: false, onlyMatches: false },
+    { q: "", venue: "", when: "all", genres: [], allAges: false, free: false, onlyMatches: false, onlyPlans: false },
     S.store.get(PREFS, {}),
   );
   if (state.when === "tonight") state.when = "all"; // tonight has its own section above the calendar
@@ -51,6 +51,7 @@
       if (!state.q.toLowerCase().split(/\s+/).every((w) => hay.includes(w))) return false;
     }
     if (state.onlyMatches && T.profile && !e._match) return false;
+    if (state.onlyPlans && !P.status(e.id)) return false;
     return true;
   }
 
@@ -70,7 +71,7 @@
     const age = S.AGE[e.age_restriction] ? `<span class="tag age">${S.AGE[e.age_restriction]}</span>` : "";
     const cancelled = e.status === "cancelled";
     const id = S.esc(e.id);
-    return `<article class="show${e._match ? " matched" : ""}${cancelled ? " cancelled" : ""}">
+    return `<article class="show${e._match ? " matched" : ""}${cancelled ? " cancelled" : ""}${P.cardClass(e)}" data-card="${id}">
       <div class="time">${S.esc(S.timeLabel(e.starts_at))}${e.doors_at ? `<small>doors ${S.esc(S.timeLabel(e.doors_at))}</small>` : ""}</div>
       <a class="thumb" href="#show-${id}" data-show="${id}" tabindex="-1" aria-hidden="true">${D.art(e, "thumb-img")}</a>
       <div class="show-main">
@@ -80,6 +81,7 @@
         ${D.cardLinks(e, artists)}
         <div class="tags">${cancelled ? '<span class="tag status">Cancelled</span>' : ""}${age}${tags}</div>
         ${e._match ? `<div class="match">${S.esc(e._match.reason)}</div>` : ""}
+        ${P.html(e, "card")}
       </div>
       <div class="show-side">
         ${price ? `<span class="price${price === "Free" ? " free" : ""}">${S.esc(price)}</span>` : ""}
@@ -113,7 +115,9 @@
     const n = list.length;
     $("count").textContent = `${n} show${n === 1 ? "" : "s"}`;
     if (!n) {
-      $("list").innerHTML = `<div class="empty"><strong>Nothing on the bill</strong>Try a wider date range or fewer filters.</div>`;
+      $("list").innerHTML = state.onlyPlans
+        ? `<div class="empty"><strong>No plans yet</strong>Tap Maybe or Going on a show and it lands here.</div>`
+        : `<div class="empty"><strong>Nothing on the bill</strong>Try a wider date range or fewer filters.</div>`;
       return;
     }
     const byDay = new Map();
@@ -137,6 +141,7 @@
     $("f-allages").setAttribute("aria-pressed", String(state.allAges));
     $("f-free").setAttribute("aria-pressed", String(state.free));
     $("only-matches").setAttribute("aria-pressed", String(state.onlyMatches));
+    $("only-plans").setAttribute("aria-pressed", String(state.onlyPlans));
   }
 
   const whenRow = $("when-row");
@@ -151,30 +156,96 @@
   $("f-allages").onclick = () => { state.allAges = !state.allAges; update(); };
   $("f-free").onclick = () => { state.free = !state.free; update(); };
   $("f-clear").onclick = () => {
-    Object.assign(state, { q: "", venue: "", when: "all", genres: [], allAges: false, free: false, onlyMatches: false });
+    Object.assign(state, { q: "", venue: "", when: "all", genres: [], allAges: false, free: false, onlyMatches: false, onlyPlans: false });
     $("q").value = ""; $("venue").value = ""; update();
   };
   $("only-matches").onclick = () => { state.onlyMatches = !state.onlyMatches; update(); };
+  $("only-plans").onclick = () => { state.onlyPlans = !state.onlyPlans; update(); };
 
   // The calendar always opens at the top. The browser's own scroll restoration would put a reload back where the
-  // visitor was (often the For you panel) and then keep it pinned there while the listings above it load. It has
-  // to be switched off on the page being left, so it is set on every load, not only on a reload.
+  // visitor was and then keep it pinned there while the listings above it load. It has to be switched off on the
+  // page being left, so it is set on every load, not only on a reload.
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-  if (location.hash === "#for-you") history.replaceState(history.state, "", location.pathname + location.search);
+  const params = new URLSearchParams(location.search);
+  const arriveAtYou = location.hash === "#you" || location.hash === "#for-you" || params.has("you");
+  if (arriveAtYou) {
+    params.delete("you");
+    const qs = params.toString();
+    const keepHash = location.hash.startsWith("#show-") || location.hash.includes("access_token") ? location.hash : "";
+    history.replaceState(history.state, "", location.pathname + (qs ? `?${qs}` : "") + keepHash);
+  }
   if (!location.hash.startsWith("#show-")) window.scrollTo(0, 0);
-  // The For you link scrolls to the panel without leaving #for-you in the address
-  document.querySelector('.nav a[href="#for-you"]')?.addEventListener("click", (ev) => {
+  // The You link scrolls to the section without leaving #you in the address
+  document.querySelector('.nav a[href="#you"]')?.addEventListener("click", (ev) => {
     ev.preventDefault();
-    $("for-you").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    you.open(you.isEmpty());
   });
 
-  // ---------- taste panel ----------
+  // ---------- You ----------
+  // Set up once, then it folds down to one line with your matches and plans.
+  const YOU = "slc.you.v1";
+  const youPref = S.store.get(YOU, { setUp: false });
+  if (T.profile) youPref.setUp = true; // already set up under the old For you panel
+  const you = {
+    isOpen: () => !$("you-body").hidden,
+    isEmpty: () => !T.profile && !P.user && !P.mineCount().going && !P.mineCount().maybe,
+    open(focus) {
+      setOpen(true);
+      $("you").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+      if (focus) setTimeout(() => {
+        const target = !T.profile ? $("lastfm-user") : !P.user && P.social ? $("signin-email") : $("you-done");
+        (target && target.offsetParent ? target : $("you-toggle")).focus({ preventScroll: true });
+      }, 350);
+    },
+    close() { setOpen(false); },
+  };
+  window.SLCYou = you;
+  function setOpen(open) {
+    $("you-body").hidden = !open;
+    $("you").dataset.open = String(open);
+    $("you-toggle").setAttribute("aria-expanded", String(open));
+    syncYou();
+  }
+  function done() {
+    youPref.setUp = true;
+    S.store.set(YOU, youPref);
+    setOpen(false);
+    $("you-toggle").focus({ preventScroll: true });
+  }
+  $("you-toggle").onclick = () => (you.isOpen() ? done() : setOpen(true));
+  $("you-done").onclick = done;
+
   function showTasteError(msg) { $("taste-error").textContent = msg; $("taste-error").hidden = !msg; }
-  function syncTaste() {
+
+  function syncYou() {
     const on = Boolean(T.profile);
-    $("for-you").dataset.active = String(on);
+    const open = you.isOpen();
+    const plans = P.mineCount();
+    const planned = plans.going + plans.maybe;
+    $("you").dataset.active = String(on || planned > 0 || Boolean(P.user));
+
+    // Collapsed summary
+    const bits = [];
+    if (on) {
+      const hits = events.filter((e) => T.score(e)).length;
+      bits.push(`<strong>${hits} show${hits === 1 ? "" : "s"}</strong> match ${S.esc(T.summary().label)}`);
+    }
+    if (planned) {
+      bits.push(`<strong>Going to ${plans.going}</strong>${plans.maybe ? `, maybe ${plans.maybe}` : ""}`);
+    }
+    if (P.profile) bits.push(S.esc(P.visibilityNote().replace(/\.$/, "")));
+    $("you-summary").innerHTML = bits.length
+      ? bits.join('<span class="dot" aria-hidden="true"> · </span>')
+      : "Picks from your listening, and a place to keep the shows you're going to.";
+    $("you-summary").hidden = open && !bits.length;
+    $("you-toggle").textContent = open ? "Close" : bits.length || youPref.setUp ? "Edit" : "Set up";
+    $("only-matches").hidden = !on;
+    $("only-plans").hidden = !planned && !state.onlyPlans;
+    $("only-plans").textContent = planned ? `My plans (${planned})` : "My plans";
+
+    // Step 1: music
+    $("taste-intro").hidden = on;
     $("taste-connect").hidden = on;
-    $("manual-taste").hidden = on;
     $("taste-on").hidden = !on;
     $("lastfm-form").hidden = !T.hasLastfm();
     if (!T.hasLastfm()) {
@@ -188,14 +259,54 @@
       $("taste-summary").innerHTML = `<strong>${hits} show${hits === 1 ? "" : "s"}</strong> match ${S.esc(s.label)}` +
         (s.text ? ` (${S.esc(s.text)})` : "");
     }
+
+    // Step 2: account
+    const social = P.social;
+    $("acct-off").hidden = social;
+    $("acct-out").hidden = !social || Boolean(P.user);
+    $("acct-in").hidden = !social || !P.profile;
+    if (P.profile && !$("acct-in").dataset.filled) fillProfile();
   }
+
+  function fillProfile() {
+    const p = P.profile;
+    $("acct-in").dataset.filled = "1";
+    $("pf-name").value = p.display_name;
+    $("pf-handle").value = p.handle;
+    document.querySelectorAll('input[name="vis"]').forEach((r) => { r.checked = r.value === p.visibility; });
+    const url = P.shareUrl();
+    $("share-url").textContent = url.replace(/^https?:\/\//, "");
+    $("share-url").href = url;
+    $("share-url").dataset.profile = p.handle;
+    $("acct-email").textContent = P.user?.email || "";
+    renderFriends();
+  }
+
+  function renderFriends() {
+    const f = P.friends();
+    const person = (p, actions) => `<li><a href="?u=${encodeURIComponent(p.handle)}" data-profile="${S.esc(p.handle)}">${S.esc(p.display_name)}</a>
+      <span class="mono">@${S.esc(p.handle)}</span><span class="you-row-actions">${actions(p)}</span></li>`;
+    const group = (title, list, actions) => list.length
+      ? `<h4 class="you-sub">${title}</h4><ul class="you-people">${list.map((p) => person(p, actions)).join("")}</ul>` : "";
+    $("friends").innerHTML =
+      group("Added you", f.requests, (p) => `<button class="btn lake" type="button" data-follow="${p.user_id}">Add back</button>`) +
+      group(`Friends (${f.friends.length})`, f.friends, (p) => `<button class="linkish" type="button" data-unfriend="${p.user_id}">Remove</button>`) +
+      group("Waiting for them to add you back", f.waiting, (p) => `<button class="linkish" type="button" data-unfriend="${p.user_id}">Cancel</button>`);
+  }
+  $("friends").addEventListener("click", async (ev) => {
+    const b = ev.target.closest("[data-follow],[data-unfriend]");
+    if (!b) return;
+    b.disabled = true;
+    if (b.dataset.follow) await P.follow(b.dataset.follow); else await P.unfriend(b.dataset.unfriend);
+  });
+
   async function connect(promise, button) {
     showTasteError("");
     const label = button?.textContent;
     if (button) { button.disabled = true; button.textContent = "Reading your taste…"; }
     try {
       T.save(await promise);
-      syncTaste(); render();
+      syncYou(); render();
     } catch (err) {
       showTasteError(err.message || String(err));
     } finally {
@@ -212,7 +323,45 @@
     const picked = [...document.querySelectorAll("#manual-genres input:checked")].map((i) => i.value);
     connect(T.fromManual($("manual-artists").value, picked), ev.submitter);
   };
-  $("taste-clear").onclick = () => { T.save(null); state.onlyMatches = false; syncTaste(); update(); };
+  $("taste-clear").onclick = () => { T.save(null); state.onlyMatches = false; syncYou(); update(); };
+
+  $("signin-form").onsubmit = async (ev) => {
+    ev.preventDefault();
+    const btn = ev.submitter;
+    btn.disabled = true;
+    const { error } = await P.signIn($("signin-email").value.trim());
+    btn.disabled = false;
+    const msg = $("signin-msg");
+    msg.hidden = false;
+    msg.className = `notice ${error ? "err" : "ok"}`;
+    msg.textContent = error ? error.message : "Check your email and open the link on this device. Your Maybe and Going picks come with you.";
+  };
+  $("profile-form").onsubmit = async (ev) => {
+    ev.preventDefault();
+    const btn = ev.submitter;
+    btn.disabled = true;
+    $("profile-msg").textContent = "";
+    const r = await P.saveProfile({
+      display_name: $("pf-name").value,
+      handle: $("pf-handle").value,
+      visibility: document.querySelector('input[name="vis"]:checked')?.value || "friends",
+    });
+    btn.disabled = false;
+    $("profile-msg").textContent = r.error || "Saved.";
+    if (r.ok) { delete $("acct-in").dataset.filled; fillProfile(); }
+  };
+  $("share-btn").onclick = (ev) => P.shareLink(ev.currentTarget);
+  $("sign-out").onclick = async () => { await P.signOut(); delete $("acct-in").dataset.filled; };
+
+  P.onChange(() => {
+    if (P.profile) {
+      if (!$("acct-in").dataset.filled) fillProfile(); else renderFriends();
+    } else {
+      delete $("acct-in").dataset.filled;
+    }
+    syncYou();
+    if (state.onlyPlans) render();
+  });
 
   // ---------- load ----------
   try {
@@ -235,8 +384,13 @@
     const sortKey = (v) => v.replace(/^the\s+/i, "");
     const venues = [...new Set(events.map((e) => e.venue_name))].sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
     $("venue").insertAdjacentHTML("beforeend", venues.map((v) => `<option>${S.esc(v)}</option>`).join(""));
-    syncControls(); syncTaste(); render();
+    syncControls(); syncYou(); render();
     details.fromHash();
+    P.start({ find: (id) => events.find((e) => String(e.id) === String(id)) }).then(() => {
+      if (arriveAtYou) you.open(true);
+    });
+    // Until the visitor has set it up once, You starts open
+    if (!youPref.setUp && !arriveAtYou) setOpen(true);
   } catch (err) {
     $("list").innerHTML = `<div class="empty"><strong>Shows didn't load</strong>${S.esc(err.message)}</div>`;
   }

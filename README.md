@@ -16,7 +16,7 @@ Hosting is free or nearly free: a static site on GitHub Pages, a free Supabase d
 
 ```
  venue websites ─┐
- Ticketmaster  ──┼─► ingest/run_scrapers.py ─┐                       ┌─► web/index.html  (calendar, filters, For you)
+ Ticketmaster  ──┼─► ingest/run_scrapers.py ─┐                       ┌─► web/index.html  (calendar, filters, You)
                  │   (every 6 h)             ├─► Supabase Postgres ──┼─► web/submit.html (public form → pending)
  musicinslc     ─┴─► ingest/run_email.py ────┘    events, venues     └─► web/admin.html  (review queue, source health)
  @gmail.com          (hourly, Claude reads        source_runs
@@ -146,6 +146,17 @@ Both jobs run automatically at the end of every calendar update: every scrape, i
 - **Spotify** sign-in is not offered. Spotify limits non-commercial developer apps to a handful of allowlisted users, so Spotify listeners scrobble to Last.fm instead.
 
 Profiles are stored only in the visitor's browser. Nothing about a visitor's listening is sent to the database.
+
+## You: taste, plans and friends
+
+The **You** section on the calendar page is set up once and then folds down to a single line showing matches and plans, with **Edit** to reopen it. It is the only place the Last.fm connection appears.
+
+- **Maybe and Going** buttons sit on every show card, the week view and the show detail view. Signed out, picks are kept in the browser. Signing in (an emailed link, no password) moves them to the visitor's account.
+- **Who can see them** is set per person: *Friends* (the default), *Everyone*, or *Just me*. Totals such as "12 going" count everyone and never name anyone.
+- **Friends** are two-way. Each person has a page at `index.html?u=<handle>`. Opening someone's page and tapping **Add friend** sends a request; they see it under You and tap **Add back**. Friends' names then show on the shows they picked.
+- The rules live in the database (`supabase/migrations/003_you_plans_and_friends.sql`), so a visitor can only read plans the owner allows, whatever the page code does.
+
+Setup: run migration 003 in the Supabase SQL editor, and under **Authentication → URL Configuration → Redirect URLs** add `https://musicinslc-afk.github.io/music-in-slc/**` so sign-in links return to the calendar.
 
 ## Being a good neighbor
 

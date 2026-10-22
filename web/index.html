@@ -18,7 +18,7 @@
     <nav class="nav" aria-label="Site">
       <a href="index.html" aria-current="page">Calendar</a>
       <a href="week.html">This week</a>
-      <a href="#for-you">For you</a>
+      <a href="#you">You</a>
       <a class="cta" href="submit.html">Submit a show</a>
     </nav>
   </div>
@@ -71,33 +71,95 @@
     <div id="tonight-list"></div>
   </section>
 
-  <section class="taste" id="for-you" aria-labelledby="taste-title">
-    <div>
-      <h2 id="taste-title">For you</h2>
-      <p id="taste-intro">Connect your listening and we'll flag shows by artists you play, plus similar bands coming through town. Pandora listeners: turn on Last.fm scrobbling and use your Last.fm name.</p>
+  <section class="you" id="you" aria-labelledby="you-title" data-open="false">
+    <div class="you-bar">
+      <h2 id="you-title">You</h2>
+      <p class="you-summary" id="you-summary">Picks from your listening, and a place to keep the shows you're going to.</p>
+      <div class="you-bar-actions">
+        <button class="chip lake" id="only-matches" type="button" aria-pressed="false" hidden>My matches</button>
+        <button class="chip plan-chip" id="only-plans" type="button" aria-pressed="false" hidden>My plans</button>
+        <button class="btn" id="you-toggle" type="button" aria-expanded="false" aria-controls="you-body">Set up</button>
+      </div>
     </div>
-    <div class="taste-actions" id="taste-connect">
-      <form class="taste-inline" id="lastfm-form">
-        <label class="sr-only" for="lastfm-user">Last.fm username</label>
-        <input id="lastfm-user" name="user" placeholder="Last.fm username" autocomplete="off">
-        <button class="btn" type="submit">Use Last.fm</button>
-      </form>
+
+    <div class="you-body" id="you-body" hidden>
+      <div class="you-step" id="taste-step">
+        <h3 class="you-label"><span aria-hidden="true">1</span>Your music</h3>
+        <p class="hint" id="taste-intro">Connect your listening and we'll flag shows by artists you play, plus similar bands coming through town. Spotify and Pandora listeners can scrobble to Last.fm and use their Last.fm name.</p>
+        <div id="taste-connect" class="you-stack">
+          <form class="you-inline" id="lastfm-form">
+            <label class="sr-only" for="lastfm-user">Last.fm username</label>
+            <input id="lastfm-user" name="user" placeholder="Last.fm username" autocomplete="off" autocapitalize="off" spellcheck="false">
+            <button class="btn lake" type="submit">Connect Last.fm</button>
+          </form>
+          <details id="manual-taste">
+            <summary>Or tell us what you like</summary>
+            <form id="manual-form" class="you-stack">
+              <label for="manual-artists" class="hint">Artists you love, separated by commas</label>
+              <textarea id="manual-artists" placeholder="Phoebe Bridgers, Khruangbin, Turnstile"></textarea>
+              <div class="checks" id="manual-genres"></div>
+              <div><button class="btn lake" type="submit">Use these</button></div>
+            </form>
+          </details>
+        </div>
+        <div class="you-inline" id="taste-on" hidden>
+          <p class="taste-summary" id="taste-summary"></p>
+          <button class="btn ghost" id="taste-clear" type="button">Disconnect</button>
+        </div>
+        <div class="notice err" id="taste-error" hidden></div>
+      </div>
+
+      <div class="you-step" id="account-step">
+        <h3 class="you-label"><span aria-hidden="true">2</span>Your plans and friends</h3>
+        <div id="acct-out" class="you-stack">
+          <p class="hint">Tap Maybe or Going on any show to keep track of it. Sign in to keep your plans on every device, see where friends are headed, and let them see yours.</p>
+          <form class="you-inline" id="signin-form">
+            <label class="sr-only" for="signin-email">Email</label>
+            <input id="signin-email" type="email" required placeholder="you@example.com" autocomplete="email">
+            <button class="btn primary" type="submit">Email me a sign-in link</button>
+          </form>
+          <p class="hint">No password. We'll send a link; open it on this device.</p>
+          <div class="notice" id="signin-msg" hidden></div>
+        </div>
+        <div id="acct-in" class="you-stack" hidden>
+          <form id="profile-form" class="you-stack">
+            <div class="you-fields">
+              <div class="field">
+                <label for="pf-name">Your name</label>
+                <input id="pf-name" maxlength="40" required autocomplete="nickname">
+              </div>
+              <div class="field">
+                <label for="pf-handle">Handle</label>
+                <input id="pf-handle" maxlength="24" required pattern="[A-Za-z0-9_]{3,24}" autocapitalize="off" spellcheck="false">
+              </div>
+            </div>
+            <fieldset class="vis">
+              <legend class="you-sub">Who can see your Maybe and Going</legend>
+              <label><input type="radio" name="vis" value="friends"><span><strong>Friends</strong> People you've added who added you back</span></label>
+              <label><input type="radio" name="vis" value="public"><span><strong>Everyone</strong> Your name shows on the shows you pick, and your page is public</span></label>
+              <label><input type="radio" name="vis" value="private"><span><strong>Just me</strong> Only counted in the totals, never named</span></label>
+            </fieldset>
+            <div class="you-inline">
+              <button class="btn primary" type="submit">Save</button>
+              <span class="hint" id="profile-msg" aria-live="polite"></span>
+            </div>
+          </form>
+          <div class="you-share">
+            <span class="you-sub">Your page</span>
+            <a class="mono" id="share-url" href="#" data-profile=""></a>
+            <button class="btn" type="button" id="share-btn">Share link</button>
+          </div>
+          <p class="hint">Send your link to friends. When they open it and tap Add friend, they show up here for you to add back.</p>
+          <div id="friends"></div>
+          <p class="hint">Signed in as <span id="acct-email"></span>. <button class="linkish" type="button" id="sign-out">Sign out</button></p>
+        </div>
+        <p class="hint" id="acct-off" hidden>Your Maybe and Going picks are saved in this browser.</p>
+      </div>
+
+      <div class="you-done">
+        <button class="btn primary" id="you-done" type="button">Done</button>
+      </div>
     </div>
-    <details id="manual-taste">
-      <summary>Or tell us what you like</summary>
-      <form id="manual-form" style="display:grid;gap:10px">
-        <label for="manual-artists" class="hint">Artists you love, separated by commas</label>
-        <textarea id="manual-artists" placeholder="Phoebe Bridgers, Khruangbin, Turnstile"></textarea>
-        <div class="checks" id="manual-genres"></div>
-        <div><button class="btn lake" type="submit">Find my shows</button></div>
-      </form>
-    </details>
-    <div class="taste-actions" id="taste-on" hidden>
-      <div class="taste-summary" id="taste-summary"></div>
-      <button class="chip lake" id="only-matches" type="button" aria-pressed="false">Only my matches</button>
-      <button class="btn ghost" id="taste-clear" type="button">Disconnect</button>
-    </div>
-    <div class="notice err" id="taste-error" hidden></div>
   </section>
 
   <h2 class="section-title" id="calendar-title">Coming up</h2>
@@ -134,9 +196,11 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script src="data.js"></script>
 <script src="details.js"></script>
+<script src="plans.js"></script>
 <script src="taste.js"></script>
 <script src="app.js"></script>
 </body>

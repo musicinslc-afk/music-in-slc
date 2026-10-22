@@ -6,7 +6,7 @@
   const state = Object.assign({ allAges: false, free: false }, S.store.get(PREFS, {}));
   let events = [];
   const artists = new Map();
-  const D = window.SLCDetails;
+  const D = window.SLCDetails, P = window.SLCPlans;
   const details = D.create({ find: (id) => events.find((e) => String(e.id) === String(id)), artists });
 
   $("inbox-addr").textContent = S.cfg.inboxAddress || "musicinslc@gmail.com";
@@ -46,7 +46,7 @@
     const id = S.esc(e.id);
     const title = `<a href="#show-${id}" data-show="${id}">${S.esc(e.title)}</a>`;
     const hasArt = S.safeUrl(e.image_url) || String(e.image_url || "").startsWith("data:image/svg+xml");
-    return `<article class="wshow${cancelled ? " cancelled" : ""}">
+    return `<article class="wshow${cancelled ? " cancelled" : ""}${P.cardClass(e)}" data-card="${id}">
       ${hasArt ? `<a class="wthumb" href="#show-${id}" data-show="${id}" tabindex="-1" aria-hidden="true">${D.art(e, "wthumb-img")}</a>` : ""}
       <div class="wtime">${S.esc(S.timeLabel(e.starts_at))}${cancelled ? " · Cancelled" : ""}</div>
       <h3 class="wtitle">${title}</h3>
@@ -54,6 +54,7 @@
       <div class="wwhere">${S.esc(e.venue_name)}</div>
       ${D.cardLinks(e, artists)}
       ${price || age ? `<div class="wmeta">${price ? `<span class="${price === "Free" ? "free" : ""}">${S.esc(price)}</span>` : ""}${price && age ? "<span>·</span>" : ""}${age ? `<span>${S.esc(age)}</span>` : ""}</div>` : ""}
+      ${P.html(e, "card")}
     </article>`;
   }
 
@@ -103,6 +104,7 @@
     for (const [k, v] of await artistsLoad) artists.set(k, v);
     render();
     details.fromHash();
+    P.start({ find: (id) => events.find((e) => String(e.id) === String(id)) });
   } catch (err) {
     $("week").innerHTML = `<div class="empty"><strong>Shows didn't load</strong>${S.esc(err.message)}</div>`;
   }

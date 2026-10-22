@@ -100,6 +100,7 @@
           <div class="tags">${cancelled ? '<span class="tag status">Cancelled</span>' : ""}${price ? `<span class="tag price-tag${price === "Free" ? " free" : ""}">${S.esc(price)}</span>` : ""}${age ? `<span class="tag age">${S.esc(age)}</span>` : ""}${tags}</div>
           ${actRows ? `<h3 class="sd-label">On the bill</h3><ul class="sd-acts">${actRows}</ul>` : ""}
           ${e.description ? `<p class="sd-desc">${S.esc(e.description)}</p>` : ""}
+          ${window.SLCPlans ? window.SLCPlans.html(e, "detail") : ""}
           <div class="sd-actions">
             ${ticket && !cancelled ? `<a class="btn primary" href="${S.esc(ticket)}" target="_blank" rel="noopener">Tickets and info</a>` : ""}
             ${cancelled ? "" : '<button class="btn" type="button" data-act="ics">Add to calendar</button>'}
