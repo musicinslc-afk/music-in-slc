@@ -23,18 +23,15 @@ SKIP_HOSTS = re.compile(r"(^|\.)(ticketmaster|livenation|axs|seatgeek|stubhub|go
 MAX_PAGES_PER_RUN = 60
 SHARED_IMAGE_LIMIT = 3      # the same image for this many different bands is a logo, not a flyer
 
-# Sites that show the flyer on the page but don't name it for link previews: the image path that marks it,
-# and file names that are the site's stand-in graphic rather than a flyer.
+# Sites that show the flyer on the page but don't name it for link previews: the image path that marks it.
+# File names there say nothing (moe.'s flyer is 564_x564_Commonwealth_Room.png), so a shared stand-in is
+# caught the usual way, by turning up for several different bands.
 SITE_IMAGES = {
-    # The State Room Presents: each show's square flyer is uploaded under /media/acfupload/. Shows without one
-    # get the room's graphic (564_x564_Commonwealth_Room.png and the like).
-    "thestateroompresents.com": (
-        re.compile(r"/media/acfupload/", re.I),
-        re.compile(r"(commonwealth|state[_ -]?room|eccles|deer[_ -]?valley|fort[_ -]?desolation)[^/]*$", re.I),
-    ),
+    # The State Room Presents: each show's square flyer is uploaded under /media/acfupload/
+    "thestateroompresents.com": re.compile(r"/media/acfupload/", re.I),
 }
-# Pages checked before a site rule existed for their host are read again once
-SITE_RULES_ADDED = "2026-10-23"
+# Pages checked before the current site rules are read again once
+SITE_RULES_ADDED = "2026-10-23T00:30:00+00:00"
 
 
 def page_image(html: str, page_url: str) -> Optional[str]:
@@ -59,14 +56,13 @@ def page_image(html: str, page_url: str) -> Optional[str]:
             if isinstance(image, str) and usable(urljoin(page_url, image)):
                 return urljoin(page_url, image)
     host = urlparse(page_url).netloc.lower().removeprefix("www.")
-    rule = SITE_IMAGES.get(host)
-    if rule:
-        marks, stand_in = rule
+    marks = SITE_IMAGES.get(host)
+    if marks:
         for img in soup.find_all("img"):
             src = (img.get("src") or img.get("data-src") or "").strip()
             url = urljoin(page_url, src) if src else ""
             if url and marks.search(url) and usable(url):
-                return None if stand_in.search(urlparse(url).path) else url
+                return url
     return None
 
 

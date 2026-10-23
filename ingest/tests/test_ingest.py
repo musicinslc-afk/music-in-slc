@@ -667,14 +667,14 @@ class TestFlyers(unittest.TestCase):
         logo = '<meta property="og:image" content="https://venue.example/logo.png">'
         self.assertIsNone(flyers.page_image(logo, "https://venue.example/e/1"))
 
-    def test_page_image_state_room_presents_flyer_and_stand_in(self):
+    def test_page_image_state_room_presents_flyer(self):
         page = "https://thestateroompresents.com/state-room-presents/x"
         body = ('<img src="https://thestateroompresents.com/images/slides/Commonwealth_icon.png">'
                 '<img src="https://thestateroompresents.com/media/acfupload/Pigeons-Playing-Ping-Pong_10-27-2026_564x564.jpg">')
         self.assertEqual(flyers.page_image(body, page),
                          "https://thestateroompresents.com/media/acfupload/Pigeons-Playing-Ping-Pong_10-27-2026_564x564.jpg")
-        stand_in = '<img src="https://thestateroompresents.com/media/acfupload/564_x564_Commonwealth_Room.png">'
-        self.assertIsNone(flyers.page_image(stand_in, page))
+        moe = '<img src="https://thestateroompresents.com/media/acfupload/564_x564_Commonwealth_Room.png">'
+        self.assertEqual(flyers.page_image(moe, page), "https://thestateroompresents.com/media/acfupload/564_x564_Commonwealth_Room.png")
         # The rule is only for that site
         self.assertIsNone(flyers.page_image('<img src="/media/acfupload/a.jpg">', "https://other.example/e"))
 
