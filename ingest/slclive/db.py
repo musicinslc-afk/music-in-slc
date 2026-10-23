@@ -219,8 +219,8 @@ class DB:
     # -- flyers ------------------------------------------------------------
     def shows_missing_images(self, limit: int, days_ahead: int = 365,
                              recheck_hosts: tuple[str, ...] = (), checked_before: Optional[str] = None) -> list[dict]:
-        """Upcoming published shows with no image whose event page hasn't been checked yet, plus shows on
-        recheck_hosts whose page was checked before checked_before (when a site rule was added)."""
+        """Upcoming published shows with no image: pages on recheck_hosts checked before checked_before (when a
+        site rule was added), then pages never checked, then pages last checked more than two weeks ago."""
         now = datetime.now(TZ)
         window = f"(starts_at.lte.{(now + timedelta(days=days_ahead)).isoformat(timespec='seconds')})"
         base = {
@@ -235,6 +235,12 @@ class DB:
             rows = self._get("events", {**base, "image_checked_at": f"lt.{checked_before}", "or": f"({hosts})"})
         if len(rows) < limit:
             rows += self._get("events", {**base, "image_checked_at": "is.null", "limit": limit - len(rows)})
+        # Flyers often go up after a show is announced, so a page with nothing is read again every two weeks
+        if len(rows) < limit:
+            seen = {r["id"] for r in rows}
+            stale = (now - timedelta(days=14)).isoformat(timespec="seconds")
+            more = self._get("events", {**base, "image_checked_at": f"lt.{stale}", "limit": limit - len(rows)})
+            rows += [r for r in more if r["id"] not in seen]
         return rows
 
     def shows_with_image(self, url: str) -> list[dict]:
