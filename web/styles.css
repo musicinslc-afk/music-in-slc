@@ -855,3 +855,33 @@ body {
 
   .search, .select, .field input, .field select, .field textarea, .you-inline input, .you textarea { font-size: 16px; }
 }
+
+/* Header lettering matches the wave: SLC lights up like an LED meter, cyan peak over magenta over violet */
+.wordmark .wm-slc {
+  color: transparent; text-shadow: none;
+  background: linear-gradient(180deg,
+    #29E6FF 0 34%, transparent 34% 38%,
+    #FF2BD6 38% 58%, transparent 58% 62%,
+    #FF2BD6 62% 70%, transparent 70% 74%,
+    #9D4DFF 74% 84%, transparent 84% 88%,
+    #9D4DFF 88% 100%);
+  -webkit-background-clip: text; background-clip: text;
+  padding-bottom: 0.04em;
+}
+.wordmark .wm-in {
+  color: transparent;
+  background: linear-gradient(90deg, var(--magenta), var(--cyan));
+  -webkit-background-clip: text; background-clip: text;
+}
+.nav a:not(.cta) { position: relative; }
+.nav a[aria-current="page"]:not(.cta), .nav a:not(.cta):hover {
+  color: transparent; background: linear-gradient(90deg, var(--magenta), var(--cyan));
+  -webkit-background-clip: text; background-clip: text; box-shadow: none;
+}
+.nav a[aria-current="page"]:not(.cta)::after, .nav a:not(.cta):hover::after {
+  content: ""; position: absolute; left: 8px; right: 8px; bottom: 2px; height: 3px;
+  background: linear-gradient(90deg, var(--magenta), var(--cyan));
+}
+@media (max-width: 640px) {
+  .nav a[aria-current="page"]:not(.cta)::after, .nav a:not(.cta):hover::after { left: 2px; right: 2px; }
+}
