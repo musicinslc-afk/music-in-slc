@@ -890,3 +890,13 @@ body {
 .wm-ridge { width: 72px; }
 .banner-grid { opacity: 0.9; }
 @media (max-width: 640px) { .wm-ridge { width: 52px; } }
+
+/* Trippy, not 8-bit: lit LEDs print out of register in magenta and cyan */
+.wm-ridge { filter: drop-shadow(-2px -1px 0 rgb(255 43 214 / 0.85)) drop-shadow(2px 1px 0 rgb(41 230 255 / 0.85)); }
+.bn-split { isolation: isolate; }
+.bn-copy { display: none; mix-blend-mode: screen; opacity: 0.75; }
+@media (max-width: 640px) {
+  .bn-copy { display: inline; }
+  .banner-grid { display: none; }
+  .wm-ridge { filter: drop-shadow(-1.5px -1px 0 rgb(255 43 214 / 0.85)) drop-shadow(1.5px 1px 0 rgb(41 230 255 / 0.85)); }
+}
