@@ -103,7 +103,13 @@
   }
 
   // A stand-in tile for shows without a flyer: the headliner's initials on a color picked from the name
-  const TILE_COLORS = ["#6b3fa0", "#0d6f6b", "#b4441b", "#1f4e8c", "#7a5c00", "#8c1f4e"];
+  const TILE_COLORS = ["#6A2BD9", "#A3127A", "#0B6F80", "#3B1E8A", "#8A1FB0", "#1D4FA8"];
+  // A small LED level meter: how busy a night is, one segment per show up to six
+  function meter(n) {
+    const segs = [];
+    for (let i = 5; i >= 0; i--) segs.push(`<i class="${i < n ? "on " : ""}${i < 3 ? "lv-v" : i < 5 ? "lv-m" : "lv-c"}"></i>`);
+    return `<span class="meter" role="img" aria-label="${n} show${n === 1 ? "" : "s"}">${segs.join("")}</span>`;
+  }
   function tileStyle(name) {
     let h = 0;
     for (const c of String(name || "")) h = (h * 31 + c.charCodeAt(0)) >>> 0;
@@ -253,7 +259,7 @@
 
   window.SLC = {
     cfg, live, TZ, store, mountainTime, rest, loadGenres, loadEvents, loadVenues, submitShow,
-    loadArtists, artistKey, linkKind, bandLinks, LINK_LABELS, LINK_ORDER, tileStyle, initials,
+    loadArtists, artistKey, linkKind, bandLinks, LINK_LABELS, LINK_ORDER, tileStyle, initials, meter,
     dayKey, addDays, timeLabel, priceLabel, AGE, esc, safeUrl,
     fmtDow: (d) => dowFmt.format(new Date(d)), fmtMon: (d) => monFmt.format(new Date(d)),
     fmtNum: (d) => numFmt.format(new Date(d)), fmtLong: (d) => longFmt.format(new Date(d)),

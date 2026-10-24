@@ -46,7 +46,7 @@
     const d = shows[0].starts_at;
     const rel = relLabel(k);
     return `<section class="day" aria-label="${S.esc(S.fmtLong(d))}">
-        <div class="stub"><span class="dow">${S.esc(S.fmtDow(d))}</span><span class="num">${S.esc(S.fmtNum(d))}</span><span class="mon">${S.esc(S.fmtMon(d))}</span>${rel ? `<span class="rel">${rel}</span>` : ""}</div>
+        <div class="stub"><span class="dow">${S.esc(S.fmtDow(d))}</span><span class="num">${S.esc(S.fmtNum(d))}</span><span class="mon">${S.esc(S.fmtMon(d))}</span>${rel ? `<span class="rel">${rel}</span>` : ""}${S.meter(shows.length)}</div>
         <div class="shows">${shows.map(showHtml).join("")}</div>
       </section>`;
   }

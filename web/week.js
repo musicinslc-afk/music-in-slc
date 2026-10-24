@@ -83,7 +83,7 @@
       const d = noon(k);
       const rel = k === today ? "Tonight" : k === S.addDays(today, 1) ? "Tomorrow" : "";
       html += `<section class="wday${k === today ? " today" : ""}" aria-label="${S.esc(S.fmtLong(d))}">
-        <div class="wday-head"><span class="rel${rel ? "" : " blank"}">${rel || "&nbsp;"}</span><span class="dow">${S.esc(S.fmtDow(d))}</span><span class="num">${S.esc(S.fmtNum(d))}</span><span class="mon">${S.esc(S.fmtMon(d))}</span>${shows.length ? `<span class="n">${shows.length}</span>` : ""}</div>
+        <div class="wday-head"><span class="rel${rel ? "" : " blank"}">${rel || "&nbsp;"}</span><span class="dow">${S.esc(S.fmtDow(d))}</span><span class="num">${S.esc(S.fmtNum(d))}</span><span class="mon">${S.esc(S.fmtMon(d))}</span>${shows.length ? `<span class="n">${S.meter(shows.length)}${shows.length}</span>` : ""}</div>
         <div class="wshows">${shows.length ? shows.map(showHtml).join("") : '<p class="none">No shows listed</p>'}</div>
       </section>`;
     }
