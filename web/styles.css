@@ -735,7 +735,7 @@ form.card, .card { background: var(--surface); border: 1px solid var(--line); }
 .field input[type="date"]:invalid, .field input[type="time"]:invalid { border-color: var(--line-strong); }
 
 /* Long names wrap between words, never mid-word */
-.title, .wshow .wtitle, .sd-title, .pd-name, .pd-show, .vname, .sd-act { overflow-wrap: break-word; hyphens: auto; }
+.title, .wshow .wtitle, .sd-title, .pd-name, .pd-show, .vname, .sd-act { overflow-wrap: break-word; }
 
 /* ---------- phones: crisp type, one tidy header, no stray wrapping ---------- */
 @media (max-width: 640px) {
@@ -794,4 +794,64 @@ form.card, .card { background: var(--surface); border: 1px solid var(--line); }
   #when-row::-webkit-scrollbar { display: none; }
   #when-row > * { flex: none; }
   .chip { font-size: 12px; letter-spacing: 0.04em; gap: 7px; }
+}
+
+/* ---------- type that renders the same on iPhone and Android ---------- */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  font-synthesis: none; text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
+
+/* Phones: headlines a third smaller, everyday text 1.5px smaller, and enough line height that Syne's
+   tall letters and the marker tape are never clipped. Form fields stay at 16px so iPhones don't zoom. */
+@media (max-width: 640px) {
+  body { font-size: 14.5px; }
+
+  .wm-ridge { width: 40px; }
+  .wm-in { font-size: 10px; letter-spacing: 0.26em; }
+  .wordmark .wm-slc { font-size: 24px; line-height: 1; letter-spacing: -0.02em; margin-top: 1px; }
+  .nav a { font-size: 12px; }
+  .nav a.cta { font-size: 12px; padding: 9px 11px; }
+
+  .banner { padding-block: 28px clamp(96px, 26vw, 130px); }
+  .b-in { font-size: 16px; letter-spacing: 0.14em; }
+  .b-slc { font-size: 84px; line-height: 0.95; letter-spacing: -0.02em; padding-block: 0.04em; text-shadow: -3px 0 0 var(--magenta), 3px 0 0 var(--cyan); }
+  .banner-tag { font-size: 16.5px; margin-top: 12px; }
+  .banner-cta { font-size: 15.5px; min-height: 46px; padding: 0 20px; margin-top: 14px; }
+
+  .section-title { font-size: 23px; line-height: 1.1; margin: 22px 0 10px; }
+  .week-head h1, .form-page h1, .you-head h1 { font-size: 32px; line-height: 1.05; letter-spacing: -0.01em; }
+  .empty strong { font-size: 21px; line-height: 1.15; }
+  legend { font-size: 16px; line-height: 1.2; }
+  .you h2 { font-size: 23px; line-height: 1.1; }
+  .you-label { font-size: 16px; line-height: 1.2; }
+
+  .stub .num { font-size: 27px; line-height: 1; letter-spacing: -0.02em; }
+  .stub .dow, .stub .mon, .stub .rel { font-size: 11px; }
+  .wday-head .num { font-size: 23px; line-height: 1; }
+
+  .title { font-size: 16px; line-height: 1.2; letter-spacing: -0.005em; }
+  .wshow .wtitle { font-size: 15px; line-height: 1.2; }
+  .support, .time { font-size: 12.5px; }
+  .time small { font-size: 11px; }
+  .where, .sd-where, .wshow .wwhere { font-size: 14.5px; line-height: 1.4; padding: 1px 8px; }
+  .price { font-size: 13.5px; }
+  .tag { font-size: 10px; padding: 5px 7px; }
+  .blink { font-size: 11.5px; padding: 6px 9px; }
+  .rsvp { font-size: 12.5px; }
+  .btn { font-size: 13px; }
+  .chip { font-size: 11px; min-height: 38px; padding: 0 11px; }
+  .count { font-size: 11.5px; }
+  .demo-note, .hint, .site-footer { font-size: 12.5px; }
+
+  .sd-title { font-size: 26px; line-height: 1.05; }
+  .sd-act { font-size: 15px; line-height: 1.15; }
+  .sd-act.head { font-size: 17px; }
+  .vname { font-size: 19px; line-height: 1.1; }
+  .pd-name { font-size: 24px; line-height: 1.05; }
+  .pd-show { font-size: 14px; line-height: 1.15; }
+  .tile { font-size: 18px; line-height: 1; }
+
+  .search, .select, .field input, .field select, .field textarea, .you-inline input, .you textarea { font-size: 16px; }
 }
