@@ -760,8 +760,6 @@ form.card, .card { background: var(--surface); border: 1px solid var(--line); }
   .btn.primary { box-shadow: -2px -2px 0 var(--magenta), 2px 2px 0 var(--cyan); }
 
   /* Banner meters: solid bars instead of tiny LED segments, no offset copies */
-  .banner-ridge g[mask] { mask: none; }
-  .banner-split use:not(:last-child) { display: none; }
   .b-slc { text-shadow: -4px 0 0 var(--magenta), 4px 0 0 var(--cyan); }
 
   /* Cards */
@@ -887,3 +885,8 @@ body {
 }
 .banner h1 + .banner-cta { margin-top: 28px; }
 @media (max-width: 640px) { .banner h1 + .banner-cta { margin-top: 20px; } }
+
+/* LED grid logo and banner */
+.wm-ridge { width: 72px; }
+.banner-grid { opacity: 0.9; }
+@media (max-width: 640px) { .wm-ridge { width: 52px; } }
