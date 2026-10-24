@@ -1,7 +1,7 @@
 /* Music in SLC: Prism Split
    A dark mixing desk. The Wasatch ridge is a row of LED level meters that climb violet, run hot magenta and peak cyan,
    and everything prints slightly out of register: magenta to the left, cyan to the right. Corners are square.
-   Type: Syne for names and headlines, Inter for everything else, Permanent Marker only for venue tape. */
+   Type: Sora for names and headlines, Inter for everything else, Permanent Marker only for venue tape. */
 :root {
   --bg: #0B0614;
   --surface: #17102A;
@@ -21,7 +21,7 @@
   --warn: #FFB547;
   --danger: #FF6B8B;
 
-  --font-display: "Syne", "Arial Black", "Helvetica Neue", sans-serif;
+  --font-display: "Sora", "Helvetica Neue", Arial, sans-serif;
   --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
   --font-mono: "Inter", "Segoe UI", system-ui, sans-serif;
   --font-tape: "Permanent Marker", "Marker Felt", "Comic Sans MS", cursive;
@@ -803,7 +803,7 @@ body {
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
 }
 
-/* Phones: headlines a third smaller, everyday text 1.5px smaller, and enough line height that Syne's
+/* Phones: headlines a third smaller, everyday text 1.5px smaller, and enough line height that Sora's
    tall letters and the marker tape are never clipped. Form fields stay at 16px so iPhones don't zoom. */
 @media (max-width: 640px) {
   body { font-size: 14.5px; }
