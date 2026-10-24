@@ -733,3 +733,65 @@ form.card, .card { background: var(--surface); border: 1px solid var(--line); }
 }
 .checks input { width: auto; padding: 0; margin: 0; }
 .field input[type="date"]:invalid, .field input[type="time"]:invalid { border-color: var(--line-strong); }
+
+/* Long names wrap between words, never mid-word */
+.title, .wshow .wtitle, .sd-title, .pd-name, .pd-show, .vname, .sd-act { overflow-wrap: break-word; hyphens: auto; }
+
+/* ---------- phones: crisp type, one tidy header, no stray wrapping ---------- */
+@media (max-width: 640px) {
+  /* Header: wordmark and Submit on the first row, the four sections evenly across the second */
+  .site-header .wrap {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 4px; padding-block: 10px 6px;
+  }
+  .wordmark { grid-column: 1 / 4; grid-row: 1; }
+  .nav { display: contents; }
+  .nav a { grid-row: 2; text-align: center; padding: 10px 2px; font-size: 13px; white-space: nowrap; }
+  .nav a.cta {
+    grid-row: 1; grid-column: 3 / 5; justify-self: end; align-self: center; margin: 0 4px 0 0;
+    padding: 10px 12px; box-shadow: -2px -2px 0 var(--magenta), 2px 2px 0 var(--cyan);
+  }
+  .wordmark .wm-slc { text-shadow: none; }
+  .thumb { width: 60px; }
+
+  /* Thin color splits and rotated tape blur at phone sizes: keep the split only on big type, lay tape flat */
+  .section-title, .tonight .section-title, .sd-title { text-shadow: none; }
+  .week-head h1, .form-page h1, .you-head h1 { text-shadow: -2px 0 0 var(--magenta), 2px 0 0 var(--cyan); }
+  .where, .sd-where, .wshow .wwhere { transform: none; }
+  .btn.primary { box-shadow: -2px -2px 0 var(--magenta), 2px 2px 0 var(--cyan); }
+
+  /* Banner meters: solid bars instead of tiny LED segments, no offset copies */
+  .banner-ridge g[mask] { mask: none; }
+  .banner-split use:not(:last-child) { display: none; }
+  .b-slc { text-shadow: -4px 0 0 var(--magenta), 4px 0 0 var(--cyan); }
+
+  /* Cards */
+  .title { font-size: 21px; line-height: 1.08; }
+  .show-side { align-self: start; }
+
+  /* Genres scroll sideways in one row instead of stacking eight rows of buttons */
+  .genre-chips {
+    flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+    margin-right: calc(-1 * var(--gutter-r)); padding-right: var(--gutter-r);
+  }
+  .genre-chips::-webkit-scrollbar { display: none; }
+  .chip { min-height: 40px; padding: 0 12px; }
+}
+
+/* The filter block never grows past the screen: a long venue name in the dropdown used to widen the whole page */
+.filters { grid-template-columns: minmax(0, 1fr); }
+.filter-row { min-width: 0; }
+.select { min-width: 0; text-overflow: ellipsis; }
+.wordmark .wm-in, .wordmark .wm-slc { color: var(--ink); }
+@media (max-width: 640px) {
+  .search { flex: 1 1 100%; }
+  .select { flex: 1 1 100%; }
+}
+@media (max-width: 640px) {
+  #when-row {
+    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+    margin-right: calc(-1 * var(--gutter-r)); padding-right: var(--gutter-r);
+  }
+  #when-row::-webkit-scrollbar { display: none; }
+  #when-row > * { flex: none; }
+  .chip { font-size: 12px; letter-spacing: 0.04em; gap: 7px; }
+}
