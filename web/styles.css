@@ -760,7 +760,7 @@ form.card, .card { background: var(--surface); border: 1px solid var(--line); }
   .btn.primary { box-shadow: -2px -2px 0 var(--magenta), 2px 2px 0 var(--cyan); }
 
   /* Banner meters: solid bars instead of tiny LED segments, no offset copies */
-  .banner-ridge g[mask] { mask: none; }
+  .banner-ridge g[mask] { mask: url(#bnMaskM); }
   .banner-split use:not(:last-child) { display: none; }
   .b-slc { text-shadow: -4px 0 0 var(--magenta), 4px 0 0 var(--cyan); }
 
