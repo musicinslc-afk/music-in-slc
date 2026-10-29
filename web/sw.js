@@ -2,7 +2,7 @@
 // so the installed app opens offline. The site workflow stamps VERSION with the commit on each deploy.
 const VERSION = "dev";
 const SHELL = `slc-shell-${VERSION}`;
-const DATA = "slc-data-v1";
+const DATA = "slc-data-v2";
 const LIBS = "slc-libs-v1";
 const PAGES = ["index.html", "week.html", "venues.html", "you.html", "submit.html"];
 const EXTRA = ["manifest.webmanifest", "genres.json", "venues.json", "icons/icon-192.png", "icons/apple-touch-icon.png"];
@@ -58,19 +58,22 @@ async function page(request) {
 }
 
 // Shows, venues and band links: network first, stamped with the time they were saved.
+// Queries carry a "since" timestamp that changes on every load, so the saved copy is keyed without it.
+const dataKey = (url) => url.replace(/\d{4}-\d\d-\d\dT[\d:.]+Z/g, "now");
 async function data(request) {
   const cache = await caches.open(DATA);
+  const key = dataKey(request.url);
   try {
     const res = await fetch(request);
     if (res.ok) {
       const body = await res.clone().blob();
       const headers = new Headers(res.headers);
       headers.set("x-slc-saved-at", new Date().toISOString());
-      cache.put(request.url, new Response(body, { status: res.status, headers }));
+      cache.put(key, new Response(body, { status: res.status, headers }));
     }
     return res;
   } catch (err) {
-    const hit = await cache.match(request.url);
+    const hit = await cache.match(key);
     if (hit) return hit;
     throw err;
   }
