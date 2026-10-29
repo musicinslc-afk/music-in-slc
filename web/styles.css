@@ -887,3 +887,23 @@ body {
 }
 .banner h1 + .banner-cta { margin-top: 28px; }
 @media (max-width: 640px) { .banner h1 + .banner-cta { margin-top: 20px; } }
+
+/* ---------- installable app ---------- */
+.offline-bar {
+  background: var(--surface-2); color: var(--ink); border-bottom: 1px solid var(--warn);
+  font-size: 14px; padding: 8px var(--gutter-r) 8px var(--gutter-l); text-align: center;
+}
+.offline-bar[hidden] { display: none; }
+.install-card {
+  display: flex; gap: 16px; align-items: flex-start; margin: 24px 0;
+  padding: 18px; background: var(--surface); border: 1px solid var(--line-strong);
+  box-shadow: -3px -3px 0 var(--magenta), 3px 3px 0 var(--cyan);
+}
+.install-card[hidden] { display: none; }
+.install-icon { flex: none; width: 56px; height: 56px; }
+.install-main { min-width: 0; }
+.install-main h2 { font: 800 22px/1.05 var(--font-display); text-transform: uppercase; margin: 2px 0 8px; }
+.install-main p { margin: 0 0 12px; color: var(--muted); max-width: 60ch; }
+.install-steps { margin: 0 0 14px; padding-left: 20px; display: grid; gap: 6px; }
+.install-steps .ic-share { vertical-align: -3px; color: var(--cyan); }
+@media (max-width: 480px) { .install-icon { width: 44px; height: 44px; } .install-card { padding: 14px; gap: 12px; } }

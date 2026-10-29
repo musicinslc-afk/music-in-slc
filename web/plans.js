@@ -5,6 +5,7 @@
   const S = window.SLC;
   const LOCAL = "slc.plans.v1";
   const PENDING_FRIEND = "slc.addfriend.v1";
+  const QUEUE = "slc.plans.queue.v1"; // signed-in changes made offline: event id -> status or null
   const sb = S.live && window.supabase ? window.supabase.createClient(S.cfg.supabaseUrl, S.cfg.supabaseAnonKey) : null;
   const esc = S.esc;
 
@@ -106,6 +107,25 @@
     S.store.remove(LOCAL);
   }
 
+  // Send plans made offline once the connection is back.
+  async function flushQueue() {
+    if (!st.user || !st.profile) return;
+    const queue = S.store.get(QUEUE, {});
+    const ids = Object.keys(queue);
+    if (!ids.length) return;
+    for (const id of ids) {
+      const status = queue[id];
+      const { error } = status
+        ? await sb.from("rsvps").upsert({ user_id: st.user.id, event_id: id, status }, { onConflict: "user_id,event_id" })
+        : await sb.from("rsvps").delete().eq("user_id", st.user.id).eq("event_id", id);
+      if (error) return; // still offline or failing: try again later
+      delete queue[id];
+      S.store.set(QUEUE, queue);
+    }
+    S.store.remove(QUEUE);
+  }
+  window.addEventListener("online", () => { flushQueue().catch(() => null); });
+
   async function setUser(user) {
     st.user = user || null;
     st.profile = null;
@@ -113,6 +133,7 @@
       await ensureProfile();
       if (st.profile) {
         await syncLocal();
+        await flushQueue().catch(() => null);
         await loadMine();
         await loadFollows();
         const pending = S.store.get(PENDING_FRIEND, null);
@@ -171,7 +192,12 @@
         ? sb.from("rsvps").upsert({ user_id: st.user.id, event_id: id, status: next }, { onConflict: "user_id,event_id" })
         : sb.from("rsvps").delete().eq("user_id", st.user.id).eq("event_id", id);
       const { error } = await q;
-      if (error) { apply(next, prev); toast("That didn't save. Check your connection and try again."); }
+      if (error && navigator.onLine === false) {
+        const queue = S.store.get(QUEUE, {});
+        queue[id] = next;
+        S.store.set(QUEUE, queue);
+        toast("Saved on this phone. It will sync when you're back online.");
+      } else if (error) { apply(next, prev); toast("That didn't save. Check your connection and try again."); }
     } else {
       saveLocal();
     }

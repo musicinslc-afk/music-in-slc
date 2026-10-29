@@ -10,8 +10,9 @@
     },
     set(key, value) {
       try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage blocked: keep in memory only */ }
+      window.SLCDB?.put(key, value); // copy the service worker can read
     },
-    remove(key) { try { localStorage.removeItem(key); } catch { /* ignore */ } },
+    remove(key) { try { localStorage.removeItem(key); } catch { /* ignore */ } window.SLCDB?.remove(key); },
   };
 
   function rest(path, opts = {}) {
@@ -47,6 +48,8 @@
         r = await get();
       }
       if (!r.ok) throw new Error(`Couldn't load shows (${r.status}). Check supabaseUrl and supabaseAnonKey in config.js.`);
+      const saved = r.headers.get("x-slc-saved-at"); // set when the app served its offline copy
+      if (offset === 0) window.dispatchEvent(new CustomEvent("slc:saved-data", { detail: saved }));
       const page = await r.json();
       all.push(...page);
       if (page.length < 1000) break;

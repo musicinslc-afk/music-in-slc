@@ -26,6 +26,8 @@ jobs:
           v="${GITHUB_SHA::8}"
           sed -i -E "s#(src|href)=\"([a-z]+\.(js|css))\"#\1=\"\2?v=$v\"#g" web/*.html
           sed -i "s#fetch(\"genres.json\")#fetch(\"genres.json?v=$v\")#" web/data.js
+          # A new service worker version per deploy, so installed apps pick up the new files
+          sed -i "s#const VERSION = \"dev\";#const VERSION = \"$v\";#" web/sw.js
       - uses: actions/upload-pages-artifact@v3
         with: { path: web }
       - id: deploy
