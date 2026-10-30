@@ -138,7 +138,7 @@ def main() -> int:
 
     # Listings stored twice for one show (sources that order the bill differently) become one
     try:
-        merged = db.merge_duplicates()
+        merged = db.merge_duplicates(venues)
         if merged:
             print(f"ok   {'duplicates':38} merged={merged}", file=sys.stderr)
     except Exception as e:

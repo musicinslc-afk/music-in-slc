@@ -13,7 +13,7 @@ import requests
 from . import settings
 from .links import KINDS, artist_key, clean_links
 from .models import Show
-from .normalize import TZ, Venue, headliner_key, similar
+from .normalize import TZ, Venue, headliner_key, load_venues, match_venue, similar
 
 FUZZY_THRESHOLD = 0.82
 # Two listings at one venue on one night are the same show when their names agree (or share a
@@ -208,7 +208,7 @@ class DB:
             return self._find_match(show) if show.fingerprint in existing else None
         return None
 
-    def merge_duplicates(self) -> int:
+    def merge_duplicates(self, venues: Iterable[Venue] | None = None) -> int:
         """Fold together upcoming listings already stored twice for one show (left by sources
         that ordered the bill differently). The listing more sources confirm is kept, gains the
         other's details, sources and saved plans, and the other is removed. A listing an admin
@@ -216,13 +216,20 @@ class DB:
         if self.dry_run:
             return 0
         existing = self._load_existing()
+        venues = list(venues or load_venues())
         nights: dict[str, list[dict]] = {}
         for fp, row in existing.items():
-            if row.get("id") and row.get("status") in ("published", "pending", "cancelled"):
-                nights.setdefault(_night(fp), []).append({**row, "fingerprint": fp})
+            if not row.get("id") or row.get("status") not in ("published", "pending", "cancelled"):
+                continue
+            # Listings saved before a venue alias was added carry the venue's other name, so the
+            # night is keyed by the venue it matches today
+            venue = match_venue(row.get("venue_name"), venues)
+            night = f"{venue.slug}|{fp.split('|')[1]}" if venue and fp.count("|") >= 2 else _night(fp)
+            nights.setdefault(night, []).append({**row, "fingerprint": fp, "_canonical": venue.name if venue else None})
         removed = 0
         for rows in nights.values():
-            rows.sort(key=lambda r: (-len(r.get("sources") or []), r.get("status") != "published",
+            rows.sort(key=lambda r: (r["_canonical"] not in (None, r.get("venue_name")),
+                                     -len(r.get("sources") or []), r.get("status") != "published",
                                      not r.get("image_url"), r.get("starts_at") or ""))
             gone: set[str] = set()
             for i, keep in enumerate(rows):

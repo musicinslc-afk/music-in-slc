@@ -848,3 +848,39 @@ class TestDescriptions(unittest.TestCase):
         db.upsert_show(a)
         db.upsert_show(b)
         self.assertEqual(db._load_existing()[a.fingerprint]["description"], "Moss Lantern returns for a winter set.")
+
+
+class TestMergeStored(unittest.TestCase):
+    def test_old_venue_name_listing_folds_in(self):
+        class FakeDB(DB):
+            def __init__(self):
+                super().__init__(dry_run=True)
+                self.dry_run = False
+                self.deleted, self.patched = [], []
+                self._existing = {
+                    "capitol-theatre|2026-11-21|toddrundgrendamnedifidotour": {
+                        "id": "a", "title": "Todd Rundgren: Damned If I Do Tour", "artists": ["Todd Rundgren"],
+                        "venue_name": "Capitol Theatre", "starts_at": "2026-11-21T20:00:00-07:00",
+                        "status": "published", "sources": ["ticketmaster"]},
+                    "janet-quinney-lawson-capitol-theatre|2026-11-21|toddrundgrendamnedifidotour": {
+                        "id": "b", "title": "Todd Rundgren: Damned If I Do Tour", "artists": ["Todd Rundgren"],
+                        "venue_name": "Janet Quinney Lawson Capitol Theatre", "starts_at": "2026-11-21T20:00:00-07:00",
+                        "status": "published", "sources": ["seatgeek", "krcl"], "price_min": 49},
+                }
+                db = self
+                class S:
+                    def delete(self, url, params, timeout):
+                        db.deleted.append(params["id"])
+                        class R: status_code = 200
+                        return R()
+                self.s = S()
+            def _get(self, table, params): return []
+            def _post(self, *a, **k): return []
+            def _patch(self, table, match, values): self.patched.append((match["id"], values))
+
+        db = FakeDB()
+        self.assertEqual(db.merge_duplicates(list(load_venues())), 1)
+        self.assertEqual(db.deleted, ["eq.b"])
+        self.assertEqual(db.patched[0][0], "a")
+        self.assertEqual(db.patched[0][1]["price_min"], 49)
+        self.assertEqual(db.patched[0][1]["sources"], ["krcl", "seatgeek", "ticketmaster"])
