@@ -167,7 +167,7 @@ def main() -> int:
     imap.logout()
     db.log_run("email", True, found=total, inserted=db.stats["inserted"], updated=db.stats["updated"])
     # Flyers and band links for new and newly approved shows, a smaller batch each hour
-    listing_extras.run(db, flyer_limit=20, link_limit=15)
+    listing_extras.run(db, flyer_limit=20, link_limit=15, description_limit=10)
     print(f"done: {total} shows from email", file=sys.stderr)
     return 0
 

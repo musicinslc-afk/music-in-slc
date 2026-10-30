@@ -1,25 +1,27 @@
 """Flyers and band links, run after every calendar update: each scrape (every 6 hours, or a
 single source run by hand) and each inbox read (hourly). The hourly pass also picks up shows
-an admin approved since the last run. Each job reports to Source health as 'flyers' and
-'artist-links'."""
+an admin approved since the last run. Cut-off descriptions are completed from the show's page
+too. Each job reports to Source health as 'flyers', 'artist-links' and 'descriptions'."""
 from __future__ import annotations
 
 import re
 import sys
 
-from . import flyers, musicbrainz
+from . import descriptions, flyers, musicbrainz
 
 JOBS = (
     ("flyers", flyers.backfill, "event pages read={} flyers found={}"),
     ("artist-links", musicbrainz.enrich_upcoming, "artists looked up={} with links={}"),
+    ("descriptions", descriptions.backfill, "cut-off descriptions={} completed from show pages={}"),
 )
 
 
 def run(db, *, flyer_limit: int = flyers.MAX_PAGES_PER_RUN,
-        link_limit: int = musicbrainz.MAX_LOOKUPS_PER_RUN) -> None:
+        link_limit: int = musicbrainz.MAX_LOOKUPS_PER_RUN,
+        description_limit: int = descriptions.MAX_PAGES_PER_RUN) -> None:
     if db.dry_run:
         return
-    limits = {"flyers": flyer_limit, "artist-links": link_limit}
+    limits = {"flyers": flyer_limit, "artist-links": link_limit, "descriptions": description_limit}
     for name, task, label in JOBS:
         try:
             checked, hits = task(db, limit=limits[name])

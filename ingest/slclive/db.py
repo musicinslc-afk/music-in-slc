@@ -4,6 +4,7 @@ same show produce one listing."""
 from __future__ import annotations
 
 import hashlib
+import re
 from datetime import datetime, timedelta
 from typing import Iterable, Optional
 
@@ -12,9 +13,66 @@ import requests
 from . import settings
 from .links import KINDS, artist_key, clean_links
 from .models import Show
-from .normalize import TZ, Venue, similar
+from .normalize import TZ, Venue, headliner_key, similar
 
 FUZZY_THRESHOLD = 0.82
+# Two listings at one venue on one night are the same show when their names agree (or share a
+# performer) and they start within this many minutes of each other. Sellers order the bill
+# differently (an orchestra first on one, the soloist first on another), so the first-listed
+# performer alone can't decide it.
+SAME_SHOW_MINUTES = 90
+
+
+def _keys(row: dict) -> set[str]:
+    return {k for k in (artist_key(a) for a in (row.get("artists") or [])) if len(k) >= 4}
+
+
+def _close(a: str, b: str) -> bool:
+    if len(a) < 4 or len(b) < 4 or "show" in (a, b):
+        return False
+    short, long_ = sorted((a, b), key=len)
+    return similar(a, b) >= FUZZY_THRESHOLD or (len(short) >= 5 and short in long_)
+
+
+def _minutes_apart(a, b) -> float:
+    try:
+        ta = a if isinstance(a, datetime) else datetime.fromisoformat(str(a))
+        tb = b if isinstance(b, datetime) else datetime.fromisoformat(str(b))
+        return abs((ta - tb).total_seconds()) / 60
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _title_key(row: dict) -> str:
+    return re.sub(r"[^a-z0-9]+", "", re.sub(r"^the\s+", "", (row.get("title") or "").lower()))[:60]
+
+
+def same_show(a: dict, b: dict) -> bool:
+    """Whether two rows with the same venue and night describe one show."""
+    if _minutes_apart(a.get("starts_at"), b.get("starts_at")) > SAME_SHOW_MINUTES:
+        return False
+    head_a = (a.get("fingerprint") or "||").split("|", 2)[2].split("~")[0]
+    head_b = (b.get("fingerprint") or "||").split("|", 2)[2].split("~")[0]
+    title_a, title_b = _title_key(a), _title_key(b)
+    if _close(title_a, title_b):
+        return True
+    # Two programs led by the same orchestra or host are different shows when their names differ
+    named_apart = title_a not in (head_a, "") and title_b not in (head_b, "") and len(title_a) >= 4 and len(title_b) >= 4
+    if not named_apart and _close(head_a, head_b):
+        return True
+    # Sharing one performer (a house orchestra, a resident DJ) isn't enough on its own
+    ka, kb = _keys(a), _keys(b)
+    shared = ka & kb
+    return len(shared) >= 2 or (bool(shared) and shared == min(ka, kb, key=len))
+
+
+def _night(fingerprint: str) -> str:
+    parts = (fingerprint or "").split("|", 2)
+    return "|".join(parts[:2]) if len(parts) == 3 else ""
+
+
+def _truncated(text: Optional[str]) -> bool:
+    return bool(text) and text.rstrip().endswith(("...", "\u2026"))
 
 
 class DB:
@@ -135,14 +193,87 @@ class DB:
 
     def _find_match(self, show: Show) -> Optional[dict]:
         existing = self._load_existing()
-        if show.fingerprint in existing:
-            return existing[show.fingerprint]
-        venue_part, day, head = show.fingerprint.split("|", 2)
+        night = _night(show.fingerprint)
+        incoming = {"fingerprint": show.fingerprint, "title": show.title, "artists": show.artists,
+                    "starts_at": show.starts_at}
+        same = existing.get(show.fingerprint)
+        if same and same_show(incoming, {**same, "fingerprint": show.fingerprint}):
+            return same
         for fp, row in existing.items():
-            parts = fp.split("|", 2)
-            if len(parts) == 3 and parts[0] == venue_part and parts[1] == day and similar(parts[2], head) >= FUZZY_THRESHOLD:
+            if _night(fp) == night and same_show(incoming, {**row, "fingerprint": fp}):
                 return row
+        if same:
+            # A different show led by the same performer that night: keep its own fingerprint
+            show.fingerprint = f"{show.fingerprint}~{_title_key(incoming)[:24] or show.starts_at.strftime('%H%M')}"
+            return self._find_match(show) if show.fingerprint in existing else None
         return None
+
+    def merge_duplicates(self) -> int:
+        """Fold together upcoming listings already stored twice for one show (left by sources
+        that ordered the bill differently). The listing more sources confirm is kept, gains the
+        other's details, sources and saved plans, and the other is removed. A listing an admin
+        hid is never touched. Returns how many listings were removed."""
+        if self.dry_run:
+            return 0
+        existing = self._load_existing()
+        nights: dict[str, list[dict]] = {}
+        for fp, row in existing.items():
+            if row.get("id") and row.get("status") in ("published", "pending", "cancelled"):
+                nights.setdefault(_night(fp), []).append({**row, "fingerprint": fp})
+        removed = 0
+        for rows in nights.values():
+            rows.sort(key=lambda r: (-len(r.get("sources") or []), r.get("status") != "published",
+                                     not r.get("image_url"), r.get("starts_at") or ""))
+            gone: set[str] = set()
+            for i, keep in enumerate(rows):
+                if keep["id"] in gone:
+                    continue
+                for dup in rows[i + 1:]:
+                    if dup["id"] in gone or not same_show(keep, dup):
+                        continue
+                    self._absorb(keep, dup)
+                    gone.add(dup["id"])
+                    removed += 1
+        return removed
+
+    def _absorb(self, keep: dict, dup: dict) -> None:
+        changes: dict = {}
+        for k in ("price_min", "price_max", "ticket_url", "age_restriction", "doors_at", "venue_id",
+                  "city", "artist_url", "genres"):
+            if dup.get(k) not in (None, "", []) and keep.get(k) in (None, "", []):
+                changes[k] = dup[k]
+        if dup.get("description") and (not keep.get("description") or (
+                _truncated(keep["description"]) and not _truncated(dup["description"]))):
+            changes["description"] = dup["description"]
+        if dup.get("image_url") and (not keep.get("image_url") or (
+                dup.get("image_kind") == "flyer" and keep.get("image_kind") != "flyer")):
+            changes["image_url"], changes["image_kind"] = dup["image_url"], dup.get("image_kind")
+        if len(dup.get("artists") or []) > len(keep.get("artists") or []):
+            changes["artists"] = dup["artists"]
+        raw = sorted(set(keep.get("raw_genres") or []) | set(dup.get("raw_genres") or []))
+        if raw != sorted(keep.get("raw_genres") or []):
+            changes["raw_genres"] = raw
+        sources = sorted(set(keep.get("sources") or []) | set(dup.get("sources") or []))
+        if sources != sorted(keep.get("sources") or []):
+            changes["sources"] = sources
+        if keep.get("status") == "pending" and dup.get("status") == "published":
+            changes["status"] = "published"
+        if changes:
+            self._patch("events", {"id": keep["id"]}, changes)
+            keep.update(changes)
+        # Saved Maybe and Going picks move to the listing that stays
+        try:
+            plans = self._get("rsvps", {"select": "user_id,status,updated_at", "event_id": f"eq.{dup['id']}"})
+            if plans:
+                self._post("rsvps", [{**p, "event_id": keep["id"]} for p in plans],
+                           params={"on_conflict": "user_id,event_id"},
+                           prefer="resolution=ignore-duplicates,return=minimal")
+        except Exception:
+            pass    # plans table not set up yet
+        r = self.s.delete(f"{self.base}/events", params={"id": f"eq.{dup['id']}"}, timeout=60)
+        if r.status_code >= 400:
+            raise RuntimeError(f"events delete failed: {r.status_code} {r.text[:300]}")
+        self._load_existing().pop(dup["fingerprint"], None)
 
     def retire_unseen(self, source: str, before: datetime) -> int:
         """Remove upcoming shows that only `source` ever reported and that its latest complete
@@ -183,6 +314,10 @@ class DB:
                   "doors_at", "venue_id", "city", "artist_url"):
             if row.get(k) not in (None, "", []) and match.get(k) in (None, "", []):
                 changes[k] = row[k]
+        # A full description replaces a cut-off teaser
+        if (row.get("description") and _truncated(match.get("description"))
+                and not _truncated(row["description"])):
+            changes["description"] = row["description"]
         # An image fills a blank, and a flyer replaces an artist photo. An unreviewed email
         # can't change the picture on a show that is already public.
         unreviewed = row["status"] == "pending" and match.get("status") == "published"
@@ -242,6 +377,23 @@ class DB:
             more = self._get("events", {**base, "image_checked_at": f"lt.{stale}", "limit": limit - len(rows)})
             rows += [r for r in more if r["id"] not in seen]
         return rows
+
+    # -- descriptions ------------------------------------------------------
+    def shows_with_cut_descriptions(self, limit: int) -> list[dict]:
+        """Upcoming listings whose description is a teaser ending in an ellipsis."""
+        return self._get("events", {
+            "select": "id,title,artists,description,source_url,ticket_url",
+            "status": "in.(published,pending)",
+            "starts_at": f"gte.{datetime.now(TZ).isoformat(timespec='seconds')}",
+            "or": "(description.like.*...,description.like.*\u2026)",
+            "order": "starts_at.asc", "limit": limit,
+        })
+
+    def set_description(self, event_id: str, text: Optional[str]) -> None:
+        self._patch("events", {"id": event_id}, {"description": text})
+        for row in self._load_existing().values() if self._existing is not None else []:
+            if row.get("id") == event_id:
+                row["description"] = text
 
     def shows_with_image(self, url: str) -> list[dict]:
         return self._get("events", {"select": "title,artists", "image_url": f"eq.{url}", "limit": 10})

@@ -136,6 +136,14 @@ def main() -> int:
             if settings.DRY_RUN:
                 traceback.print_exc()
 
+    # Listings stored twice for one show (sources that order the bill differently) become one
+    try:
+        merged = db.merge_duplicates()
+        if merged:
+            print(f"ok   {'duplicates':38} merged={merged}", file=sys.stderr)
+    except Exception as e:
+        print(f"FAIL {'duplicates':38} {type(e).__name__}: {e}", file=sys.stderr)
+
     # Every update ends by finding flyers and band links for anything new
     listing_extras.run(db)
 

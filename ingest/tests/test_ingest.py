@@ -764,3 +764,88 @@ class TestEmailFlyersAndLinks(unittest.TestCase):
         s2 = Show(title="Y", starts_at=parse_dt("2026-12-01"), venue_name="Kilby Court", source="email", flyer_index=5)
         run_email.attach_flyer(UploadDB(), s2, [("image/png", b"logo")])
         self.assertIsNone(s2.image_url)
+
+
+class TestSameShow(unittest.TestCase):
+    def _stored(self, db, show):
+        return resolve(show, load_venues())
+
+    def test_bill_in_a_different_order_merges(self):
+        db = DB(dry_run=True)
+        venues = list(load_venues())
+        cases = [
+            (["Utah Symphony", "Alexandra Dariescu"], ["Alexandra Dariescu", "Utah Symphony"], "Stravinsky's Firebird Suite"),
+            (["Utah Symphony", "Sarah Uriarte Berry", "Lisa Vroman", "John Riesen"],
+             ["Sarah Uriarte Berry", "Lisa Vroman", "John Riesen", "Utah Symphony"], "Rodgers and Hammerstein Celebration"),
+        ]
+        for first, second, title in cases:
+            a = resolve(Show(title=title, artists=first, starts_at=parse_dt("2026-11-13 19:30"),
+                             venue_name="Abravanel Hall", source="ticketmaster"), venues)
+            b = resolve(Show(title=title, artists=second, starts_at=parse_dt("2026-11-13 19:30"),
+                             venue_name="Abravanel Hall", source="venue:abravanel-hall"), venues)
+            self.assertNotEqual(a.fingerprint, b.fingerprint)
+            self.assertEqual(db.upsert_show(a), "inserted")
+            self.assertEqual(db.upsert_show(b), "updated")
+
+    def test_billing_variants_merge(self):
+        db = DB(dry_run=True)
+        venues = list(load_venues())
+        a = resolve(Show(title="Todd Rundgren", starts_at=parse_dt("2026-11-20 20:00"),
+                         venue_name="Capitol Theatre", source="ticketmaster"), venues)
+        b = resolve(Show(title="An Evening with Todd Rundgren", starts_at=parse_dt("2026-11-20 20:00"),
+                         venue_name="Capitol Theater", source="krcl"), venues)
+        db.upsert_show(a)
+        self.assertEqual(db.upsert_show(b), "updated")
+
+    def test_early_and_late_shows_stay_apart(self):
+        db = DB(dry_run=True)
+        venues = list(load_venues())
+        a = resolve(Show(title="Rhea Vance", starts_at=parse_dt("2026-12-01 18:00"),
+                         venue_name="Kilby Court", source="ticketmaster"), venues)
+        b = resolve(Show(title="Rhea Vance (late show)", starts_at=parse_dt("2026-12-01 21:30"),
+                         venue_name="Kilby Court", source="ticketmaster"), venues)
+        db.upsert_show(a)
+        self.assertEqual(db.upsert_show(b), "inserted")
+
+    def test_different_shows_same_night_stay_apart(self):
+        db = DB(dry_run=True)
+        venues = list(load_venues())
+        a = resolve(Show(title="Rhea Vance", artists=["Rhea Vance", "Junebug"], starts_at=parse_dt("2026-12-01 19:00"),
+                         venue_name="Kilby Court", source="a"), venues)
+        b = resolve(Show(title="Moss Lantern", artists=["Moss Lantern"], starts_at=parse_dt("2026-12-01 19:00"),
+                         venue_name="Kilby Court", source="b"), venues)
+        db.upsert_show(a)
+        self.assertEqual(db.upsert_show(b), "inserted")
+
+
+class TestDescriptions(unittest.TestCase):
+    PAGE = """<html><head><meta name="description" content="Trash Moon Hootenanny Fri Nov 13"></head><body>
+      <h2>Description</h2><h3>Trash Moon Hootenanny</h3>
+      <p>Join the Trash Moon Collective for its 4th annual Medieval Hootenanny, a night of bluegrass,
+      old-time and folk from Salt Lake's own bands.</p>
+      <p>Doors at 7, show at 8. Meet community partners before the show.</p>
+      <h4>THE STATE ROOM</h4><p>Footer text</p></body></html>"""
+
+    def test_full_text_from_page(self):
+        from slclive import descriptions
+        page = descriptions.full_text(self.PAGE)
+        out = descriptions.finish("Trash Moon Collective Medieval Hootenanny IV Join the Trash Moon Collective for its 4th annual...", page)
+        self.assertTrue(out.startswith("Join the Trash Moon Collective"))
+        self.assertTrue(out.endswith("before the show."))
+        self.assertNotIn("Footer", out)
+
+    def test_teaser_trimmed_when_page_has_nothing(self):
+        from slclive import descriptions
+        self.assertEqual(descriptions.finish("A great night. Bring your friends and...", None), "A great night.")
+        self.assertIsNone(descriptions.finish("Join the collective for its 4th annual...", None))
+
+    def test_full_description_replaces_teaser_on_merge(self):
+        db = DB(dry_run=True)
+        venues = list(load_venues())
+        a = resolve(Show(title="Moss Lantern", starts_at=parse_dt("2026-12-02 20:00"), venue_name="Kilby Court",
+                         description="Moss Lantern returns for a...", source="a"), venues)
+        b = resolve(Show(title="Moss Lantern", starts_at=parse_dt("2026-12-02 20:00"), venue_name="Kilby Court",
+                         description="Moss Lantern returns for a winter set.", source="b"), venues)
+        db.upsert_show(a)
+        db.upsert_show(b)
+        self.assertEqual(db._load_existing()[a.fingerprint]["description"], "Moss Lantern returns for a winter set.")
