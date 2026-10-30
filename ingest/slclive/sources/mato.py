@@ -60,7 +60,8 @@ def slug_date(url: str) -> Optional[date]:
     return None
 
 
-def collect(venue_slugs: Iterable[str], get: Callable[[str], str]) -> dict[str, str]:
+def collect(venue_slugs: Iterable[str], get: Callable[[str], str],
+            now: Optional[datetime] = None) -> dict[str, str]:
     """Event URL -> where it was found: 'music' (live-music listing), 'venue:<slug>' (a listed
     venue's Mato page) or 'general' (Salt Lake listings of every kind)."""
     found: dict[str, str] = {}
@@ -75,7 +76,7 @@ def collect(venue_slugs: Iterable[str], get: Callable[[str], str]) -> dict[str, 
             continue   # one dead venue page shouldn't sink the source
         for link in event_links(html):
             found.setdefault(link, origin)
-    today = datetime.now(TZ).date()
+    today = (now or datetime.now(TZ)).date()
     # Skip pages already past. Event addresses sometimes carry the UTC date, so allow a day.
     upcoming = {u: m for u, m in found.items() if (slug_date(u) or today) >= today - timedelta(days=1)}
     return dict(list(upcoming.items())[:MAX_EVENT_PAGES])
@@ -89,7 +90,7 @@ def fetch_shows(venue_slugs: Iterable[str], get: Optional[Callable[[str], str]] 
     get = get or (lambda u: fetch.get(u).text)
     cutoff = datetime.combine((now or datetime.now(TZ)).date(), time(0, 0), TZ)
     shows: list[Show] = []
-    for url, origin in collect(venue_slugs, get).items():
+    for url, origin in collect(venue_slugs, get, now).items():
         try:
             page = get(url)
         except Exception:

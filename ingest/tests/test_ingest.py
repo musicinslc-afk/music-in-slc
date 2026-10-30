@@ -441,11 +441,10 @@ class TestMato(unittest.TestCase):
         }
         get = lambda u: pages[u.replace("https://ma.to", "")]
         self.assertEqual(mato.slug_date("https://ma.to/event/old-show-01-oct-2026"), date(2026, 10, 1))
-        found = mato.collect(["graciesbar"], get)
-        found_all = dict(found)
-        self.assertNotIn("https://ma.to/event/old-show-01-oct-2026", mato.collect(["graciesbar"], get))
-        self.assertEqual(found["https://ma.to/event/bluegrass-night-27-oct-2026"], "music")
         now = datetime(2026, 10, 21, tzinfo=TZ)
+        found = mato.collect(["graciesbar"], get, now)
+        self.assertNotIn("https://ma.to/event/old-show-01-oct-2026", found)
+        self.assertEqual(found["https://ma.to/event/bluegrass-night-27-oct-2026"], "music")
         shows = {s.title: s for s in mato.fetch_shows(["graciesbar"], get=get, now=now)}
         self.assertEqual(set(shows), {"Bluegrass Night", "The Mystery Night"})   # music-only venue page: unclear kept
         self.assertEqual(shows["Bluegrass Night"].status, "published")
