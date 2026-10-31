@@ -907,3 +907,12 @@ body {
 .install-steps { margin: 0 0 14px; padding-left: 20px; display: grid; gap: 6px; }
 .install-steps .ic-share { vertical-align: -3px; color: var(--cyan); }
 @media (max-width: 480px) { .install-icon { width: 44px; height: 44px; } .install-card { padding: 14px; gap: 12px; } }
+
+/* ---------- privacy ---------- */
+.privacy { max-width: 760px; padding-bottom: 32px; }
+.privacy h2 { font: 800 24px/1.1 var(--font-display); text-transform: uppercase; margin: 32px 0 10px; }
+.privacy p, .privacy li { color: var(--muted); max-width: 68ch; }
+.privacy ul { padding-left: 20px; display: grid; gap: 4px; }
+.privacy strong { color: var(--ink); }
+.privacy a { color: var(--cyan); }
+.site-footer .footer-links a { color: var(--muted); }
