@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-22T12:51-06:00",
+ "updated": "2026-11-02T03:33-07:00",
  "venues": [
   {
    "slug": "801-event-center",
@@ -24,7 +24,7 @@
    "city": "Salt Lake City",
    "age_policy": "all_ages",
    "website": "https://utahsymphony.org/",
-   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Slc_abravanel_hall.jpg/960px-Slc_abravanel_hall.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "image": "https://usuo.org/app/uploads/sites/2/2026/08/Rodgers-and-Hammerstein-Celebration-4-scaled.jpg",
    "map": "https://www.google.com/maps/search/?api=1&query=Abravanel+Hall%2C+123+W+South+Temple%2C+Salt+Lake+City%2C+UT"
   },
   {
@@ -376,7 +376,7 @@
    "city": "Cottonwood Heights",
    "age_policy": "21_plus",
    "website": "https://thehogwallow.com/",
-   "image": "https://thehogwallow.com//assets/components/phpthumbof/cache/hero-30.81c96564c5e586123546bac9c4075bd6.webP%3D",
+   "image": null,
    "map": "https://www.google.com/maps/search/?api=1&query=The+Hog+Wallow+Pub%2C+3200+E+Big+Cottonwood+Canyon+Rd%2C+Cottonwood+Heights%2C+UT"
   },
   {
