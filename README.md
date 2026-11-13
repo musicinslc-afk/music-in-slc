@@ -47,7 +47,7 @@ Every source produces the same show record. Each show gets a fingerprint (venue,
 - Flyers and band links are live: `supabase/migrations/002_flyers_and_artist_links.sql` has been run. After the first run, 306 of 567 upcoming shows had an image and 222 bands had links.
 - The You section (Maybe and Going, friends, visibility) is live on the site. It needs `supabase/migrations/003_you_plans_and_friends.sql` run and the sign-in redirect URL added; until then picks stay in each browser.
 - The site lives at https://musicinslc.com (moved from the github.io address, which redirects). It is an installable app: `web/manifest.webmanifest`, icons in `web/icons/`, and `web/sw.js`, which keeps the pages and the last loaded shows so the app opens offline. `web/pwa.js` registers it, copies saved settings into IndexedDB for the weekly push, shows an offline bar, and offers an Add to home screen card on the You page from the second visit.
-- Still to do: Last.fm key (genre tags and similar-artist recommendations); optional SeatGeek client ID (backstop for touring shows).
+- Last.fm key is set (genre tags and similar-artist recommendations). Still to do: optional SeatGeek client ID (backstop for touring shows).
 
 ## Setup
 
