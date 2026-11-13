@@ -25,6 +25,7 @@ INBOX_IMAP_HOST = os.environ.get("INBOX_IMAP_HOST", "imap.gmail.com")
 INBOX_SMTP_HOST = os.environ.get("INBOX_SMTP_HOST", "smtp.gmail.com")
 # Where the weekly digest goes; the inbox itself by default
 DIGEST_TO = os.environ.get("DIGEST_TO", "")
+APPROVALS_TO = os.environ.get("APPROVALS_TO", "")
 INBOX_LOOKBACK_DAYS = int(os.environ.get("INBOX_LOOKBACK_DAYS", "14"))
 # Comma-separated sender addresses or domains whose shows publish without review,
 # e.g. "booking@kilbycourt.com,@thestateroompresents.com"

@@ -43,7 +43,7 @@ Every source produces the same show record. Each show gets a fingerprint (venue,
 - Soundwell and The Hog Wallow Pub are read with layout parsers for their full calendars; Liquid Joe's comes from its Ticketsauce event list; The Union Event Center's JavaScript calendar is read in a headless browser (its shows also come from Ticketmaster). The Great Saltair comes from Ticketmaster and is marked seasonal.
 - Bars, breweries and lounges: Lake Effect (a week of nightly acts from its rendered calendar), Drift Lounge (Wix event pages), Epic Brewing (its calendar links), and weekly standing nights at Hopkins Brewing, The Green Pig Pub, The Break and Tailgate Tavern. Gracie's, HandleBar, Caputo's, Woodbine Food Hall, Melancholy, Boilerroom and SKY SLC come through Mato. Aces High Saloon is listed so KRCL, SeatGeek and emailed shows attach to it.
 - Mato (ma.to), where many small rooms post, is read every run: its Salt Lake live-music listing, the general listings (titles that say music only) and the Mato pages of listed venues.
-- The coverage watchdog flags any watched venue with no published show in its window, as a red `coverage:<venue>` row in Source health. The weekly digest goes to musicinslc@gmail.com on Monday mornings.
+- The coverage watchdog flags any watched venue with no published show in its window, as a red `coverage:<venue>` row in Source health. The weekly digest goes to musicinslc@gmail.com on Monday mornings, and the weekly approval email, listing every show waiting for review by night, goes out Tuesday mornings.
 - Flyers and band links are live: `supabase/migrations/002_flyers_and_artist_links.sql` has been run. After the first run, 306 of 567 upcoming shows had an image and 222 bands had links.
 - The You section (Maybe and Going, friends, visibility) is live on the site. It needs `supabase/migrations/003_you_plans_and_friends.sql` run and the sign-in redirect URL added; until then picks stay in each browser.
 - The site lives at https://musicinslc.com (moved from the github.io address, which redirects). It is an installable app: `web/manifest.webmanifest`, icons in `web/icons/`, and `web/sw.js`, which keeps the pages and the last loaded shows so the app opens offline. `web/pwa.js` registers it, copies saved settings into IndexedDB for the weekly push, shows an offline bar, and offers an Add to home screen card on the You page from the second visit.
@@ -85,7 +85,7 @@ The Claude model defaults to `claude-haiku-5-5`. Override it with an `ANTHROPIC_
 
 1. Create a repository (public, so GitHub Pages and Actions are free) and push this folder to it.
 2. **Settings → Secrets and variables → Actions → Secrets**: add `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `TICKETMASTER_API_KEY`, `ANTHROPIC_API_KEY`, `LASTFM_API_KEY`, `INBOX_APP_PASSWORD`, and optionally `SEATGEEK_CLIENT_ID`.
-3. **Variables** tab: add `SITE_URL` (your site address), `CONTACT_EMAIL` (shown to venues in the scraper's user agent), and optionally `TRUSTED_SENDERS` and `DIGEST_TO` (where the weekly digest goes; the inbox by default).
+3. **Variables** tab: add `SITE_URL` (your site address), `CONTACT_EMAIL` (shown to venues in the scraper's user agent), and optionally `TRUSTED_SENDERS` `DIGEST_TO` (where the weekly digest goes; the inbox by default) and `APPROVALS_TO` (where the Tuesday approval email goes; the inbox by default).
 4. **Settings → Pages**: set Source to **GitHub Actions**.
 
 ### 5. Site settings
@@ -189,6 +189,7 @@ ingest/run_scrapers.py       venue pages, Ticketmaster, 24tix, State Room Presen
 ingest/run_email.py          musicinslc inbox → database
 ingest/build_venues.py       venues.yaml → web/venues.json for the Venues page (links checked, pictures found)
 ingest/run_digest.py         weekly coverage and health email to the inbox
+ingest/run_approvals.py      Tuesday email listing shows waiting for approval
 ingest/diagnose.py           source diagnostics for the Diagnose sources workflow
 ingest/slclive/              parsing, normalizing, dedupe, AI reader, Last.fm genres,
                              flyer finder (flyers.py), band links (links.py, musicbrainz.py)
