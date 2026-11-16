@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-09T03:27-07:00",
+ "updated": "2026-11-16T04:01-07:00",
  "venues": [
   {
    "slug": "801-event-center",
@@ -24,7 +24,7 @@
    "city": "Salt Lake City",
    "age_policy": "all_ages",
    "website": "https://utahsymphony.org/",
-   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Slc_abravanel_hall.jpg/960px-Slc_abravanel_hall.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+   "image": "https://usuo.org/app/uploads/sites/2/2026/11/Salute-to-Youth-9-1-scaled.jpg",
    "map": "https://www.google.com/maps/search/?api=1&query=Abravanel+Hall%2C+123+W+South+Temple%2C+Salt+Lake+City%2C+UT"
   },
   {
@@ -85,7 +85,7 @@
    "city": "Murray",
    "age_policy": "21_plus",
    "website": "https://thebreakmurray.com/",
-   "image": "https://thebreakmurray.com/wp-content/uploads/2021/12/Break-South-Jordan.jpg",
+   "image": null,
    "map": "https://www.google.com/maps/search/?api=1&query=The+Break%2C+Murray%2C+UT"
   },
   {
@@ -148,8 +148,8 @@
    "address": "195 W 2100 S",
    "city": "South Salt Lake",
    "age_policy": "21_plus",
-   "website": "https://thestateroompresents.com/the-commonwealth-room",
-   "image": "https://thestateroompresents.com/images/admin/stateroompresents-home-2019-2.png",
+   "website": "https://thestateroompresents.com/",
+   "image": "https://thestateroompresents.com/images/2019/02/13_d48af2b658_Screen-Shot-2019-02-11-at-5.09.51-PM.png",
    "map": "https://www.google.com/maps/search/?api=1&query=The+Commonwealth+Room%2C+195+W+2100+S%2C+South+Salt+Lake%2C+UT"
   },
   {
@@ -483,7 +483,7 @@
    "city": "West Valley City",
    "age_policy": "all_ages",
    "website": "https://www.maverikcenter.com/",
-   "image": "https://maverikcenter.com/wp-content/uploads/2026/07/CVStage-@-MC-reverse-scaled.png",
+   "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cb/North-northwest_at_Maverik_Center%2C_Aug_17.jpg/960px-North-northwest_at_Maverik_Center%2C_Aug_17.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
    "map": "https://www.google.com/maps/search/?api=1&query=Maverik+Center%2C+3200+S+Decker+Lake+Dr%2C+West+Valley+City%2C+UT"
   },
   {
@@ -648,7 +648,7 @@
    "city": "Salt Lake City",
    "age_policy": "21_plus",
    "website": "https://thestateroompresents.com/the-state-room",
-   "image": "https://thestateroompresents.com/images/admin/stateroompresents-home-2019-2.png",
+   "image": null,
    "map": "https://www.google.com/maps/search/?api=1&query=The+State+Room%2C+638+S+State+St%2C+Salt+Lake+City%2C+UT"
   },
   {
