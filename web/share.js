@@ -311,6 +311,7 @@
           </div>
           <p class="ss-hint" data-ss-hint hidden>For an Instagram or Facebook story, save the image, then add it to your story from your photos.</p>
           <div class="ss-social" aria-label="Post to">
+            <button class="ss-net ss-instagram" type="button" data-ss="instagram" disabled>Instagram</button>
             ${SOCIAL.map(([k, label, href]) => `<a class="ss-net ss-${k}" href="${S.esc(href(text, url))}" target="_blank" rel="noopener">${label}</a>`).join("")}
           </div>
           <p class="ss-note" aria-live="polite"></p>
@@ -346,6 +347,19 @@
       note.textContent = "Saved. Add it to your story or post from your photos.";
     };
     const canFile = navigator.canShare && navigator.canShare({ files: [f] });
+    // Instagram has no web share link. On phones, sharing the image alone puts Instagram (story, post or
+    // message) in the share menu; elsewhere the image is saved to post from the phone.
+    const ig = $("instagram");
+    ig.disabled = false;
+    ig.onclick = async () => {
+      if (canFile) {
+        try { await navigator.share({ files: [f] }); }
+        catch (err) { if (err?.name !== "AbortError") note.textContent = "Sharing didn't work. Save the image and post it from Instagram."; }
+      } else {
+        save.onclick();
+        note.textContent = "Saved. Open Instagram on your phone and add it to your story.";
+      }
+    };
     if (canFile) {
       const native = $("native");
       native.hidden = false;
