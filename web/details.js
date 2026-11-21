@@ -160,6 +160,7 @@
     function link(e) { return `${location.origin}${location.pathname}#show-${encodeURIComponent(e.id)}`; }
 
     async function share(e) {
+      if (window.SLCShare) { window.SLCShare.show(e, window.SLCPlans ? window.SLCPlans.status(e.id) : null); return; }
       const note = dlg.querySelector(".sd-note");
       const data = { title: e.title, text: `${e.title} at ${e.venue_name}, ${S.fmtLong(e.starts_at)}`, url: link(e) };
       try {

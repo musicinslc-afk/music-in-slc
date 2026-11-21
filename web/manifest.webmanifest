@@ -17,7 +17,7 @@
   ],
   "shortcuts": [
     { "name": "This week", "url": "/week.html?src=app", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "You", "url": "/you.html?src=app", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Me", "url": "/me.html?src=app", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
     { "name": "Submit a show", "url": "/submit.html?src=app", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }

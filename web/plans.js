@@ -187,6 +187,9 @@
       refresh(id); emit();
     };
     apply(prev, next);
+    if (next === "going" && window.SLCShare && find(id)) {
+      toast("You're going.", { label: "Share it", run: () => window.SLCShare.show(find(id), "going") });
+    }
     if (st.user && st.profile) {
       const q = next
         ? sb.from("rsvps").upsert({ user_id: st.user.id, event_id: id, status: next }, { onConflict: "user_id,event_id" })
@@ -268,8 +271,8 @@
       return `<p class="plans-group"><span class="plans-k">${label} · ${total}</span> ${nameList(parts)}</p>`;
     };
     const hint = !st.user && sb && st.social
-      ? `<p class="plans-hint">Saved in this browser. <a href="you.html">Sign in on your page</a> to keep plans on every device and share them with friends.</p>`
-      : st.profile ? `<p class="plans-hint">${visibilityNote()} <a href="you.html">Change</a></p>` : "";
+      ? `<p class="plans-hint">Saved in this browser. <a href="me.html">Sign in on your page</a> to keep plans on every device and share them with friends.</p>`
+      : st.profile ? `<p class="plans-hint">${visibilityNote()} <a href="me.html">Change</a></p>` : "";
     return `<h3 class="sd-label">Your plans</h3>
       ${cancelled && !mine ? '<p class="plans-hint">This show was cancelled.</p>' : buttons(e, id, mine)}
       ${group("going", "Going")}${group("maybe", "Maybe")}
@@ -320,7 +323,7 @@
   // ---------- account ----------
   async function signIn(email) {
     if (!sb) return { error: { message: "Sign-in needs the database." } };
-    const back = new URL("you.html", location.href);
+    const back = new URL("me.html", location.href);
     return sb.auth.signInWithOtp({ email, options: { emailRedirectTo: back.href } });
   }
   async function signOut() { if (sb) await sb.auth.signOut(); }
@@ -343,7 +346,7 @@
   }
 
   function shareUrl(handle = st.profile?.handle) {
-    const u = new URL("you.html", location.href);
+    const u = new URL("me.html", location.href);
     u.searchParams.set("u", handle);
     return u.href;
   }
@@ -481,20 +484,25 @@
     setTimeout(() => { button.textContent = was; }, 1600);
   }
 
-  // Signing in happens on the You page
+  // Signing in happens on the Me page
   function openYou() {
     if (window.SLCYou) window.SLCYou.focusSignIn();
-    else location.href = "you.html";
+    else location.href = "me.html";
   }
 
   let toastEl;
-  function toast(msg) {
+  function toast(msg, action) {
     toastEl ||= Object.assign(document.createElement("div"), { className: "toast", role: "status" });
     if (!toastEl.isConnected) document.body.appendChild(toastEl);
     toastEl.textContent = msg;
+    if (action) {
+      const b = Object.assign(document.createElement("button"), { type: "button", className: "toast-act", textContent: action.label });
+      b.onclick = () => { toastEl.hidden = true; action.run(); };
+      toastEl.append(" ", b);
+    }
     toastEl.hidden = false;
     clearTimeout(toast.t);
-    toast.t = setTimeout(() => { toastEl.hidden = true; }, 4000);
+    toast.t = setTimeout(() => { toastEl.hidden = true; }, action ? 6000 : 4000);
   }
 
   window.SLCPlans = {

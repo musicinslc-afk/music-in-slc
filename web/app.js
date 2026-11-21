@@ -153,12 +153,12 @@
   // page being left, so it is set on every load, not only on a reload.
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
   const params = new URLSearchParams(location.search);
-  // The You section moved to its own page; old links (and sign-in links already sent) go there
+  // The Me page has its own address; old links (and sign-in links already sent) go there
   if (location.hash === "#you" || location.hash === "#for-you" || params.has("you")) {
     params.delete("you");
     const qs = params.toString();
     const keepHash = location.hash.includes("access_token") || location.hash.startsWith("#show-") ? location.hash : "";
-    location.replace(`you.html${qs ? `?${qs}` : ""}${keepHash}`);
+    location.replace(`me.html${qs ? `?${qs}` : ""}${keepHash}`);
     return;
   }
   if (!location.hash.startsWith("#show-")) window.scrollTo(0, 0);

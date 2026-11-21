@@ -1,4 +1,4 @@
-// You page: the shows you've marked Going and Maybe, then settings (account, friends, who sees your plans,
+// Me page: the shows you've marked Going and Maybe, then settings (account, friends, who sees your plans,
 // and your listening). Settings stay open until they've been set up once, then fold to one line.
 (async function () {
   const S = window.SLC, T = window.SLCTaste, P = window.SLCPlans, C = window.SLCCards;
@@ -30,11 +30,12 @@
     $("n-all").textContent = c.going + c.maybe ? String(c.going + c.maybe) : "";
     $("n-going").textContent = c.going ? String(c.going) : "";
     $("n-maybe").textContent = c.maybe ? String(c.maybe) : "";
+    $("share-plans").hidden = !(c.going + c.maybe) || !window.SLCShare;
     const fs = P.friendsShows().length;
     $("n-friends").textContent = fs ? String(fs) : "";
     document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tab === tab)));
     const p = P.profile;
-    $("you-name").textContent = p ? p.display_name : "You";
+    $("you-name").textContent = p ? p.display_name : "Me";
     $("you-sub-head").textContent = p
       ? `@${p.handle} · ${P.visibilityNote()}`
       : "The shows you've said yes and maybe to, and where your friends are headed.";
@@ -99,6 +100,17 @@
     for (const [k, shows] of byDay) html += C.dayHtml(k, shows);
     $("my-shows").innerHTML = html;
   }
+
+  // Share card of your upcoming Going and Maybe shows, Going first
+  $("share-plans").onclick = () => {
+    const rows = events.map((e) => ({ e, status: P.status(e.id) })).filter((r) => r.status)
+      .sort((a, b) => (a.status === "going" ? 0 : 1) - (b.status === "going" ? 0 : 1) || a.e.starts_at.localeCompare(b.e.starts_at));
+    const p = P.profile;
+    window.SLCShare.plans(rows, {
+      name: p ? `${p.display_name} · @${p.handle}` : "",
+      url: p ? P.shareUrl() : undefined,
+    });
+  };
 
   document.querySelectorAll("[data-tab]").forEach((b) => b.onclick = () => {
     tab = b.dataset.tab;

@@ -1,4 +1,4 @@
-// Show cards and nights, shared by the calendar and the You page.
+// Show cards and nights, shared by the calendar and the Me page.
 (function () {
   const S = window.SLC;
   const D = window.SLCDetails;

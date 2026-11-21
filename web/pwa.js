@@ -1,6 +1,6 @@
 // The installable app: registers the service worker, mirrors this browser's saved settings into
 // IndexedDB (where the service worker can read them for the weekly push), shows an offline bar,
-// and offers an "Add to home screen" card on the You page.
+// and offers an "Add to home screen" card on the Me page.
 (function () {
   const VISITS = "slc.visits.v1";
   const DISMISSED = "slc.install.dismissed.v1";
