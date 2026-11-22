@@ -148,14 +148,14 @@ def db_venue(name: str) -> None:
 
 
 def db_title(pattern: str) -> None:
-    """Every upcoming show whose title matches (case-insensitive, * wildcards), with sources and links."""
-    from datetime import datetime
+    """Every show from two days ago on whose title matches (case-insensitive), with sources and links."""
+    from datetime import datetime, timedelta
     from slclive.db import DB
     from slclive.normalize import TZ
     rows = DB(dry_run=False)._get("events", {
         "select": "starts_at,title,venue_name,city,status,sources,fingerprint,source_url,ticket_url,description",
         "title": f"ilike.*{pattern}*",
-        "starts_at": f"gte.{datetime.now(TZ).isoformat(timespec='seconds')}", "order": "starts_at.asc", "limit": 200})
+        "starts_at": f"gte.{(datetime.now(TZ) - timedelta(days=2)).isoformat(timespec='seconds')}", "order": "starts_at.asc", "limit": 200})
     notice(f"title {pattern}", "\n".join(
         f"{r['starts_at'][:16]} [{r['status']}] {r['title'][:60]} @ {r['venue_name']} ({r.get('city')}) | "
         f"{','.join(r['sources'] or [])} | {r['fingerprint']} | {r.get('source_url')} | {r.get('ticket_url')} | "
