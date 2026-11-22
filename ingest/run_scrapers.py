@@ -58,7 +58,7 @@ def store(db: DB, shows, venues, source: str, dry_run: bool, review_unknown_venu
     return found, inserted, updated
 
 
-COMPLETE_METHODS = ("parser:", "ticketsauce", "weekly schedule")
+COMPLETE_METHODS = ("parser:", "ticketsauce", "weekly schedule", "promoter calendar")
 
 
 def main() -> int:

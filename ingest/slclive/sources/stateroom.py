@@ -17,7 +17,7 @@ from urllib.parse import urljoin
 
 from .. import fetch
 from ..models import Show
-from ..normalize import TZ, clean, parse_dt
+from ..normalize import TZ, clean, load_venues, match_venue, parse_dt
 
 SITE = "https://thestateroompresents.com/"
 CALENDARS = {15: "The State Room", 16: "The Commonwealth Room", 17: "Eccles Theater", 20: ""}
@@ -40,6 +40,20 @@ def _blurb(description: str) -> Optional[str]:
     return clean(htmllib.unescape(text))
 
 
+_PLACE = re.compile(r"\bat the ((?:[A-Z][\w'’&.]*\s+){0,5}(?:Theat(?:re|er)|Hall|Room|Center|Centre|"
+                    r"Amphitheat(?:re|er)|Ballroom|Arena|Park))\b")
+
+
+def _named_venue(blurb: Optional[str]):
+    """The venue the blurb says the show is at ("...at the Capitol Theatre in downtown Salt Lake
+    City"). The promoter files some shows at other rooms under its State Room calendar."""
+    for m in _PLACE.finditer(blurb or ""):
+        v = match_venue(m.group(1), load_venues())
+        if v:
+            return v
+    return None
+
+
 def parse(data: dict) -> list[Show]:
     cutoff = datetime.now(TZ) - timedelta(days=1)
     shows = []
@@ -54,16 +68,24 @@ def parse(data: dict) -> list[Show]:
         cancelled = bool(re.match(r"^\[?\s*(cancell?ed|canceled)\s*\]?\s*:?\s*", title, re.I))
         title = re.sub(r"^\[?\s*(cancell?ed|canceled|postponed)\s*\]?\s*:?\s*", "", title, flags=re.I)
         page = urljoin(SITE, ev.get("url") or "")
+        blurb = _blurb(ev.get("description") or "")
+        venue_name = CALENDARS[cal]
+        city = "Salt Lake City" if cal in (15, 17) else ("South Salt Lake" if cal == 16 else None)
+        review = cal in REVIEW_CALENDARS
+        named = _named_venue(blurb)
+        if named and named.name != venue_name:
+            # Another room's show (often Live at the Eccles), so it waits for Ticketmaster like Eccles
+            venue_name, city, review = named.name, named.city, True
         shows.append(Show(
             title=title,
             starts_at=starts,
-            venue_name=CALENDARS[cal],
-            city="Salt Lake City" if cal in (15, 17) else ("South Salt Lake" if cal == 16 else None),
-            description=_blurb(ev.get("description") or ""),
+            venue_name=venue_name,
+            city=city,
+            description=blurb,
             ticket_url=page or None,
             source_url=page or None,
             cancelled=cancelled,
-            status="pending" if cal in REVIEW_CALENDARS else "published",
+            status="pending" if review else "published",
             source="stateroom",
         ))
     return shows

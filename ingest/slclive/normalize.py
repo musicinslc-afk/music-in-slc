@@ -194,7 +194,10 @@ def in_salt_lake_county(city: Optional[str]) -> bool:
 # Ticket sites list passes, gift cards and parking next to real shows
 _NOT_A_SHOW = re.compile(
     r"\b(golden ticket|gift cards?|gift certificates?|season pass|season tickets?|waitlist|annual pass|membership|parking|"
-    r"(all ages|21\+|vip) pass|merch(andise)? only|presale registration)\b", re.I)
+    r"(all ages|21\+|vip) pass|merch(andise)? only|presale registration|"
+    # Ticket sellers such as 24tix also sell sports nights
+    r"(pro )?wrestling|boxing|mma|ufc|roller derby|basketball|football|volleyball|hockey|rodeo|"
+    r"monster trucks?)\b", re.I)
 
 
 def resolve(show: Show, venues: Iterable[Venue] | None = None) -> Optional[Show]:

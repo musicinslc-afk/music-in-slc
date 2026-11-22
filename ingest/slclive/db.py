@@ -28,7 +28,11 @@ def _keys(row: dict) -> set[str]:
 
 
 def _close(a: str, b: str) -> bool:
-    if len(a) < 4 or len(b) < 4 or "show" in (a, b):
+    if not a or not b or "show" in (a, b):
+        return False
+    if a == b:
+        return True   # short names ("SAP", "MGK") are still the same name
+    if len(a) < 4 or len(b) < 4:
         return False
     short, long_ = sorted((a, b), key=len)
     return similar(a, b) >= FUZZY_THRESHOLD or (len(short) >= 5 and short in long_)
@@ -202,7 +206,7 @@ class DB:
         for fp, row in existing.items():
             if _night(fp) == night and same_show(incoming, {**row, "fingerprint": fp}):
                 return row
-        if same:
+        if same and "~" not in show.fingerprint:
             # A different show led by the same performer that night: keep its own fingerprint
             show.fingerprint = f"{show.fingerprint}~{_title_key(incoming)[:24] or show.starts_at.strftime('%H%M')}"
             return self._find_match(show) if show.fingerprint in existing else None

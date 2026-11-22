@@ -10,7 +10,7 @@ HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE.parent))
 os.environ.setdefault("DRY_RUN", "1")
 
-from slclive.db import DB  # noqa: E402
+from slclive.db import DB, same_show  # noqa: E402
 from slclive.genres import map_genres  # noqa: E402
 from slclive.models import Show  # noqa: E402
 from slclive.normalize import TZ, headliner_key, load_venues, match_venue, parse_dt, resolve, split_artists  # noqa: E402
@@ -232,12 +232,33 @@ class TestMerge(unittest.TestCase):
         db.upsert_show(s)
         self.assertEqual(db._existing[e.fingerprint]["status"], "published")
 
+    def test_short_name_is_one_listing_every_run(self):
+        # A three-letter act ("SAP") used to get a new "~sap~sap..." listing on every scrape
+        db = DB(dry_run=True)
+        db._existing = {}
+        for _ in range(4):
+            db.upsert_show(resolve(Show(title="SAP", starts_at=parse_dt("2026-11-23T18:00:00-07:00"),
+                                        venue_name="Kilby Court", source="feed:24tix")))
+        self.assertEqual(list(db._existing), ["kilby-court|2026-11-23|sap"])
+
+    def test_stored_short_name_copies_merge(self):
+        rows = [{"fingerprint": "kilby-court|2026-11-23|sap" + "~sap" * n, "title": "SAP", "artists": ["SAP"],
+                 "starts_at": "2026-11-23T18:00:00-07:00"} for n in range(3)]
+        self.assertTrue(same_show(rows[0], rows[2]))
+
     def test_hidden_show_stays_hidden(self):
         db = DB(dry_run=True)
         a = resolve(Show(title="Lo Velo", starts_at=parse_dt("2026-12-12"), venue_name="Soundwell", source="ticketmaster"))
         db._existing = {a.fingerprint: {"fingerprint": a.fingerprint, "status": "rejected", "sources": ["ticketmaster"]}}
         db.upsert_show(a)
         self.assertEqual(db._existing[a.fingerprint]["status"], "rejected")
+
+
+class TestNotAShow(unittest.TestCase):
+    def test_sports_nights_from_ticket_sellers_are_dropped(self):
+        for title in ("PRO WRESTLING: IWR - AGON", "Utah Roller Derby Double Header", "Golden Gloves Boxing"):
+            self.assertIsNone(resolve(Show(title=title, starts_at=parse_dt("2026-11-21T18:00:00-07:00"),
+                                           venue_name="Murray High School", source="feed:24tix")), title)
 
 
 class TestStateRoom(unittest.TestCase):
@@ -254,6 +275,17 @@ class TestStateRoom(unittest.TestCase):
         self.assertEqual(ween.starts_at, datetime(2099, 10, 23, 19, 0, tzinfo=TZ))
         self.assertEqual(ween.ticket_url, "https://thestateroompresents.com/state-room-presents/ween-tribute")
         self.assertIn("Ween", ween.description)
+
+    def test_show_at_another_room_takes_the_named_venue(self):
+        data = {"data": {"events": [{
+            "title": "Todd Rundgren", "start": "2099-11-21T19:00:00", "url": "/state-room-presents/todd-rundgren-2",
+            "classNames": ["dp-event-calendar-15"],
+            "description": '<div class="tooltip__description">Live at the Eccles presents the Todd Rundgren: '
+                           'Damned If I Do Tour on November 21 at the Capitol Theatre in downtown Salt Lake City.</div>'}]}}
+        show = stateroom.parse(data)[0]
+        self.assertEqual(show.venue_name, "Capitol Theatre")
+        self.assertEqual(show.status, "pending")
+        self.assertEqual(self.shows["Powder Blue Ween Tribute"].venue_name, "The State Room")
 
     def test_eccles_waits_for_review_and_cancelled_is_marked(self):
         self.assertEqual(self.shows["#IMOMSOHARD"].status, "pending")
