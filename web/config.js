@@ -8,4 +8,6 @@ window.SLC_CONFIG = {
   supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbXJibXhha2dkaGN6emNwcnp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0NDM2NTQsImV4cCI6MjEwODAxOTY1NH0.eiPXcfVrMY0aYxWKKSgXiLmoEibeyllXtM3Q9X6FWIo",
   lastfmApiKey: "fea91d4cdab342fa59ad27174d84c8d6",         // last.fm/api/account/create (free)
   inboxAddress: "musicinslc@gmail.com",
+  // Google Analytics 4 measurement ID (G-XXXXXXXXXX). Leave empty to turn analytics off.
+  gaMeasurementId: "",
 };
