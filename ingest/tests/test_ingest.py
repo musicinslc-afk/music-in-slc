@@ -560,7 +560,29 @@ class TestDigest(unittest.TestCase):
         self.assertIn("venue:the-complex", body)
         self.assertNotIn("kilby-court", body)
         self.assertIn("Shows waiting for review: 4", body)
-        self.assertIn("all sources healthy", run_digest.build(runs[1:2], 0)[0])
+        self.assertIn("all sources and listings healthy", run_digest.build(runs[1:2], 0)[0])
+
+    def test_flags_listing_mistakes(self):
+        from slclive import quality
+        def row(title, venue, fp, start="2026-11-23T18:00:00-07:00"):
+            return {"title": title, "artists": [title], "venue_name": venue, "starts_at": start,
+                    "status": "published", "fingerprint": fp}
+        rows = [row("SAP", "Kilby Court", "kilby-court|2026-11-23|sap"),
+                row("SAP", "Kilby Court", "kilby-court|2026-11-23|sap~sap~sap"),
+                row("Todd Rundgren", "The State Room", "the-state-room|2026-11-21|toddrundgren", "2026-11-21T19:00:00-07:00"),
+                row("Todd Rundgren: Damned If I Do Tour", "Capitol Theatre", "capitol-theatre|2026-11-21|toddrundgren",
+                    "2026-11-21T20:00:00-07:00"),
+                row("PRO WRESTLING: IWR - AGON", "Murray High School", "murray-high-school|2026-11-21|prowrestlingiwragon"),
+                row("The Beths", "Urban Lounge", "urban-lounge|2026-11-23|beths")]
+        found = quality.check(rows)
+        self.assertEqual(len(found["duplicates"]), 1)
+        self.assertIn("SAP at Kilby Court (2 listings)", found["duplicates"][0])
+        self.assertIn("Capitol Theatre and The State Room", found["two_venues"][0])
+        self.assertIn("WRESTLING", found["not_music"][0])
+        self.assertEqual(len(found["runaway"]), 1)
+        subject, body = run_digest.build([], 0, found)
+        self.assertIn("4 to look at", subject)
+        self.assertNotIn("Beths", body)
 
 
 class TestVenueDirectory(unittest.TestCase):

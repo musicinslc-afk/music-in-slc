@@ -15,13 +15,16 @@ import smtplib
 import sys
 from email.message import EmailMessage
 
-from slclive import settings
+from datetime import datetime, timedelta
+
+from slclive import quality, settings
 from slclive.db import DB
+from slclive.normalize import TZ
 
 DIGEST_HEADER = "X-MusicInSLC-Digest"
 
 
-def build(runs: list[dict], pending: int) -> tuple[str, str]:
+def build(runs: list[dict], pending: int, listings: dict[str, list[str]] | None = None) -> tuple[str, str]:
     gaps = sorted((r for r in runs if r["source"].startswith("coverage:") and not r["ok"]), key=lambda r: r["source"])
     failing = sorted((r for r in runs if not r["source"].startswith("coverage:") and not r["ok"]),
                      key=lambda r: r["source"])
@@ -34,12 +37,21 @@ def build(runs: list[dict], pending: int) -> tuple[str, str]:
         lines.append("Sources whose last run failed:")
         lines += [f"  - {r['source']} ({r['ran_at'][:10]}): {(r['error'] or '')[:200]}" for r in failing]
         lines.append("")
+    listing_problems = 0
+    for kind, found in (listings or {}).items():
+        if found:
+            listing_problems += len(found)
+            lines.append(quality.HEADINGS[kind])
+            lines += [f"  - {f}" for f in found[:40]]
+            if len(found) > 40:
+                lines.append(f"  ...and {len(found) - 40} more")
+            lines.append("")
     lines.append(f"Shows waiting for review: {pending}")
     lines.append("")
     lines.append(f"Admin page: {settings.SITE_URL.rstrip('/')}/admin.html")
-    problems = len(gaps) + len(failing)
+    problems = len(gaps) + len(failing) + listing_problems
     subject = (f"Music in SLC weekly check: {problems} to look at" if problems
-               else "Music in SLC weekly check: all sources healthy")
+               else "Music in SLC weekly check: all sources and listings healthy")
     return subject, "\n".join(lines)
 
 
@@ -51,7 +63,12 @@ def main() -> int:
     reader = DB(dry_run=False)
     runs = reader.latest_runs()
     pending = len(reader._get("events", {"select": "id", "status": "eq.pending", "limit": 1000}))
-    subject, body = build(runs, pending)
+    now = datetime.now(TZ)
+    rows = reader._get("events", {"select": "title,artists,venue_name,starts_at,status,fingerprint",
+                                  "status": "eq.published", "starts_at": f"gte.{now.isoformat(timespec='seconds')}",
+                                  "and": f"(starts_at.lte.{(now + timedelta(days=60)).isoformat(timespec='seconds')})",
+                                  "order": "starts_at.asc", "limit": 5000})
+    subject, body = build(runs, pending, quality.check(rows))
     if settings.DRY_RUN or not settings.INBOX_APP_PASSWORD:
         print(subject + "\n\n" + body)
         return 0
