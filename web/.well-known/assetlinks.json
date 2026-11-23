@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.musicinslc.app",
+      "sha256_cert_fingerprints": [
+        "1E:DB:62:7C:1A:46:0B:DF:F6:6C:DB:0D:90:F8:31:F6:E2:E0:20:78:69:30:CE:88:2E:B9:94:97:98:5D:CF:45"
+      ]
+    }
+  }
+]
