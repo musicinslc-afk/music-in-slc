@@ -9,5 +9,5 @@ window.SLC_CONFIG = {
   lastfmApiKey: "fea91d4cdab342fa59ad27174d84c8d6",         // last.fm/api/account/create (free)
   inboxAddress: "musicinslc@gmail.com",
   // Google Analytics 4 measurement ID (G-XXXXXXXXXX). Leave empty to turn analytics off.
-  gaMeasurementId: "",
+  gaMeasurementId: "G-3P13JG6X1J",
 };
