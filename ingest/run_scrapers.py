@@ -15,7 +15,7 @@ import traceback
 from collections import defaultdict
 from datetime import datetime
 
-from slclive import coverage, enrich, flyers, listing_extras, settings
+from slclive import coverage, enrich, flyers, listing_extras, music_filter, settings
 from slclive.db import DB
 from slclive import fetch
 from slclive.links import artist_key
@@ -39,6 +39,8 @@ def store(db: DB, shows, venues, source: str, dry_run: bool, review_unknown_venu
     shows = list(shows)
     drop_shared_images(shows)
     for raw in shows:
+        if music_filter.is_sports(raw.title):
+            continue
         show = resolve(raw, venues)
         if not show:
             continue
@@ -143,6 +145,14 @@ def main() -> int:
             print(f"ok   {'duplicates':38} merged={merged}", file=sys.stderr)
     except Exception as e:
         print(f"FAIL {'duplicates':38} {type(e).__name__}: {e}", file=sys.stderr)
+
+    # Games that reached the calendar or the queue before the sports filter existed are taken off
+    try:
+        cleared = db.reject_sports()
+        if cleared:
+            print(f"ok   {'sports filter':38} removed={cleared}", file=sys.stderr)
+    except Exception as e:
+        print(f"FAIL {'sports filter':38} {type(e).__name__}: {e}", file=sys.stderr)
 
     # Every update ends by finding flyers and band links for anything new
     listing_extras.run(db)

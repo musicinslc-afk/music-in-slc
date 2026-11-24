@@ -22,7 +22,7 @@ from email.utils import parseaddr
 
 from bs4 import BeautifulSoup
 
-from slclive import ai_extract, enrich, listing_extras, settings
+from slclive import ai_extract, enrich, listing_extras, music_filter, settings
 from slclive.db import DB
 from slclive.links import artist_key
 from slclive.normalize import load_venues, resolve
@@ -147,6 +147,8 @@ def main() -> int:
 
         kept = 0
         for raw_show in shows:
+            if music_filter.is_sports(raw_show.title):
+                continue
             show = resolve(raw_show, venues)
             if not show:
                 continue

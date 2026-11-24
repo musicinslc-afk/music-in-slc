@@ -306,6 +306,18 @@ class DB:
             existing.pop(row.get("fingerprint"), None)
         return len(removed)
 
+    def reject_sports(self) -> int:
+        """Take games and matches off the calendar and out of the queue. Returns how many."""
+        from .music_filter import is_sports
+        cleared = 0
+        for row in self._load_existing().values():
+            if row.get("status") in ("published", "pending") and "id" in row and is_sports(row.get("title")):
+                self._patch("events", {"id": row["id"]},
+                            {"status": "rejected", "review_notes": "Filtered automatically as sports"})
+                row["status"] = "rejected"
+                cleared += 1
+        return cleared
+
     def upsert_show(self, show: Show) -> str:
         """Insert or merge one show. Returns 'inserted', 'updated' or 'unchanged'."""
         match = self._find_match(show)

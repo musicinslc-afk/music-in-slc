@@ -57,6 +57,10 @@ def _to_show(e: dict) -> Show | None:
     starts = parse_dt(start.get("dateTime") or start.get("localDate"))
     if not starts:
         return None
+    # "music" searches can return games and other events that only mention music somewhere
+    segments = {((c.get("segment") or {}).get("name") or "").lower() for c in e.get("classifications", [])} - {""}
+    if segments and "music" not in segments:
+        return None
     venues = e.get("_embedded", {}).get("venues", [])
     venue = venues[0] if venues else {}
     raw_genres = []

@@ -21,6 +21,24 @@ NOT_MUSIC = re.compile(
     r"happy hour|tasting|wine night|food truck|painting|pumpkin|swap|charity|cinema|film|movie|pop-?up|"
     r"run club|runners|pixels|pairing|workshop|book fair|costume party)\b", re.I)
 
+# Sports and other games. These win over music words, so "Utah Jazz vs. Lakers" is a game, not a jazz night.
+SPORTS = re.compile(
+    r"\b(nba|wnba|nhl|nfl|mls|nwsl|ncaa|basketball|(?<!american )football|soccer|hockey|baseball|softball|"
+    r"volleyball|lacrosse|rugby|wrestling|wwe|aew|ufc|mma|boxing match|fight night|rodeo|bull riding|"
+    r"monster jam|monster trucks|supercross|motocross|nascar|drag racing|roller derby|kentucky derby|derby party|"
+    r"marathon|fun run|5k|10k|golf|pickleball|cornhole|esports|gymnastics|figure skating|globetrotters|"
+    r"utah jazz|utah mammoth|utah hockey club|real salt lake|rsl|utah royals|salt lake bees|utah grizzlies|"
+    r"utah utes|byu cougars|utah tech|weber state|playoffs?|tournament|championships?|game day|gameday|"
+    r"tip-?off|puck drop|season opener|home opener|tailgate party|watch party|viewing party)\b", re.I)
+VERSUS = re.compile(r"\b(vs\.?|versus)(\s|$)", re.I)
+
+
+def is_sports(title: str) -> bool:
+    """A game, match or race rather than a show. "X vs. Y" counts unless the title also says music."""
+    title = title or ""
+    return bool(SPORTS.search(title)) or bool(VERSUS.search(title) and not MUSIC.search(title))
+
+
 GENRE_WORDS = re.compile(r"\b(jazz|blues|funk|soul|reggae|folk|bluegrass|country|americana|techno|house|"
                          r"salsa|cumbia|samba|bossa nova|hip[- ]?hop|rock|punk|metal|disco)\b", re.I)
 
@@ -28,6 +46,8 @@ GENRE_WORDS = re.compile(r"\b(jazz|blues|funk|soul|reggae|folk|bluegrass|country
 def classify(show: Show) -> str:
     """'music', 'not_music' or 'unclear'."""
     title = show.title or ""
+    if is_sports(title):
+        return "not_music"
     text = f"{title} {show.description or ''}"
     music_title, music_any = MUSIC.search(title), MUSIC.search(text)
     other_title, other_any = NOT_MUSIC.search(title), NOT_MUSIC.search(text)
@@ -43,7 +63,7 @@ def classify(show: Show) -> str:
 
 
 def title_is_music(title: str) -> bool:
-    return bool(MUSIC.search(title or "")) and not NOT_MUSIC.search(title or "")
+    return bool(MUSIC.search(title or "")) and not NOT_MUSIC.search(title or "") and not is_sports(title)
 
 
 def add_genre_words(show: Show) -> None:

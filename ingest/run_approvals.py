@@ -16,11 +16,11 @@ from __future__ import annotations
 
 import smtplib
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 from zoneinfo import ZoneInfo
 
-from slclive import settings
+from slclive import review_stats, settings
 from slclive.db import DB
 from run_digest import DIGEST_HEADER
 
@@ -38,7 +38,10 @@ def _source(row: dict) -> str:
     return SOURCE_LABELS.get(src) or SOURCE_LABELS.get(src.split(":", 1)[0]) or src
 
 
-def build(rows: list[dict], now: datetime | None = None) -> tuple[str, str]:
+REVIEW_DAYS = 30
+
+
+def build(rows: list[dict], now: datetime | None = None, reviewed: list[dict] | None = None) -> tuple[str, str]:
     now = now or datetime.now(timezone.utc)
     upcoming = sorted((r for r in rows if _when(r["starts_at"]) >= now), key=lambda r: r["starts_at"])
     past = len(rows) - len(upcoming)
@@ -74,6 +77,7 @@ def build(rows: list[dict], now: datetime | None = None) -> tuple[str, str]:
     if past:
         lines.append(f"{past} pending show{'s have' if past != 1 else ' has'} already passed and can be rejected.")
         lines.append("")
+    lines += review_stats.summarize(reviewed or [], REVIEW_DAYS)
     lines.append(f"Admin page: {admin}")
 
     subject = (f"Music in SLC: {len(upcoming)} show{'s' if len(upcoming) != 1 else ''} to approve" if upcoming
@@ -91,7 +95,16 @@ def main() -> int:
                   "submitter_name,submitter_email,submitter_notes",
         "status": "eq.pending", "order": "starts_at", "limit": 1000,
     })
-    subject, body = build(rows)
+    since = (datetime.now(timezone.utc) - timedelta(days=REVIEW_DAYS)).isoformat(timespec="seconds")
+    try:
+        reviewed = reader._get("events", {
+            "select": "title,venue_name,source,submitter_email,review_reason,review_edits,review_notes",
+            "reviewed_at": f"gte.{since}", "limit": 5000,
+        })
+    except Exception as e:  # before migration 004 the columns don't exist yet
+        print(f"review summary skipped: {type(e).__name__}: {e}", file=sys.stderr)
+        reviewed = []
+    subject, body = build(rows, reviewed=reviewed)
     if settings.DRY_RUN or not settings.INBOX_APP_PASSWORD:
         print(subject + "\n\n" + body)
         return 0

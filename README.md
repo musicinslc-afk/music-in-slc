@@ -164,6 +164,16 @@ Profiles are stored only in the visitor's browser. Nothing about a visitor's lis
 
 Setup: run migration 003 in the Supabase SQL editor, and under **Authentication → URL Configuration → Redirect URLs** add `https://musicinslc-afk.github.io/music-in-slc/**` so sign-in links return to the site.
 
+## Review reasons and the sports filter
+
+Every show in the review queue gets a reason when you decide on it. **Reject** asks why (not music, outside the county, already listed, wrong or missing details, private event, spam or promo, other). **Publish** records on its own whether you published it as sent or fixed something first, and which fields you changed. Each show also has an optional note.
+
+The Tuesday approval email ends with the last 30 days of decisions: counts by reason, which sources sent the most shows that weren't music, the most common fixes, your notes, and two kinds of suggestion. A venue with three or more "not music" rejections is suggested for `music_only: true`, and an email sender with three or more shows approved as sent and none rejected is suggested for `TRUSTED_SENDERS`.
+
+Setup: run `supabase/migrations/004_review_reasons.sql` in the Supabase SQL editor. Until then decisions still save, without the reasons.
+
+Sports are filtered before anything reaches the calendar or the queue: Ticketmaster events outside its Music category are skipped, and titles that name a game, team, league, match or race ("Utah Jazz vs. Lakers", "UFC watch party", "Roller Derby") are dropped from every source and from the inbox. Each scrape also takes any such show already stored off the calendar and out of the queue, with the note "Filtered automatically as sports".
+
 ## Being a good neighbor
 
 The scraper identifies itself with your site and contact email, obeys `robots.txt`, waits two seconds between requests to the same site, and links every listing back to the venue's or seller's ticket page. If a venue asks you to stop, set its strategy to `feeds_only`. Event facts (who, where, when) are generally fine to list; don't copy long descriptions or artwork you don't have permission to use.

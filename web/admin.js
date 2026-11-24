@@ -81,7 +81,33 @@
     return null;
   }
 
+  const REJECT_REASONS = [
+    ["not_music", "Not music (sports, comedy, talks)"], ["outside_county", "Outside the county"],
+    ["duplicate", "Already listed"], ["wrong_details", "Wrong or missing details"],
+    ["private", "Private event"], ["spam", "Spam or promo"], ["other", "Other"],
+  ];
+  const queueRows = new Map();
+  const sameList = (a, b) => JSON.stringify([...(a || [])].sort()) === JSON.stringify([...(b || [])].sort());
+
+  // What the reviewer changed before publishing, so the sources that get details wrong stand out
+  function editsMade(e, u, linkChanged) {
+    const out = [];
+    if (u.title !== e.title) out.push("title");
+    if (JSON.stringify(u.artists) !== JSON.stringify(e.artists || [])) out.push("artists");
+    if (new Date(u.starts_at).getTime() !== new Date(e.starts_at).getTime()) out.push("date_time");
+    if (u.venue_name !== e.venue_name) out.push("venue");
+    if ((u.city || null) !== (e.city || null) && e.city) out.push("city");
+    if ((u.price_min ?? null) !== (e.price_min ?? null)) out.push("price");
+    if ((u.age_restriction || null) !== (e.age_restriction || null)) out.push("ages");
+    if (!sameList(u.genres, e.genres)) out.push("genres");
+    if ((u.ticket_url || null) !== (S.safeUrl(e.ticket_url || "") || null)) out.push("ticket_link");
+    if ((u.image_url || null) !== (S.safeUrl(e.image_url || "") || null)) out.push("flyer");
+    if (linkChanged) out.push("band_link");
+    return out;
+  }
+
   function itemHtml(e) {
+    queueRows.set(String(e.id), e);
     const { day, t } = localInput(e.starts_at);
     const head = (e.artists || [])[0] || e.title;
     const offered = e.artist_url || "";
@@ -116,6 +142,10 @@
       </div>
       ${S.safeUrl(e.image_url) ? `<img class="queue-flyer" src="${S.esc(S.safeUrl(e.image_url))}" alt="Flyer for ${S.esc(e.title)}" loading="lazy" referrerpolicy="no-referrer">` : ""}
       ${e.description ? `<p class="meta">${S.esc(e.description)}</p>` : ""}
+      <div class="field"><span class="label">If rejecting, why?</span><div class="checks">${REJECT_REASONS.map(([v, l]) =>
+        `<label><input type="radio" name="reason" value="${v}"> ${S.esc(l)}</label>`).join("")}</div></div>
+      <div class="field"><label for="n-${e.id}">Note <span class="opt">(optional, for you later)</span></label>
+        <input id="n-${e.id}" name="note" maxlength="500" placeholder="Anything worth remembering about this one"></div>
       <div class="notice err" hidden></div>
       <div class="form-actions">
         <button class="btn primary" type="submit" value="publish">Publish</button>
@@ -139,9 +169,13 @@
     err.hidden = true;
     const id = form.dataset.id;
     const f = Object.fromEntries(new FormData(form));
-    let update;
+    const orig = queueRows.get(String(id)) || {};
+    const note = (f.note || "").trim() || null;
+    let update, review;
     if (ev.submitter.value === "reject") {
+      if (!f.reason) { err.hidden = false; err.textContent = "Pick a reason for rejecting, so the patterns add up over time."; return; }
       update = { status: "rejected" };
+      review = { review_reason: f.reason, review_notes: note, review_edits: [], reviewed_at: new Date().toISOString() };
     } else {
       const [hh, mm] = f.time.split(":").map(Number);
       const artists = f.artists.split(",").map((s) => s.trim()).filter(Boolean);
@@ -166,12 +200,21 @@
       update.fingerprint = fingerprint(update);
       const link = S.safeUrl(f.artist_link || "");
       const known = form.querySelector('[name="artist_link"]').dataset.known;
+      const offered = S.safeUrl(orig.artist_url || "") || known || "";
       if (link && link !== known) {
         const problem = await saveBandLink(update.artists[0], link);
         if (problem) { err.hidden = false; err.textContent = problem; return; }
       }
+      const edits = editsMade(orig, update, (link || "") !== offered);
+      review = { review_reason: edits.length ? "approved_edited" : "approved", review_edits: edits,
+        review_notes: note, reviewed_at: new Date().toISOString() };
     }
-    const { error } = await sb.from("events").update(update).eq("id", id);
+    let { error } = await sb.from("events").update({ ...update, ...review }).eq("id", id);
+    if (error && /review_reason|review_edits|reviewed_at/.test(error.message || "")) {
+      // Migration 004 not run yet: still save the decision, and say how to keep the reasons
+      ({ error } = await sb.from("events").update({ ...update, review_notes: note }).eq("id", id));
+      if (!error) $("queue-summary").dataset.warn = "1";
+    }
     if (error) {
       err.hidden = false;
       err.textContent = error.code === "23505"
@@ -181,7 +224,8 @@
     }
     form.remove();
     const left = document.querySelectorAll(".queue-item").length;
-    $("queue-summary").textContent = left ? `${left} show${left === 1 ? "" : "s"} waiting for review.` : "Nothing waiting. Nice.";
+    $("queue-summary").textContent = (left ? `${left} show${left === 1 ? "" : "s"} waiting for review.` : "Nothing waiting. Nice.")
+      + ($("queue-summary").dataset.warn ? " Reasons aren't being saved yet: run supabase/migrations/004_review_reasons.sql." : "");
     if (update.status === "published") loadRecent();
   }
 

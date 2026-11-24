@@ -938,3 +938,38 @@ class TestMergeStored(unittest.TestCase):
         self.assertEqual(db.patched[0][0], "a")
         self.assertEqual(db.patched[0][1]["price_min"], 49)
         self.assertEqual(db.patched[0][1]["sources"], ["krcl", "seatgeek", "ticketmaster"])
+
+
+class TestSportsAndReviews(unittest.TestCase):
+    def test_sports_titles(self):
+        for t in ["Utah Jazz vs. Los Angeles Lakers", "Real Salt Lake vs Seattle Sounders", "UFC Fight Night Watch Party",
+                  "Utah Mammoth Home Opener", "Monster Jam", "Roller Derby Double Header", "Utes Basketball"]:
+            self.assertTrue(music_filter.is_sports(t), t)
+        for t in ["American Football", "Jazz Night with the Joe McQueen Quartet", "DJ Battle: Rock vs Disco Night",
+                  "Kilby Court Presents: Tennis", "Monster Truck"]:
+            self.assertFalse(music_filter.is_sports(t), t)
+        jazz = Show(title="Utah Jazz vs. Nuggets", starts_at=datetime(2026, 12, 1, 19, 0, tzinfo=TZ), venue_name="x", source="x")
+        self.assertEqual(music_filter.classify(jazz), "not_music")
+
+    def test_ticketmaster_skips_other_segments(self):
+        game = {"name": "Utah Jazz vs. Lakers", "dates": {"start": {"dateTime": "2026-12-01T02:00:00Z"}},
+                "classifications": [{"segment": {"name": "Sports"}, "genre": {"name": "Basketball"}}]}
+        self.assertIsNone(ticketmaster._to_show(game))
+        game["classifications"] = [{"segment": {"name": "Music"}, "genre": {"name": "Rock"}}]
+        game["name"] = "Arctic Monkeys"
+        self.assertIsNotNone(ticketmaster._to_show(game))
+
+    def test_review_summary(self):
+        from slclive import review_stats
+        rows = ([{"review_reason": "not_music", "venue_name": "Liquid Joe's", "source": "ticketsauce:liquid-joes"}] * 3
+                + [{"review_reason": "approved", "source": "email", "submitter_email": "Booking@Venue.com"}] * 3
+                + [{"review_reason": "approved_edited", "source": "email", "submitter_email": "x@y.com",
+                    "review_edits": ["date_time"], "review_notes": "Flyer had last year's date", "title": "Show"}])
+        text = "\n".join(review_stats.summarize(rows, 30))
+        self.assertIn("Not music: 3", text)
+        self.assertIn("music_only: true", text)
+        self.assertIn("booking@venue.com", text)
+        self.assertNotIn("x@y.com: ", text)
+        self.assertIn("date or time (1)", text)
+        self.assertIn("last year's date", text)
+        self.assertEqual(review_stats.summarize([], 30), [])
