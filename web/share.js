@@ -4,6 +4,9 @@
 (function () {
   const S = window.SLC;
   const W = 1080, H = 1920, PAD = 80;
+  // Everything that matters sits in the middle 1080 x 1350: what a 4:5 Instagram feed post keeps, and clear of
+  // the profile bar and reply box that cover the top and bottom of a story. Outside it is only background.
+  const SAFE_TOP = 285, SAFE_BOT = 1635;
   const C = {
     bg: "#0B0614", surface: "#17102A", ink: "#F7F2FF", muted: "#B8AAD9",
     violet: "#9D4DFF", magenta: "#FF2BD6", cyan: "#29E6FF",
@@ -155,30 +158,43 @@
     }
   }
 
-  // Background, the wordmark at the top, and the ridge and address at the bottom
+  // Background, the wordmark at the top of the safe area, and the ridge and address at its bottom
   function frame(ctx, ridge) {
     ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
-    const glow = ctx.createRadialGradient(W / 2, 760, 40, W / 2, 760, 1000);
+    const glow = ctx.createRadialGradient(W / 2, H / 2, 40, W / 2, H / 2, 1000);
     glow.addColorStop(0, "rgba(163, 91, 255, 0.28)"); glow.addColorStop(1, "rgba(11, 6, 20, 0)");
     ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
 
-    // Wordmark: ridge, MUSIC IN over SLC
-    drawRidge(ctx, ridge, PAD, 92, 170, 77);
-    setFont(ctx, 800, 30, DISPLAY, 9);
-    ctx.fillStyle = C.ink; ctx.fillText("MUSIC IN", PAD + 196, 116);
-    setFont(ctx, 800, 104, DISPLAY, -4);
-    splitText(ctx, "SLC", PAD + 192, 196, 5);
-
-    // Bottom: the ridge across the width, then the address on a white bar
-    ctx.globalAlpha = 0.95;
-    drawRidge(ctx, ridge, -6, H - 150 - 150, W + 12, 150, { base: false });
+    // Background only: faint ridges in the strips Instagram covers or crops
+    ctx.globalAlpha = 0.22;
+    drawRidge(ctx, ridge, -6, 40, W + 12, 200, { base: false });
+    drawRidge(ctx, ridge, -6, SAFE_BOT + 50, W + 12, 200, { base: false });
     ctx.globalAlpha = 1;
-    ctx.fillStyle = C.ink; ctx.fillRect(0, H - 150, W, 150);
-    setFont(ctx, 600, 30, BODY, 6);
+
+    // Wordmark, centered and large: ridge, MUSIC IN over SLC
+    setFont(ctx, 800, 132, DISPLAY, -5);
+    const slcW = ctx.measureText("SLC").width;
+    setFont(ctx, 800, 40, DISPLAY, 12);
+    const inW = ctx.measureText("MUSIC IN").width;
+    const rw = 280, rh = 126, gap = 30;
+    const x0 = (W - (rw + gap + Math.max(slcW, inW))) / 2;
+    const base = SAFE_TOP + 155;
+    drawRidge(ctx, ridge, x0, base - rh, rw, rh);
+    ctx.fillStyle = C.ink; ctx.fillText("MUSIC IN", x0 + rw + gap + 4, base - 104);
+    setFont(ctx, 800, 132, DISPLAY, -5);
+    splitText(ctx, "SLC", x0 + rw + gap, base, 6);
+
+    // Bottom of the safe area: the ridge across the width, then the address on a white bar
+    const barH = 120, barTop = SAFE_BOT - barH;
+    ctx.globalAlpha = 0.95;
+    drawRidge(ctx, ridge, -6, barTop - 96, W + 12, 96, { base: false });
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = C.ink; ctx.fillRect(0, barTop, W, barH);
+    setFont(ctx, 600, 26, BODY, 6);
     ctx.fillStyle = C.bg; ctx.textAlign = "center";
-    ctx.fillText("FIND LIVE MUSIC IN SALT LAKE", W / 2, H - 92);
-    setFont(ctx, 800, 56, DISPLAY, -1);
-    ctx.fillText(SITE.toUpperCase(), W / 2, H - 36);
+    ctx.fillText("FIND LIVE MUSIC IN SALT LAKE", W / 2, barTop + 42);
+    setFont(ctx, 800, 58, DISPLAY, -1);
+    ctx.fillText(SITE.toUpperCase(), W / 2, barTop + 100);
     ctx.textAlign = "left";
   }
 
@@ -209,20 +225,20 @@
     const cv = Object.assign(document.createElement("canvas"), { width: W, height: H });
     const ctx = cv.getContext("2d");
     frame(ctx, ridge);
-    tape(ctx, TAPES[status] || "SEE YOU THERE?", PAD, 268);
+    tape(ctx, TAPES[status] || "SEE YOU THERE?", PAD, SAFE_TOP + 196);
 
-    const size = 760, ax = (W - size) / 2, ay = 410;
-    drawArt(ctx, e, img, ax, ay, size, 14);
+    const size = 470, ax = (W - size) / 2, ay = SAFE_TOP + 330;
+    drawArt(ctx, e, img, ax, ay, size, 12);
 
-    let y = ay + size + 90;
+    let y = ay + size + 66;
     setFont(ctx, 600, 40, BODY, 3);
     ctx.fillStyle = C.cyan; ctx.fillText(whenLine(e), PAD, y);
-    const t = fitLines(ctx, e.title.toUpperCase(), W - PAD * 2, 3, 96, 52, DISPLAY);
+    const t = fitLines(ctx, e.title.toUpperCase(), W - PAD * 2, 2, 80, 44, DISPLAY);
     y += 28;
     for (const line of t.lines) { y += t.size * 0.94; splitText(ctx, line, PAD, y, Math.max(3, t.size * 0.03)); }
-    setFont(ctx, 600, 42, BODY, 0);
+    setFont(ctx, 600, 40, BODY, 0);
     ctx.fillStyle = C.ink;
-    y += 66;
+    y += 56;
     const where = [e.venue_name, e.city && e.city !== "Salt Lake City" ? e.city : ""].filter(Boolean).join(" · ");
     ctx.fillText(ellipsize(ctx, where, W - PAD * 2), PAD, y);
     return cv;
@@ -230,39 +246,39 @@
 
   // ---------- your plans ----------
   async function plansCard(rows, who) {
-    const shown = rows.slice(0, 6);
+    const shown = rows.slice(0, 5);
     const [ridge, imgs] = await Promise.all([ridgeBars(), Promise.all(shown.map(({ e }) => flyer(e))), fonts()]);
     const cv = Object.assign(document.createElement("canvas"), { width: W, height: H });
     const ctx = cv.getContext("2d");
     frame(ctx, ridge);
-    tape(ctx, "WHERE I'LL BE", PAD, 268);
+    tape(ctx, "WHERE I'LL BE", PAD, SAFE_TOP + 196);
     if (who) {
-      setFont(ctx, 600, 38, BODY, 0);
-      ctx.fillStyle = C.muted; ctx.fillText(ellipsize(ctx, who, W - PAD * 2), PAD, 432);
+      setFont(ctx, 600, 32, BODY, 0);
+      ctx.fillStyle = C.muted; ctx.fillText(ellipsize(ctx, who, W - PAD * 2), PAD, SAFE_TOP + 340);
     }
 
-    const rowH = 180, thumb = 148, top = 474;
+    const rowH = 146, thumb = 120, top = SAFE_TOP + (who ? 372 : 330);
     shown.forEach(({ e, status }, i) => {
       const y = top + i * rowH;
       drawArt(ctx, e, imgs[i], PAD + 6, y, thumb, 6);
       const tx = PAD + thumb + 44, tw = W - tx - PAD;
-      setFont(ctx, 600, 30, BODY, 2);
+      setFont(ctx, 600, 26, BODY, 2);
       ctx.fillStyle = C.cyan;
       const when = whenLine(e);
-      ctx.fillText(when, tx, y + 36);
+      ctx.fillText(when, tx, y + 30);
       if (status === "maybe") {
         const wx = tx + ctx.measureText(when).width + 18;
-        ctx.fillStyle = C.magenta; ctx.fillText("MAYBE", wx, y + 36);
+        ctx.fillStyle = C.magenta; ctx.fillText("MAYBE", wx, y + 30);
       }
-      const t = fitLines(ctx, e.title.toUpperCase(), tw, 1, 56, 34, DISPLAY);
-      ctx.fillStyle = C.ink; ctx.fillText(t.lines[0], tx, y + 36 + t.size + 8);
-      setFont(ctx, 500, 32, BODY, 0);
-      ctx.fillStyle = C.muted; ctx.fillText(ellipsize(ctx, e.venue_name, tw), tx, y + 140);
+      const t = fitLines(ctx, e.title.toUpperCase(), tw, 1, 48, 32, DISPLAY);
+      ctx.fillStyle = C.ink; ctx.fillText(t.lines[0], tx, y + 30 + t.size + 6);
+      setFont(ctx, 500, 28, BODY, 0);
+      ctx.fillStyle = C.muted; ctx.fillText(ellipsize(ctx, e.venue_name, tw), tx, y + 116);
     });
     if (rows.length > shown.length) {
-      setFont(ctx, 600, 34, BODY, 0);
+      setFont(ctx, 600, 30, BODY, 0);
       ctx.fillStyle = C.ink;
-      ctx.fillText(`+ ${rows.length - shown.length} more on ${SITE}`, PAD + 6, top + shown.length * rowH + 36);
+      ctx.fillText(`+ ${rows.length - shown.length} more on ${SITE}`, PAD + 6, top + shown.length * rowH + 8);
     }
     return cv;
   }
