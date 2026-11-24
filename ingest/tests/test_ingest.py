@@ -583,6 +583,8 @@ class TestDigest(unittest.TestCase):
         subject, body = run_digest.build([], 0, found)
         self.assertIn("4 to look at", subject)
         self.assertNotIn("Beths", body)
+        self.assertIn("Hide one under Published shows", body)
+        self.assertNotIn("Published shows", run_digest.build([], 0, {"duplicates": found["duplicates"]})[1])
 
 
 class TestVenueDirectory(unittest.TestCase):

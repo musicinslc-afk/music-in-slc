@@ -20,12 +20,12 @@ Hosting is free or nearly free: a static site on GitHub Pages, a free Supabase d
  venue websites ─┐
  Ticketmaster  ──┼─► ingest/run_scrapers.py ─┐                       ┌─► web/index.html  (calendar, filters, You)
                  │   (every 6 h)             ├─► Supabase Postgres ──┼─► web/submit.html (public form → pending)
- musicinslc     ─┴─► ingest/run_email.py ────┘    events, venues     └─► web/admin.html  (review queue, source health)
+ musicinslc     ─┴─► ingest/run_email.py ────┘    events, venues     └─► web/admin.html  (review queue, hide shows, source health)
  @gmail.com          (hourly, Claude reads        source_runs
                       text + flyer images)
 ```
 
-Every source produces the same show record. Each show gets a fingerprint (venue, local date, headliner), and near-matches at the same venue on the same night are merged, so a show listed by the venue, Ticketmaster and an email appears once. Scraped shows publish directly. Emailed and submitted shows wait in the review queue, unless the email comes from a sender you trust. When a scraper later confirms a pending show, it publishes automatically. A show you hide in the admin page stays hidden.
+Every source produces the same show record. Each show gets a fingerprint (venue, local date, headliner), and near-matches at the same venue on the same night are merged, so a show listed by the venue, Ticketmaster and an email appears once. Scraped shows publish directly. Emailed and submitted shows wait in the review queue, unless the email comes from a sender you trust. When a scraper later confirms a pending show, it publishes automatically. A show you hide in the admin page stays hidden. To hide one that's already on the calendar, such as a listing the weekly check flags as not music, find it under Published shows on the admin page.
 
 ## Status
 

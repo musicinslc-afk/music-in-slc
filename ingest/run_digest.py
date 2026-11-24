@@ -45,6 +45,9 @@ def build(runs: list[dict], pending: int, listings: dict[str, list[str]] | None 
             lines += [f"  - {f}" for f in found[:40]]
             if len(found) > 40:
                 lines.append(f"  ...and {len(found) - 40} more")
+            if kind == "not_music":
+                lines.append("  These are already on the calendar, so they aren't in the review queue."
+                             " Hide one under Published shows on the admin page.")
             lines.append("")
     lines.append(f"Shows waiting for review: {pending}")
     lines.append("")

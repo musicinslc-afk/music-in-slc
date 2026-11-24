@@ -302,18 +302,78 @@
       <td class="err">${S.esc(r.error || "")}</td></tr>`).join("") || `<tr><td colspan="6">No runs yet. The first scheduled run fills this in.</td></tr>`;
   }
 
+  // One published show as a table row with a Hide button (Recently added and Published shows)
+  const showRow = (e) => `<tr data-id="${S.esc(e.id)}">
+      <td>${S.esc(S.fmtDow(e.starts_at))} ${S.esc(S.fmtMon(e.starts_at))} ${S.esc(S.fmtNum(e.starts_at))}</td>
+      <td>${S.esc(e.title)}</td><td>${S.esc(e.venue_name)}</td><td class="mono">${S.esc(e.source)}</td>
+      <td><button class="btn ghost" type="button" data-hide="${S.esc(e.id)}">Hide</button></td></tr>`;
+
+  // Hiding marks the show rejected. The scrapers load rejected rows too, so it never comes back.
+  async function setShowStatus(id, status) {
+    const { error } = await sb.from("events").update({ status }).eq("id", id);
+    return error;
+  }
+
   async function loadRecent() {
     const { data } = await sb.from("events").select("id,title,venue_name,starts_at,source,status")
       .eq("status", "published").order("created_at", { ascending: false }).limit(25);
-    $("recent").innerHTML = (data || []).map((e) => `<tr data-id="${e.id}">
-      <td>${S.esc(S.fmtDow(e.starts_at))} ${S.esc(S.fmtMon(e.starts_at))} ${S.esc(S.fmtNum(e.starts_at))}</td>
-      <td>${S.esc(e.title)}</td><td>${S.esc(e.venue_name)}</td><td class="mono">${S.esc(e.source)}</td>
-      <td><button class="btn ghost" type="button" data-hide="${e.id}">Hide</button></td></tr>`).join("");
-    document.querySelectorAll("[data-hide]").forEach((b) => b.onclick = async () => {
-      const { error } = await sb.from("events").update({ status: "rejected" }).eq("id", b.dataset.hide);
+    $("recent").innerHTML = (data || []).map(showRow).join("");
+    $("recent").querySelectorAll("[data-hide]").forEach((b) => b.onclick = async () => {
+      const error = await setShowStatus(b.dataset.hide, "rejected");
       if (!error) b.closest("tr").remove();
     });
   }
+
+  // ---------- published shows: find any upcoming show and hide it ----------
+  function findMsg(text, bad) {
+    const m = $("find-msg");
+    m.hidden = !text; m.className = `notice ${bad ? "err" : "ok"}`; m.textContent = text || "";
+  }
+
+  // Hide and Undo swap in place, so a slip is one tap to put back
+  function hideButton(cell, id) {
+    cell.innerHTML = `<button class="btn ghost" type="button">Hide</button>`;
+    const b = cell.querySelector("button");
+    b.onclick = async () => {
+      b.disabled = true;
+      const error = await setShowStatus(id, "rejected");
+      if (error) { b.disabled = false; return findMsg(error.message, true); }
+      findMsg("");
+      undoButton(cell, id);
+      loadRecent();
+    };
+  }
+  function undoButton(cell, id) {
+    cell.innerHTML = `<span class="meta">Hidden</span> <button class="btn ghost" type="button">Undo</button>`;
+    const b = cell.querySelector("button");
+    b.onclick = async () => {
+      b.disabled = true;
+      const error = await setShowStatus(id, "published");
+      if (error) { b.disabled = false; return findMsg(error.message, true); }
+      findMsg("");
+      hideButton(cell, id);
+      loadRecent();
+    };
+  }
+
+  $("find-form").onsubmit = async (ev) => {
+    ev.preventDefault();
+    // Keep the words only: commas, brackets and quotes would break the search filter
+    const term = $("find-q").value.replace(/[^\p{L}\p{N}\s&'-]/gu, " ").replace(/\s+/g, " ").trim();
+    if (term.length < 2) return findMsg("Type at least two letters of a show or venue.", true);
+    const since = new Date(Date.now() - 12 * 3600 * 1000).toISOString();   // tonight's shows still count
+    const like = `*${term.split(" ").join("*")}*`;   // words in order, anything between: "hoard vine" finds "Hoard Nation: Vine"
+    const { data, error } = await sb.from("events").select("id,title,venue_name,starts_at,source")
+      .eq("status", "published").gte("starts_at", since)
+      .or(`title.ilike.${like},venue_name.ilike.${like}`)
+      .order("starts_at").limit(50);
+    if (error) { $("find-results").hidden = true; return findMsg(error.message, true); }
+    $("found").innerHTML = data.map(showRow).join("");
+    $("found").querySelectorAll("[data-hide]").forEach((b) => hideButton(b.parentElement, b.dataset.hide));
+    $("find-results").hidden = !data.length;
+    findMsg(data.length ? (data.length === 50 ? "Showing the first 50. Add a word to narrow it down." : "")
+      : `No upcoming published show matches "${term}".`, !data.length);
+  };
 
   const { data: { session } } = await sb.auth.getSession();
   sb.auth.onAuthStateChange((event, s) => { if (event === "SIGNED_IN" && !session) location.reload(); });
