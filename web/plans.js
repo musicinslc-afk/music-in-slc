@@ -40,7 +40,7 @@
     if (!sb || !st.social) return;
     const [counts, rows] = await Promise.all([
       sb.rpc("rsvp_counts", { since: since() }),
-      sb.from("rsvps").select("event_id,status,user_id,profiles(handle,display_name),events!inner(starts_at)")
+      sb.from("rsvps").select("event_id,status,user_id,profiles(handle,display_name,visibility),events!inner(starts_at)")
         .gte("events.starts_at", since()).limit(5000),
     ]);
     if (counts.error && rows.error) { st.social = false; return; } // migration 003 not run yet
@@ -50,7 +50,7 @@
       if (!r.profiles || (st.user && r.user_id === st.user.id)) continue;
       const k = String(r.event_id);
       if (!st.people.has(k)) st.people.set(k, []);
-      st.people.get(k).push({ user_id: r.user_id, name: r.profiles.display_name, handle: r.profiles.handle, status: r.status });
+      st.people.get(k).push({ user_id: r.user_id, name: r.profiles.display_name, handle: r.profiles.handle, status: r.status, public: r.profiles.visibility === "public" });
     }
   }
 
@@ -516,6 +516,16 @@
       for (const [id, list] of st.people) {
         const e = find(id);
         const people = list.filter((p) => isFriend(p.user_id));
+        if (e && people.length) out.push({ e, people });
+      }
+      return out.sort((a, b) => a.e.starts_at.localeCompare(b.e.starts_at));
+    },
+    // Upcoming shows anyone with public plans marked, soonest first: [{ e, people }]
+    publicShows: () => {
+      const out = [];
+      for (const [id, list] of st.people) {
+        const e = find(id);
+        const people = list.filter((p) => p.public);
         if (e && people.length) out.push({ e, people });
       }
       return out.sort((a, b) => a.e.starts_at.localeCompare(b.e.starts_at));

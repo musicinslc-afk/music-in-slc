@@ -33,12 +33,14 @@
     $("share-plans").hidden = !(c.going + c.maybe) || !window.SLCShare;
     const fs = P.friendsShows().length;
     $("n-friends").textContent = fs ? String(fs) : "";
+    const ps = P.publicShows().length;
+    $("n-public").textContent = ps ? String(ps) : "";
     document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tab === tab)));
     const p = P.profile;
     $("you-name").textContent = p ? p.display_name : "Me";
     $("you-sub-head").textContent = p
       ? `@${p.handle} · ${P.visibilityNote()}`
-      : "The shows you've said yes and maybe to, and where your friends are headed.";
+      : "The shows you've said yes and maybe to, where your friends are headed, and who's going publicly.";
   }
 
   // The list is drawn when the page loads and when you switch tabs. A show you un-mark stays put until then,
@@ -72,9 +74,31 @@
     $("my-shows").innerHTML = html;
   }
 
+  // Public tab: every upcoming show someone with public plans marked Maybe or Going, with their names on the card
+  function renderPublicShows() {
+    const list = P.publicShows();
+    if (!list.length) {
+      const msg = !P.social
+        ? "Public plans need the site's sign-in, which isn't switched on yet."
+        : "No one with public plans has marked an upcoming show yet. Set your plans to Everyone under Settings and yours show up here for others.";
+      $("my-shows").innerHTML = `<div class="empty you-empty"><strong>No public plans yet</strong>${msg}</div>`;
+      return;
+    }
+    const byDay = new Map();
+    for (const { e } of list) {
+      const k = S.dayKey(e.starts_at);
+      if (!byDay.has(k)) byDay.set(k, []);
+      byDay.get(k).push(e);
+    }
+    let html = "";
+    for (const [k, shows] of byDay) html += C.dayHtml(k, shows);
+    $("my-shows").innerHTML = html;
+  }
+
   function renderShows() {
     syncCounts();
     if (tab === "friends") { renderFriendsShows(); return; }
+    if (tab === "public") { renderPublicShows(); return; }
     const mine = events.filter((e) => {
       const s = P.status(e.id);
       return s && (tab === "all" || s === tab);
