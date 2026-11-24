@@ -30,5 +30,9 @@ jobs:
           sed -i "s#const VERSION = \"dev\";#const VERSION = \"$v\";#" web/sw.js
       - uses: actions/upload-pages-artifact@v3
         with: { path: web }
+      # GitHub sometimes takes a few seconds to list a fresh upload; deploying right away then finds nothing
+      - name: Wait for the upload to be listed
+        run: sleep 20
       - id: deploy
         uses: actions/deploy-pages@v4
+        with: { error_count: 20 }
