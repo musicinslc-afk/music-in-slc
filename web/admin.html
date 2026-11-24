@@ -55,6 +55,20 @@
     <p id="queue-summary"></p>
     <div class="queue" id="queue"></div>
 
+    <h2 class="section-title">Published shows</h2>
+    <p class="hint">Find any upcoming show on the calendar and hide it, such as a listing the weekly check flags as not music. A hidden show stays hidden after the next scrape.</p>
+    <form class="card" id="find-form">
+      <div class="form-actions">
+        <div class="field" style="flex:1 1 260px">
+          <label for="find-q">Show or venue</label>
+          <input id="find-q" autocomplete="off" required minlength="2" placeholder="Part of a show title or venue name">
+        </div>
+        <button class="btn" type="submit">Find</button>
+      </div>
+      <div class="notice" id="find-msg" hidden></div>
+    </form>
+    <div class="card table-wrap" id="find-results" hidden><table><thead><tr><th>Date</th><th>Show</th><th>Venue</th><th>Source</th><th></th></tr></thead><tbody id="found"></tbody></table></div>
+
     <h2 class="section-title">Band links</h2>
     <p class="hint">Links come from Ticketmaster, MusicBrainz and emails from trusted senders. Fix a wrong or missing one here; a band you save is never changed by the robots again.</p>
     <form class="card" id="band-form">
