@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-23T03:42-07:00",
+ "updated": "2026-11-25T18:36-07:00",
  "venues": [
   {
    "slug": "801-event-center",
@@ -24,7 +24,7 @@
    "city": "Salt Lake City",
    "age_policy": "all_ages",
    "website": "https://utahsymphony.org/",
-   "image": "https://usuo.org/app/uploads/sites/2/2026/08/Rodgers-and-Hammerstein-Celebration-4-scaled.jpg",
+   "image": "https://usuo.org/app/uploads/sites/2/2026/11/Black-Friday-Sale-14-scaled.jpg",
    "map": "https://www.google.com/maps/search/?api=1&query=Abravanel+Hall%2C+123+W+South+Temple%2C+Salt+Lake+City%2C+UT"
   },
   {
@@ -197,7 +197,7 @@
    "city": "Salt Lake City",
    "age_policy": "varies",
    "website": "https://www.depotslc.com/",
-   "image": "https://assets.livenationcdn.com/uploads/8c93fb93-9f5e-4e80-8262-7e49a6a1ddaf.png",
+   "image": null,
    "map": "https://www.google.com/maps/search/?api=1&query=The+Depot%2C+13+N+400+W%2C+Salt+Lake+City%2C+UT"
   },
   {
@@ -266,6 +266,24 @@
    "website": "https://www.epicbrewing.com/",
    "image": "https://static1.squarespace.com/static/5ecea08bff39df0155937536/t/65a19b53905a8452654b4ee1/1705089875681/EpicLogo_fullColor-01+%281%29.png?format=1500w",
    "map": "https://www.google.com/maps/search/?api=1&query=Epic+Brewing%2C+825+S+State+St%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "four-sound-bar",
+   "name": "Four Sound Bar",
+   "aliases": [
+    "Four Sound",
+    "Foursound",
+    "Foursound Bar",
+    "4 Sound Bar"
+   ],
+   "kind": "Bar",
+   "capacity": null,
+   "address": "837 S Main St",
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Four+Sound+Bar%2C+837+S+Main+St%2C+Salt+Lake+City%2C+UT"
   },
   {
    "slug": "gallivan-center",
@@ -411,6 +429,24 @@
    "website": null,
    "image": null,
    "map": "https://www.google.com/maps/search/?api=1&query=International+Bar%2C+342+S+State+St%2C+Salt+Lake+City%2C+UT"
+  },
+  {
+   "slug": "juniors-tavern",
+   "name": "Junior's Tavern",
+   "aliases": [
+    "Junior's",
+    "Juniors Tavern",
+    "Junior's Bar",
+    "Juniors Bar"
+   ],
+   "kind": "Bar",
+   "capacity": null,
+   "address": "30 E Broadway",
+   "city": "Salt Lake City",
+   "age_policy": "21_plus",
+   "website": null,
+   "image": null,
+   "map": "https://www.google.com/maps/search/?api=1&query=Junior%27s+Tavern%2C+30+E+Broadway%2C+Salt+Lake+City%2C+UT"
   },
   {
    "slug": "kilby-court",
