@@ -438,6 +438,25 @@ venues:
     default_genres: [metal, punk]
     strategy: feeds_only   # touring metal and punk; shows come from KRCL, SeatGeek, email and submissions
 
+  - slug: juniors-tavern
+    name: Junior's Tavern
+    kind: Bar
+    aliases: [Junior's, Juniors Tavern, Junior's Bar, Juniors Bar]
+    address: 30 E Broadway
+    city: Salt Lake City
+    age_policy: 21_plus
+    default_genres: [jazz, blues]
+    strategy: feeds_only   # no public calendar; shows come from KRCL, email and submissions
+
+  - slug: four-sound-bar
+    name: Four Sound Bar
+    kind: Bar
+    aliases: [Four Sound, Foursound, Foursound Bar, 4 Sound Bar]
+    address: 837 S Main St
+    city: Salt Lake City
+    age_policy: 21_plus
+    strategy: feeds_only   # no public calendar; shows come from KRCL, email and submissions
+
   - slug: tailgate-tavern
     name: Tailgate Tavern
     kind: Bar

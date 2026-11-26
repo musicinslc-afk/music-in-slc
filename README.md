@@ -108,7 +108,7 @@ Edit `web/config.js` with the Supabase URL and anon key, plus the Last.fm key if
 
 ### 7. Check the venue list
 
-`ingest/config/venues.yaml` lists 48 Salt Lake County venues with their best-known calendar pages. Open each URL in a browser before launch; venue sites move often. Anything that fails shows up red in **Source health** with the error. To add a venue, copy an entry, give it a unique `slug`, and add any alternate spellings ticket sites use under `aliases` so duplicates merge.
+`ingest/config/venues.yaml` lists 50 Salt Lake County venues with their best-known calendar pages. Open each URL in a browser before launch; venue sites move often. Anything that fails shows up red in **Source health** with the error. To add a venue, copy an entry, give it a unique `slug`, and add any alternate spellings ticket sites use under `aliases` so duplicates merge.
 
 Strategies:
 - `auto` uses the venue's layout parser if it has one (`parser:`), then JSON-LD event data from the page (most ticketing widgets publish it), then links to 24tix event pages, then an iCal feed if you set `ics_url`, then falls back to Claude reading the page.
