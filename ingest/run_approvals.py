@@ -41,7 +41,12 @@ def _source(row: dict) -> str:
 REVIEW_DAYS = 30
 
 
-def build(rows: list[dict], now: datetime | None = None, reviewed: list[dict] | None = None) -> tuple[str, str]:
+REQUEST_LABELS = {"show_list": "List of shows", "venue": "Venue", "special_event": "Special event",
+                  "question": "Question"}
+
+
+def build(rows: list[dict], now: datetime | None = None, reviewed: list[dict] | None = None,
+          requests: list[dict] | None = None) -> tuple[str, str]:
     now = now or datetime.now(timezone.utc)
     upcoming = sorted((r for r in rows if _when(r["starts_at"]) >= now), key=lambda r: r["starts_at"])
     past = len(rows) - len(upcoming)
@@ -77,11 +82,22 @@ def build(rows: list[dict], now: datetime | None = None, reviewed: list[dict] | 
     if past:
         lines.append(f"{past} pending show{'s have' if past != 1 else ' has'} already passed and can be rejected.")
         lines.append("")
+    if requests:
+        lines.append(f"MESSAGES AND REQUESTS ({len(requests)} open)")
+        for r in requests:
+            label = REQUEST_LABELS.get(r.get("kind"), r.get("kind"))
+            title = f"{label}: {r['subject']}" if r.get("subject") and r["subject"] != label else label
+            lines.append(f"  {title}")
+            lines.append(f"      {str(r.get('submitter_role', '')).capitalize()}, from {r.get('name')} ({r.get('email')})")
+        lines.append(f"Read them here: {admin}")
+        lines.append("")
     lines += review_stats.summarize(reviewed or [], REVIEW_DAYS)
     lines.append(f"Admin page: {admin}")
 
     subject = (f"Music in SLC: {len(upcoming)} show{'s' if len(upcoming) != 1 else ''} to approve" if upcoming
                else "Music in SLC: no shows to approve this week")
+    if requests:
+        subject += f", {len(requests)} message{'s' if len(requests) != 1 else ''} open"
     return subject, "\n".join(lines)
 
 
@@ -104,7 +120,13 @@ def main() -> int:
     except Exception as e:  # before migration 004 the columns don't exist yet
         print(f"review summary skipped: {type(e).__name__}: {e}", file=sys.stderr)
         reviewed = []
-    subject, body = build(rows, reviewed=reviewed)
+    try:
+        requests = reader._get("requests", {"select": "kind,submitter_role,name,email,subject",
+                                            "status": "eq.open", "order": "created_at", "limit": 200})
+    except Exception as e:  # before migration 005 the table doesn't exist yet
+        print(f"requests skipped: {type(e).__name__}: {e}", file=sys.stderr)
+        requests = []
+    subject, body = build(rows, reviewed=reviewed, requests=requests)
     if settings.DRY_RUN or not settings.INBOX_APP_PASSWORD:
         print(subject + "\n\n" + body)
         return 0

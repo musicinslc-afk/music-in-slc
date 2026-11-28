@@ -37,7 +37,4 @@
       gtag("event", "friend_action", { action: el.dataset.friend });
     }
   }, true);
-  document.addEventListener("submit", () => {
-    if (/submit\.html$/.test(location.pathname)) gtag("event", "show_submitted");
-  }, true);
 })();

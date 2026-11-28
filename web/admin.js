@@ -44,7 +44,7 @@
     $("admin").hidden = false;
     venues = (await sb.from("venues").select("id,slug,name,aliases,city")).data || [];
     await loadArtistRows();
-    await Promise.all([loadQueue(), loadHealth(), loadRecent(), loadBandNames()]);
+    await Promise.all([loadQueue(), loadRequests(), loadHealth(), loadRecent(), loadBandNames()]);
   }
 
   // ---------- queue ----------
@@ -227,6 +227,40 @@
     $("queue-summary").textContent = (left ? `${left} show${left === 1 ? "" : "s"} waiting for review.` : "Nothing waiting. Nice.")
       + ($("queue-summary").dataset.warn ? " Reasons aren't being saved yet: run supabase/migrations/004_review_reasons.sql." : "");
     if (update.status === "published") loadRecent();
+  }
+
+  // ---------- lists, venues, special events and questions ----------
+  const KINDS = { show_list: "List of shows", venue: "Venue", special_event: "Special event", question: "Question" };
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, " ");
+
+  async function loadRequests() {
+    const { data, error } = await sb.from("requests").select("*").eq("status", "open").order("created_at").limit(200);
+    if (error) {
+      $("request-summary").textContent = /requests/.test(error.message)
+        ? "Run supabase/migrations/005_submission_requests.sql to turn this on." : error.message;
+      return;
+    }
+    const count = (n) => n ? `${n} open.` : "Nothing open.";
+    $("request-summary").textContent = count(data.length);
+    $("requests").innerHTML = data.map((r) => `<div class="card queue-item" data-request="${r.id}">
+      <header><strong>${S.esc(KINDS[r.kind] || r.kind)}${r.subject !== KINDS[r.kind] ? `: ${S.esc(r.subject)}` : ""}</strong>
+        <span class="meta">${S.esc(cap(r.submitter_role))} · ${S.esc(r.name)} (${S.esc(r.email)})</span></header>
+      ${Object.entries(r.details || {}).map(([k, v]) => `<p class="meta">${S.esc(cap(k))}: ${S.safeUrl(v) ? `<a href="${S.esc(S.safeUrl(v))}" target="_blank" rel="noopener noreferrer">${S.esc(v)}</a>` : S.esc(v)}</p>`).join("")}
+      ${r.message ? `<p style="white-space:pre-wrap;overflow-wrap:anywhere">${S.esc(r.message)}</p>` : ""}
+      <div class="notice err" hidden></div>
+      <div class="form-actions">
+        <a class="btn" href="mailto:${encodeURIComponent(r.email).replace("%40", "@")}?subject=${encodeURIComponent(`Music in SLC: ${r.subject}`)}">Reply</a>
+        <button class="btn primary" type="button">Mark done</button>
+      </div>
+    </div>`).join("");
+    $("requests").querySelectorAll("[data-request]").forEach((el) => {
+      el.querySelector("button").onclick = async () => {
+        const { error: err } = await sb.from("requests").update({ status: "done" }).eq("id", el.dataset.request);
+        if (err) { const n = el.querySelector(".notice"); n.hidden = false; n.textContent = err.message; return; }
+        el.remove();
+        $("request-summary").textContent = count($("requests").children.length);
+      };
+    });
   }
 
   // ---------- band links ----------

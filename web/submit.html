@@ -34,9 +34,32 @@
 
 <main class="wrap form-page">
   <h1>Submit a show</h1>
-  <p>Playing in Salt Lake County? Add it here and it goes on the calendar once we check it, usually within a day. You can also email a flyer to <span class="mono" id="inbox-addr">musicinslc@gmail.com</span>.</p>
+  <p>Add live music in Salt Lake County, tell us about a venue, or ask a question. Everything is checked before it goes on the calendar. You can also email a flyer to <span class="mono" id="inbox-addr">musicinslc@gmail.com</span>.</p>
 
-  <form class="card" id="submit-form" novalidate>
+  <div class="card" id="chooser">
+    <fieldset>
+      <legend>I am</legend>
+      <div class="pills">
+          <label><input type="radio" name="role" value="artist"><span>Artist</span></label>
+          <label><input type="radio" name="role" value="venue"><span>Venue</span></label>
+          <label><input type="radio" name="role" value="promoter"><span>Promoter</span></label>
+          <label><input type="radio" name="role" value="fan"><span>Fan</span></label>
+      </div>
+    </fieldset>
+    <fieldset id="kind-step" hidden>
+      <legend>Submitting</legend>
+      <div class="pills">
+          <label><input type="radio" name="kind" value="single"><span>Single show</span></label>
+          <label><input type="radio" name="kind" value="show_list"><span>List of shows</span></label>
+          <label><input type="radio" name="kind" value="venue"><span>Venue</span></label>
+          <label><input type="radio" name="kind" value="special_event"><span>Special event</span></label>
+          <label><input type="radio" name="kind" value="question"><span>Question</span></label>
+      </div>
+    </fieldset>
+  </div>
+
+  <form class="card" id="submit-form" novalidate hidden>
+    <div class="panel" data-kind="single" hidden>
     <fieldset>
       <legend>The show</legend>
       <div class="field">
@@ -104,11 +127,74 @@
       </div>
     </fieldset>
 
+    </div>
+
+    <div class="panel" data-kind="show_list" hidden>
+      <fieldset>
+        <legend>Your shows</legend>
+        <div class="field">
+          <label for="list-text">Paste your list <span class="opt">(one show per line: date, time, act, venue)</span></label>
+          <textarea id="list-text" name="list_text" rows="8" maxlength="8000" placeholder="Jan 9, 8pm, Rhea Vance, Kilby Court"></textarea>
+        </div>
+        <div class="field">
+          <label for="list-url">Or link to a calendar, schedule or spreadsheet</label>
+          <input id="list-url" name="list_url" type="url" maxlength="500" placeholder="https://">
+        </div>
+        <p class="hint">Have flyers? Email them to <span class="mono inbox-addr">musicinslc@gmail.com</span>.</p>
+      </fieldset>
+    </div>
+
+    <div class="panel" data-kind="venue" hidden>
+      <fieldset>
+        <legend>The venue</legend>
+        <div class="field"><label for="v-name">Venue name</label><input id="v-name" name="v_name" maxlength="120" list="venue-list" autocomplete="off"></div>
+        <div class="grid-2">
+          <div class="field"><label for="v-address">Street address</label><input id="v-address" name="v_address" maxlength="200"></div>
+          <div class="field"><label for="v-city">City</label><select id="v-city" name="v_city"></select></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label for="v-website">Website or social page <span class="opt">(optional)</span></label><input id="v-website" name="v_website" type="url" maxlength="500" placeholder="https://"></div>
+          <div class="field"><label for="v-calendar">Where shows are posted <span class="opt">(optional)</span></label><input id="v-calendar" name="v_calendar" type="url" maxlength="500" placeholder="https://"></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label for="v-capacity">Capacity <span class="opt">(optional, a guess is fine)</span></label><input id="v-capacity" name="v_capacity" type="number" min="1" step="1" inputmode="numeric"></div>
+          <div class="field"><label for="v-ages">Ages</label><select id="v-ages" name="v_ages"><option value="">Not sure</option><option>All ages</option><option>18+</option><option>21+</option><option>Varies by show</option></select></div>
+        </div>
+        <div class="field"><label for="v-notes">Anything else <span class="opt">(optional, including corrections to a listed venue)</span></label><textarea id="v-notes" name="v_notes" maxlength="3000"></textarea></div>
+      </fieldset>
+    </div>
+
+    <div class="panel" data-kind="special_event" hidden>
+      <fieldset>
+        <legend>The event</legend>
+        <p class="hint">Festivals, concert series, benefits and anything bigger than one show.</p>
+        <div class="field"><label for="e-name">Event name</label><input id="e-name" name="e_name" maxlength="200"></div>
+        <div class="grid-2">
+          <div class="field"><label for="e-start">Start date</label><input id="e-start" name="e_start" type="date"></div>
+          <div class="field"><label for="e-end">End date <span class="opt">(if more than one day)</span></label><input id="e-end" name="e_end" type="date"></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label for="e-place">Location</label><input id="e-place" name="e_place" maxlength="200" list="venue-list" autocomplete="off" placeholder="Venue, park or street"></div>
+          <div class="field"><label for="e-city">City</label><select id="e-city" name="e_city"></select></div>
+        </div>
+        <div class="field"><label for="e-lineup">Lineup <span class="opt">(optional)</span></label><textarea id="e-lineup" name="e_lineup" maxlength="3000"></textarea></div>
+        <div class="field"><label for="e-url">Event or ticket link <span class="opt">(optional)</span></label><input id="e-url" name="e_url" type="url" maxlength="500" placeholder="https://"></div>
+        <div class="field"><label for="e-notes">Anything else <span class="opt">(optional)</span></label><textarea id="e-notes" name="e_notes" maxlength="2000"></textarea></div>
+      </fieldset>
+    </div>
+
+    <div class="panel" data-kind="question" hidden>
+      <fieldset>
+        <legend>Your question</legend>
+        <div class="field"><label for="q-text">What would you like to ask?</label><textarea id="q-text" name="q_text" rows="6" maxlength="4000"></textarea></div>
+      </fieldset>
+    </div>
+
     <fieldset>
       <legend>You</legend>
       <div class="grid-2">
         <div class="field"><label for="name">Your name</label><input id="name" name="name" required maxlength="100" autocomplete="name"></div>
-        <div class="field"><label for="email">Email <span class="opt">(only used if we have a question)</span></label><input id="email" name="email" type="email" required autocomplete="email"></div>
+        <div class="field"><label for="email">Email <span class="opt">(only used to follow up)</span></label><input id="email" name="email" type="email" required autocomplete="email"></div>
       </div>
       <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
     </fieldset>
@@ -116,13 +202,13 @@
     <div class="notice err" id="form-error" hidden></div>
     <div class="form-actions">
       <button class="btn primary" type="submit" id="submit-btn">Send for review</button>
-      <span class="hint">We check every submission before it goes live.</span>
+      <span class="hint" id="submit-hint">We check every submission before it goes live.</span>
     </div>
   </form>
 
   <div class="card" id="thanks" hidden>
     <div class="notice ok" id="thanks-msg">Got it. Your show is in the review queue.</div>
-    <div class="form-actions"><button class="btn" type="button" id="another">Submit another show</button><a class="btn ghost" href="index.html">Back to the calendar</a></div>
+    <div class="form-actions"><button class="btn" type="button" id="another">Submit something else</button><a class="btn ghost" href="index.html">Back to the calendar</a></div>
   </div>
 </main>
 

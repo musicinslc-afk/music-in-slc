@@ -137,6 +137,13 @@
     return { ok: false, error: text };
   }
 
+  // Lists, venues, special events and questions from the submit page
+  async function submitRequest(row) {
+    if (!live) return { ok: true, demo: true };
+    const r = await rest("requests", { method: "POST", body: JSON.stringify(row), headers: { Prefer: "return=minimal" } });
+    return { ok: r.ok };
+  }
+
   // ---------- dates, always shown in Mountain time ----------
   const fmt = (opts) => new Intl.DateTimeFormat("en-US", { timeZone: TZ, ...opts });
   const dayKeyFmt = fmt({ year: "numeric", month: "2-digit", day: "2-digit" });
@@ -261,7 +268,7 @@
   }
 
   window.SLC = {
-    cfg, live, TZ, store, mountainTime, rest, loadGenres, loadEvents, loadVenues, submitShow,
+    cfg, live, TZ, store, mountainTime, rest, loadGenres, loadEvents, loadVenues, submitShow, submitRequest,
     loadArtists, artistKey, linkKind, bandLinks, LINK_LABELS, LINK_ORDER, tileStyle, initials, meter,
     dayKey, addDays, timeLabel, priceLabel, AGE, esc, safeUrl,
     fmtDow: (d) => dowFmt.format(new Date(d)), fmtMon: (d) => monFmt.format(new Date(d)),
