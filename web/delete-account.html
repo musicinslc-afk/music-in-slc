@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Delete your account · Music in SLC</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Delete your Music in SLC account and the data that goes with it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Permanent+Marker&display=block">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Music in SLC">
+<meta name="theme-color" content="#0B0614">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap wide">
+    <a class="wordmark" href="index.html" aria-label="Music in SLC, home"><img class="wm-ridge" src="ridge.svg" alt="" width="64" height="29"><span class="wm-in" aria-hidden="true">Music in</span><span class="wm-slc" aria-hidden="true">SLC</span></a>
+    <nav class="nav" aria-label="Site">
+      <a href="index.html">Calendar</a>
+      <a href="week.html">This week</a>
+      <a href="venues.html">Venues</a>
+      <a href="me.html">Me</a>
+      <a class="cta" href="submit.html">Submit a show</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap wide privacy">
+  <div class="week-head">
+    <div>
+      <h1>Delete your account</h1>
+      <p class="week-range">Music in SLC, website and app</p>
+    </div>
+  </div>
+
+  <div id="intro">
+    <p>You can delete your Music in SLC account here. It happens right away and can't be undone.</p>
+    <h2>What gets deleted</h2>
+    <ul>
+      <li>Your email address, display name, handle and visibility setting</li>
+      <li>Your Maybe and Going shows and your friend connections</li>
+      <li>Messages and requests you sent through the Submit page with the same email</li>
+      <li>Your name, email and submission notes on shows sent from that email</li>
+    </ul>
+    <h2>What stays</h2>
+    <ul>
+      <li>Show listings you submitted, without your personal details</li>
+      <li>Anonymous visit statistics, which aren't linked to your account</li>
+      <li>Email already in the musicinslc@gmail.com inbox. Ask us and we'll delete it within 30 days.</li>
+    </ul>
+  </div>
+
+  <p class="notice" id="loading" role="status">Checking whether you're signed in…</p>
+
+  <section id="signed-out" class="you-stack" aria-labelledby="so-title" hidden>
+    <h2 id="so-title">Sign in to delete</h2>
+    <p>We'll email a sign-in link so only you can delete your account. Open it in this browser.</p>
+    <form class="you-inline" id="signin-form">
+      <label class="sr-only" for="signin-email">Email</label>
+      <input id="signin-email" type="email" required placeholder="you@example.com" autocomplete="email">
+      <button class="btn primary" type="submit">Email me a sign-in link</button>
+    </form>
+    <div class="notice" id="signin-msg" role="status" hidden></div>
+  </section>
+
+  <section id="signed-in" class="you-stack" aria-labelledby="si-title" hidden>
+    <h2 id="si-title">Confirm deletion</h2>
+    <p>Signed in as <strong id="acct-email"></strong>.</p>
+    <form id="delete-form" class="you-stack">
+      <label class="delete-confirm"><input type="checkbox" id="confirm" required> <span>I understand this permanently deletes my account.</span></label>
+      <div class="you-inline">
+        <button class="btn danger" type="submit" id="delete-btn" disabled>Delete my account</button>
+        <a class="btn ghost" href="me.html">Keep my account</a>
+      </div>
+    </form>
+    <div class="notice err" id="delete-error" role="alert" hidden></div>
+  </section>
+
+  <section id="done" tabindex="-1" hidden>
+    <h2>Your account is deleted</h2>
+    <p>The plans and music settings saved in this browser were cleared too. You can keep browsing without an account.</p>
+    <p><a class="btn primary" href="index.html">Back to the calendar</a></p>
+  </section>
+
+  <h2>Can't sign in?</h2>
+  <p>Email <a href="mailto:musicinslc@gmail.com?subject=Delete%20my%20Music%20in%20SLC%20account">musicinslc@gmail.com</a> from the address on your account and ask us to delete it. We'll do it within 30 days. The same address handles requests to see, correct or remove other data. See our <a href="privacy.html">privacy page</a>.</p>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap wide">
+    <p>Music in SLC, Salt Lake City, Utah.</p>
+    <p class="footer-links"><a href="privacy.html">Privacy</a></p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="analytics.js"></script>
+<script src="data.js"></script>
+<script src="pwa.js"></script>
+<script src="deleteaccount.js"></script>
+</body>
+</html>

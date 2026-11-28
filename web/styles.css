@@ -927,6 +927,16 @@ body {
 .privacy a { color: var(--cyan); }
 .site-footer .footer-links a { color: var(--muted); }
 
+/* ---------- delete account ---------- */
+.delete-link { color: var(--danger); font-weight: 600; }
+.delete-confirm { display: flex; gap: 10px; align-items: flex-start; min-height: 32px; }
+.delete-confirm input { width: 20px; height: 20px; flex: none; }
+.btn.danger { background: transparent; border-color: var(--danger); color: var(--danger); min-height: 44px; }
+.btn.danger:hover { border-color: var(--danger); }
+.privacy .btn.primary { color: var(--accent-ink); }
+.privacy a.btn.ghost { color: var(--ink); }
+#signed-in[hidden], #signed-out[hidden] { display: none; }
+
 /* ---------- share sheet: branded card preview, then share, save, copy and social posts ---------- */
 .share-sheet {
   border: 0; padding: 0; border-radius: 0; width: min(820px, calc(100vw - 32px)); max-height: calc(100dvh - 48px);
