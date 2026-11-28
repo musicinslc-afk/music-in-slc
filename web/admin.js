@@ -155,7 +155,11 @@
   }
 
   async function loadQueue() {
-    const { data, error } = await sb.from("events").select("*").eq("status", "pending").order("starts_at").limit(200);
+    // Submitter details are private columns, so the queue comes from an admin-only function (migration 006)
+    let { data, error } = await sb.rpc("admin_review_queue");
+    if (error && error.code === "PGRST202") {
+      ({ data, error } = await sb.from("events").select("*").eq("status", "pending").order("starts_at").limit(200));
+    }
     if (error) { $("queue-summary").textContent = error.message; return; }
     $("queue-summary").textContent = data.length ? `${data.length} show${data.length === 1 ? "" : "s"} waiting for review.` : "Nothing waiting. Nice.";
     $("queue").innerHTML = `<datalist id="venue-names">${venues.map((v) => `<option value="${S.esc(v.name)}">`).join("")}</datalist>` + data.map(itemHtml).join("");
